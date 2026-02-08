@@ -6,9 +6,11 @@ import TopContent from '../components/TopContent';
 import WhySupport from '../components/WhySupport';
 import StickyCTA from '../components/StickyCTA';
 
+import Footer from '../components/Footer';
+
 export default function HomePage() {
     return (
-        <main className="relative min-h-screen w-full overflow-x-hidden pb-32">
+        <main className="relative min-h-screen w-full overflow-x-hidden">
             <Hero />
             <div className="relative z-10 -mt-8 flex flex-col gap-10">
                 <ROIDashboard />
@@ -16,6 +18,7 @@ export default function HomePage() {
                 <TrustWall />
                 <TopContent />
             </div>
+            <Footer />
             <StickyCTA />
         </main>
     );
