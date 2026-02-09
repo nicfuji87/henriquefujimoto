@@ -29,6 +29,7 @@ export interface AggregatedMetrics {
     followers_growth: number;
     audience_city: Record<string, number>;
     audience_gender_age: Record<string, number>;
+    audience_country: Record<string, number>;
 }
 
 export async function getAggregatedMetrics(days: number): Promise<AggregatedMetrics | null> {
@@ -117,16 +118,36 @@ export async function getAggregatedMetrics(days: number): Promise<AggregatedMetr
     const calcGrowth = (curr: number, prev: number) => prev === 0 ? 0 : ((curr - prev) / prev) * 100;
 
     // Latest Audience Snapshot (from the most recent record available)
-    // We can query explicitly for the absolute latest record just to be sure we get the newest snapshot
     const { data: latestRecord } = await supabase
         .from('daily_metrics')
-        .select('audience_city, audience_gender_age')
+        .select('audience_city, audience_gender_age, audience_country')
         .order('date', { ascending: false })
         .limit(1)
         .single();
 
-    const audience_city = latestRecord?.audience_city || {};
-    const audience_gender_age = latestRecord?.audience_gender_age || {};
+    // Convert new API format: array [{value, dimension_values}] → Record<string, number>
+    const convertBreakdownToRecord = (data: any): Record<string, number> => {
+        if (!data) return {};
+        // If it's already a simple Record<string, number> (old format)
+        if (typeof data === 'object' && !Array.isArray(data) && Object.values(data).every(v => typeof v === 'number')) {
+            return data;
+        }
+        // New API format: array of {value, dimension_values: [key]}
+        if (Array.isArray(data)) {
+            const result: Record<string, number> = {};
+            for (const item of data) {
+                if (item.dimension_values && item.value) {
+                    result[item.dimension_values.join(', ')] = item.value;
+                }
+            }
+            return result;
+        }
+        return {};
+    };
+
+    const audience_city = convertBreakdownToRecord(latestRecord?.audience_city);
+    const audience_gender_age = convertBreakdownToRecord(latestRecord?.audience_gender_age);
+    const audience_country = convertBreakdownToRecord(latestRecord?.audience_country);
 
     return {
         total_reach: currentReach,
@@ -138,6 +159,7 @@ export async function getAggregatedMetrics(days: number): Promise<AggregatedMetr
         interactions_growth: calcGrowth(currentInteractions, prevInteractions),
         followers_growth: calcGrowth(currentFollowersGained, prevFollowersGained),
         audience_city,
-        audience_gender_age
+        audience_gender_age,
+        audience_country
     };
 }

@@ -3,6 +3,7 @@ import { TrendingUp, Zap, ArrowUpRight, ArrowDownRight, Users, Activity } from '
 import { motion, AnimatePresence } from 'framer-motion';
 import { getAggregatedMetrics, AggregatedMetrics } from '../lib/metrics';
 import AudienceCharts from './AudienceCharts';
+import BrazilMap from './BrazilMap';
 
 const ROIDashboard: React.FC = () => {
   const [period, setPeriod] = useState<30 | 60 | 90>(30);
@@ -168,6 +169,13 @@ const ROIDashboard: React.FC = () => {
           cityData={stats.audience_city}
           genderAgeData={stats.audience_gender_age}
         />
+      )}
+
+      {/* Brazil Map Section */}
+      {!loading && stats && Object.keys(stats.audience_city).length > 0 && (
+        <div className="mt-6">
+          <BrazilMap cityData={stats.audience_city} />
+        </div>
       )}
 
     </section>
