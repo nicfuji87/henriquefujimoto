@@ -4,6 +4,7 @@ import ROIDashboard from '../components/ROIDashboard';
 import TrustWall from '../components/TrustWall';
 import TopContent from '../components/TopContent';
 import WhySupport from '../components/WhySupport';
+import HowToSupport from '../components/HowToSupport';
 import StickyCTA from '../components/StickyCTA';
 
 import Footer from '../components/Footer';
@@ -15,6 +16,7 @@ export default function HomePage() {
             <div className="relative z-10 -mt-8 flex flex-col gap-10">
                 <ROIDashboard />
                 <WhySupport />
+                <HowToSupport />
                 <TrustWall />
                 <TopContent />
             </div>
