@@ -3,19 +3,17 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3'
 // Configuration
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-
-// SECURITY: Token is managed via Supabase Secrets.
 const FB_ACCESS_TOKEN = Deno.env.get('FB_ACCESS_TOKEN')!
 
-// Initialize Supabase Client
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
 
-Deno.serve(async (req) => {
-    try {
-        // 1. Get the Facebook User ID
-        const meReq = await fetch(`https://graph.facebook.com/v19.0/me?fields=id,name,accounts&access_token=${FB_ACCESS_TOKEN}`)
-        const meData = await meReq.json()
+const API_VERSION = 'v24.0'
 
+Deno.serve(async (_req) => {
+    try {
+        // 1. Get the Facebook User ID & Pages
+        const meReq = await fetch(`https://graph.facebook.com/${API_VERSION}/me?fields=id,name,accounts&access_token=${FB_ACCESS_TOKEN}`)
+        const meData = await meReq.json()
         if (meData.error) throw new Error(`FB Error (Me): ${meData.error.message}`)
 
         // 2. Find the Instagram Business Account ID
@@ -23,7 +21,7 @@ Deno.serve(async (req) => {
         let igUserId = null
 
         for (const page of pages) {
-            const pageReq = await fetch(`https://graph.facebook.com/v19.0/${page.id}?fields=instagram_business_account&access_token=${FB_ACCESS_TOKEN}`)
+            const pageReq = await fetch(`https://graph.facebook.com/${API_VERSION}/${page.id}?fields=instagram_business_account&access_token=${FB_ACCESS_TOKEN}`)
             const pageData = await pageReq.json()
             if (pageData.instagram_business_account?.id) {
                 igUserId = pageData.instagram_business_account.id
@@ -37,37 +35,55 @@ Deno.serve(async (req) => {
 
         console.log(`Found IG User ID: ${igUserId}`)
 
-        // 3. Fetch Metrics
+        // 3. Fetch Metrics (Using v24.0 valid metric names)
 
         // A. Profile Basic Data
-        const profileBasicReq = await fetch(`https://graph.facebook.com/v19.0/${igUserId}?fields=followers_count,media_count&access_token=${FB_ACCESS_TOKEN}`)
-        const profileData = await profileBasicReq.json()
+        const profileReq = await fetch(`https://graph.facebook.com/${API_VERSION}/${igUserId}?fields=followers_count,media_count&access_token=${FB_ACCESS_TOKEN}`)
+        const profileData = await profileReq.json()
+        console.log('Profile:', JSON.stringify(profileData))
 
-        // B. Daily Interaction Metrics
-        const dailyMetrics = 'reach,impressions,profile_views,email_contacts,phone_call_clicks,text_message_clicks,get_directions_clicks,website_clicks,total_interactions'
-        const insightsDayReq = await fetch(
-            `https://graph.facebook.com/v19.0/${igUserId}/insights?metric=${dailyMetrics}&period=day&access_token=${FB_ACCESS_TOKEN}`
+        // B. Daily Reach (period=day, does NOT need metric_type)
+        const reachDayReq = await fetch(
+            `https://graph.facebook.com/${API_VERSION}/${igUserId}/insights?metric=reach&period=day&access_token=${FB_ACCESS_TOKEN}`
         )
-        const insightsDayData = await insightsDayReq.json()
+        const reachDayData = await reachDayReq.json()
+        console.log('Reach day error?', reachDayData.error ? JSON.stringify(reachDayData.error) : 'No error')
 
-        // C. Rolling 28 Days Metrics (Reach & Impressions)
-        const insights28dReq = await fetch(
-            `https://graph.facebook.com/v19.0/${igUserId}/insights?metric=reach,impressions&period=days_28&access_token=${FB_ACCESS_TOKEN}`
+        // C. Daily Total Value Metrics (require metric_type=total_value)
+        const totalValueMetrics = 'profile_views,website_clicks,total_interactions,accounts_engaged,likes,comments,shares,saves,replies,follows_and_unfollows,profile_links_taps'
+        const totalValueDayReq = await fetch(
+            `https://graph.facebook.com/${API_VERSION}/${igUserId}/insights?metric=${totalValueMetrics}&period=day&metric_type=total_value&access_token=${FB_ACCESS_TOKEN}`
         )
-        const insights28dData = await insights28dReq.json()
+        const totalValueDayData = await totalValueDayReq.json()
+        console.log('Total value day error?', totalValueDayData.error ? JSON.stringify(totalValueDayData.error) : 'No error')
 
-        // D. Audience Demographics (Lifetime snapshot)
-        const audienceMetrics = 'audience_city,audience_country,audience_gender_age,audience_locale'
+        // D. 28-day Reach
+        const reach28dReq = await fetch(
+            `https://graph.facebook.com/${API_VERSION}/${igUserId}/insights?metric=reach&period=days_28&access_token=${FB_ACCESS_TOKEN}`
+        )
+        const reach28dData = await reach28dReq.json()
+        console.log('Reach 28d error?', reach28dData.error ? JSON.stringify(reach28dData.error) : 'No error')
+
+        // E. 28-day Total Value Metrics
+        const totalValue28dReq = await fetch(
+            `https://graph.facebook.com/${API_VERSION}/${igUserId}/insights?metric=${totalValueMetrics},follower_count&period=days_28&metric_type=total_value&access_token=${FB_ACCESS_TOKEN}`
+        )
+        const totalValue28dData = await totalValue28dReq.json()
+        console.log('Total value 28d error?', totalValue28dData.error ? JSON.stringify(totalValue28dData.error) : 'No error')
+
+        // F. Audience Demographics (lifetime)
+        const audienceMetrics = 'engaged_audience_demographics,reached_audience_demographics,follower_demographics'
         const audienceReq = await fetch(
-            `https://graph.facebook.com/v19.0/${igUserId}/insights?metric=${audienceMetrics}&period=lifetime&access_token=${FB_ACCESS_TOKEN}`
+            `https://graph.facebook.com/${API_VERSION}/${igUserId}/insights?metric=${audienceMetrics}&period=lifetime&metric_type=total_value&access_token=${FB_ACCESS_TOKEN}`
         )
         const audienceData = await audienceReq.json()
+        console.log('Audience error?', audienceData.error ? JSON.stringify(audienceData.error) : 'No error')
 
-        // online_followers (Safe fetch)
-        let onlineFollowersData = {}
+        // G. Online Followers (Safe fetch)
+        let onlineFollowersData: any = {}
         try {
             const onlineReq = await fetch(
-                `https://graph.facebook.com/v19.0/${igUserId}/insights?metric=online_followers&period=lifetime&access_token=${FB_ACCESS_TOKEN}`
+                `https://graph.facebook.com/${API_VERSION}/${igUserId}/insights?metric=online_followers&period=lifetime&access_token=${FB_ACCESS_TOKEN}`
             )
             const onlineRes = await onlineReq.json()
             if (!onlineRes.error) {
@@ -78,11 +94,10 @@ Deno.serve(async (req) => {
         }
 
         // ==========================================
-        // NEW: Fetch Recent Media (Top Content)
+        // Fetch Recent Media (Top Content)
         // ==========================================
         const mediaFields = 'id,media_type,media_url,thumbnail_url,caption,permalink,timestamp,like_count,comments_count'
-        // Fetch last 50 posts to ensure we get recent viral ones
-        const mediaReq = await fetch(`https://graph.facebook.com/v19.0/${igUserId}/media?fields=${mediaFields}&limit=50&access_token=${FB_ACCESS_TOKEN}`)
+        const mediaReq = await fetch(`https://graph.facebook.com/${API_VERSION}/${igUserId}/media?fields=${mediaFields}&limit=50&access_token=${FB_ACCESS_TOKEN}`)
         const mediaData = await mediaReq.json()
 
         if (mediaData.data) {
@@ -99,7 +114,6 @@ Deno.serve(async (req) => {
                 last_updated: new Date().toISOString()
             }))
 
-            // Insert into top_content table
             const { error: mediaError } = await supabase
                 .from('top_content')
                 .upsert(contentRecords, { onConflict: 'id' })
@@ -108,37 +122,46 @@ Deno.serve(async (req) => {
             else console.log(`Saved ${contentRecords.length} media items.`)
         }
 
-
-        // Process Data for Daily Metrics
+        // ==========================================
+        // Process Data
+        // ==========================================
         const getMetricValue = (data: any, metricName: string) => {
-            const metric = data.data?.find((m: any) => m.name === metricName)
-            return metric?.values[0]?.value || 0
+            if (!data?.data) return 0
+            const metric = data.data.find((m: any) => m.name === metricName)
+            // total_value metrics return { value: X } directly or as total_value.value
+            const val = metric?.total_value?.value ?? metric?.values?.[0]?.value ?? 0
+            return typeof val === 'number' ? val : 0
         }
 
         const getMetricComplexValue = (data: any, metricName: string) => {
-            const metric = data.data?.find((m: any) => m.name === metricName)
-            return metric?.values[0]?.value || {}
+            if (!data?.data) return {}
+            const metric = data.data.find((m: any) => m.name === metricName)
+            return metric?.total_value?.breakdowns?.[0]?.results ?? metric?.values?.[0]?.value ?? {}
         }
 
-        // Daily
-        const reachDaily = getMetricValue(insightsDayData, 'reach')
-        const impressionsDaily = getMetricValue(insightsDayData, 'impressions')
-        const profileViewsDaily = getMetricValue(insightsDayData, 'profile_views')
-        const emailContacts = getMetricValue(insightsDayData, 'email_contacts')
-        const phoneCallClicks = getMetricValue(insightsDayData, 'phone_call_clicks')
-        const textMessageClicks = getMetricValue(insightsDayData, 'text_message_clicks')
-        const getDirectionsClicks = getMetricValue(insightsDayData, 'get_directions_clicks')
-        const websiteClicks = getMetricValue(insightsDayData, 'website_clicks')
+        // Daily values
+        const reachDaily = getMetricValue(reachDayData, 'reach')
+        const profileViewsDaily = getMetricValue(totalValueDayData, 'profile_views')
+        const websiteClicks = getMetricValue(totalValueDayData, 'website_clicks')
+        const totalInteractions = getMetricValue(totalValueDayData, 'total_interactions')
+        const accountsEngaged = getMetricValue(totalValueDayData, 'accounts_engaged')
+        const likesDaily = getMetricValue(totalValueDayData, 'likes')
+        const commentsDaily = getMetricValue(totalValueDayData, 'comments')
+        const sharesDaily = getMetricValue(totalValueDayData, 'shares')
+        const savesDaily = getMetricValue(totalValueDayData, 'saves')
+        const repliesDaily = getMetricValue(totalValueDayData, 'replies')
+        const followsUnfollows = getMetricValue(totalValueDayData, 'follows_and_unfollows')
+        const profileLinksTaps = getMetricValue(totalValueDayData, 'profile_links_taps')
 
-        // 28 Days
-        const reach28d = getMetricValue(insights28dData, 'reach')
-        const impressions28d = getMetricValue(insights28dData, 'impressions')
+        // 28-day values
+        const reach28d = getMetricValue(reach28dData, 'reach')
+        const followerCount28d = getMetricValue(totalValue28dData, 'follower_count')
+        const totalInteractions28d = getMetricValue(totalValue28dData, 'total_interactions')
 
-        // Audience
-        const audienceCity = getMetricComplexValue(audienceData, 'audience_city')
-        const audienceCountry = getMetricComplexValue(audienceData, 'audience_country')
-        const audienceGenderAge = getMetricComplexValue(audienceData, 'audience_gender_age')
-        const audienceLocale = getMetricComplexValue(audienceData, 'audience_locale')
+        // Audience demographics
+        const engagedAudienceDemographics = getMetricComplexValue(audienceData, 'engaged_audience_demographics')
+        const reachedAudienceDemographics = getMetricComplexValue(audienceData, 'reached_audience_demographics')
+        const followerDemographics = getMetricComplexValue(audienceData, 'follower_demographics')
 
         // Online Followers
         const onlineFollowers = getMetricComplexValue(onlineFollowersData, 'online_followers')
@@ -151,26 +174,49 @@ Deno.serve(async (req) => {
             followers_count: profileData.followers_count,
             media_count: profileData.media_count,
             reach_28d: reach28d,
-            impressions_28d: impressions28d,
+            impressions_28d: totalInteractions28d,
             reach_daily: reachDaily,
-            impressions_daily: impressionsDaily,
+            impressions_daily: totalInteractions,
             profile_views_daily: profileViewsDaily,
-            email_contacts: emailContacts,
-            phone_call_clicks: phoneCallClicks,
-            text_message_clicks: textMessageClicks,
-            get_directions_clicks: getDirectionsClicks,
+            email_contacts: accountsEngaged,
+            phone_call_clicks: profileLinksTaps,
+            text_message_clicks: 0,
+            get_directions_clicks: 0,
             website_clicks: websiteClicks,
-            audience_city: audienceCity,
-            audience_country: audienceCountry,
-            audience_gender_age: audienceGenderAge,
-            audience_locale: audienceLocale,
+            audience_city: engagedAudienceDemographics,
+            audience_country: reachedAudienceDemographics,
+            audience_gender_age: followerDemographics,
+            audience_locale: {},
             online_followers: onlineFollowers,
             raw_data: {
                 profile: profileData,
-                insights_day: insightsDayData,
-                insights_28d: insights28dData,
+                reach_day: reachDayData,
+                total_value_day: totalValueDayData,
+                reach_28d: reach28dData,
+                total_value_28d: totalValue28dData,
                 audience: audienceData,
-                online_followers: onlineFollowersData
+                online_followers: onlineFollowersData,
+                parsed: {
+                    daily: {
+                        reach: reachDaily,
+                        profile_views: profileViewsDaily,
+                        website_clicks: websiteClicks,
+                        total_interactions: totalInteractions,
+                        accounts_engaged: accountsEngaged,
+                        likes: likesDaily,
+                        comments: commentsDaily,
+                        shares: sharesDaily,
+                        saves: savesDaily,
+                        replies: repliesDaily,
+                        follows_and_unfollows: followsUnfollows,
+                        profile_links_taps: profileLinksTaps
+                    },
+                    rolling_28d: {
+                        reach: reach28d,
+                        follower_count: followerCount28d,
+                        total_interactions: totalInteractions28d
+                    }
+                }
             }
         }
 
@@ -180,11 +226,14 @@ Deno.serve(async (req) => {
 
         if (dbError) throw new Error(`Supabase Error: ${dbError.message}`)
 
+        console.log(`Successfully saved metrics for ${today}`)
+
         return new Response(JSON.stringify({ success: true, data: record }), {
             headers: { 'Content-Type': 'application/json' },
         })
 
     } catch (error) {
+        console.error('Error:', error.message)
         return new Response(JSON.stringify({ error: error.message }), {
             headers: { 'Content-Type': 'application/json' },
             status: 400,
