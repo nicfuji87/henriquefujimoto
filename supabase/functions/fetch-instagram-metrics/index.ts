@@ -71,13 +71,35 @@ Deno.serve(async (_req) => {
         const totalValue28dData = await totalValue28dReq.json()
         console.log('Total value 28d error?', totalValue28dData.error ? JSON.stringify(totalValue28dData.error) : 'No error')
 
-        // F. Audience Demographics (lifetime)
-        const audienceMetrics = 'engaged_audience_demographics,reached_audience_demographics,follower_demographics'
-        const audienceReq = await fetch(
-            `https://graph.facebook.com/${API_VERSION}/${igUserId}/insights?metric=${audienceMetrics}&period=lifetime&metric_type=total_value&access_token=${FB_ACCESS_TOKEN}`
-        )
-        const audienceData = await audienceReq.json()
-        console.log('Audience error?', audienceData.error ? JSON.stringify(audienceData.error) : 'No error')
+        // F. Follower Demographics by city, country, gender, age (lifetime)
+        const followerDemoCity = await (await fetch(
+            `https://graph.facebook.com/${API_VERSION}/${igUserId}/insights?metric=follower_demographics&period=lifetime&metric_type=total_value&breakdown=city&access_token=${FB_ACCESS_TOKEN}`
+        )).json()
+        const followerDemoCountry = await (await fetch(
+            `https://graph.facebook.com/${API_VERSION}/${igUserId}/insights?metric=follower_demographics&period=lifetime&metric_type=total_value&breakdown=country&access_token=${FB_ACCESS_TOKEN}`
+        )).json()
+        const followerDemoGenderAge = await (await fetch(
+            `https://graph.facebook.com/${API_VERSION}/${igUserId}/insights?metric=follower_demographics&period=lifetime&metric_type=total_value&breakdown=gender,age&access_token=${FB_ACCESS_TOKEN}`
+        )).json()
+        console.log('Follower demo city error?', followerDemoCity.error ? JSON.stringify(followerDemoCity.error) : 'No error')
+        console.log('Follower demo country error?', followerDemoCountry.error ? JSON.stringify(followerDemoCountry.error) : 'No error')
+        console.log('Follower demo gender/age error?', followerDemoGenderAge.error ? JSON.stringify(followerDemoGenderAge.error) : 'No error')
+
+        // G. Engaged & Reached Audience Demographics (this_month timeframe + breakdown)
+        let engagedDemoData: any = {}
+        let reachedDemoData: any = {}
+        try {
+            engagedDemoData = await (await fetch(
+                `https://graph.facebook.com/${API_VERSION}/${igUserId}/insights?metric=engaged_audience_demographics&period=lifetime&timeframe=this_month&metric_type=total_value&breakdown=city&access_token=${FB_ACCESS_TOKEN}`
+            )).json()
+            reachedDemoData = await (await fetch(
+                `https://graph.facebook.com/${API_VERSION}/${igUserId}/insights?metric=reached_audience_demographics&period=lifetime&timeframe=this_month&metric_type=total_value&breakdown=city&access_token=${FB_ACCESS_TOKEN}`
+            )).json()
+        } catch (e) {
+            console.log('Could not fetch engaged/reached demographics', e)
+        }
+        console.log('Engaged demo error?', engagedDemoData.error ? JSON.stringify(engagedDemoData.error) : 'No error')
+        console.log('Reached demo error?', reachedDemoData.error ? JSON.stringify(reachedDemoData.error) : 'No error')
 
         // G. Online Followers (Safe fetch)
         let onlineFollowersData: any = {}
@@ -159,9 +181,11 @@ Deno.serve(async (_req) => {
         const totalInteractions28d = getMetricValue(totalValue28dData, 'total_interactions')
 
         // Audience demographics
-        const engagedAudienceDemographics = getMetricComplexValue(audienceData, 'engaged_audience_demographics')
-        const reachedAudienceDemographics = getMetricComplexValue(audienceData, 'reached_audience_demographics')
-        const followerDemographics = getMetricComplexValue(audienceData, 'follower_demographics')
+        const engagedAudienceDemographics = getMetricComplexValue(engagedDemoData, 'engaged_audience_demographics')
+        const reachedAudienceDemographics = getMetricComplexValue(reachedDemoData, 'reached_audience_demographics')
+        const followerDemographicsCity = getMetricComplexValue(followerDemoCity, 'follower_demographics')
+        const followerDemographicsCountry = getMetricComplexValue(followerDemoCountry, 'follower_demographics')
+        const followerDemographicsGenderAge = getMetricComplexValue(followerDemoGenderAge, 'follower_demographics')
 
         // Online Followers
         const onlineFollowers = getMetricComplexValue(onlineFollowersData, 'online_followers')
@@ -183,9 +207,9 @@ Deno.serve(async (_req) => {
             text_message_clicks: 0,
             get_directions_clicks: 0,
             website_clicks: websiteClicks,
-            audience_city: engagedAudienceDemographics,
-            audience_country: reachedAudienceDemographics,
-            audience_gender_age: followerDemographics,
+            audience_city: followerDemographicsCity,
+            audience_country: followerDemographicsCountry,
+            audience_gender_age: followerDemographicsGenderAge,
             audience_locale: {},
             online_followers: onlineFollowers,
             raw_data: {
@@ -194,7 +218,11 @@ Deno.serve(async (_req) => {
                 total_value_day: totalValueDayData,
                 reach_28d: reach28dData,
                 total_value_28d: totalValue28dData,
-                audience: audienceData,
+                follower_demographics_city: followerDemoCity,
+                follower_demographics_country: followerDemoCountry,
+                follower_demographics_gender_age: followerDemoGenderAge,
+                engaged_demographics: engagedDemoData,
+                reached_demographics: reachedDemoData,
                 online_followers: onlineFollowersData,
                 parsed: {
                     daily: {
