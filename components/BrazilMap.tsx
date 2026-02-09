@@ -92,6 +92,8 @@ const BrazilMap: React.FC<BrazilMapProps> = ({ cityData }) => {
             .slice(0, 10);
     }, [stateData]);
 
+    const totalState = useMemo(() => Object.values(stateData).reduce((a: number, b) => a + Number(b), 0) || 1, [stateData]);
+
     const getColor = (code: string) => {
         const val = stateData[code] || 0;
         if (val === 0) return 'rgba(255,255,255,0.04)';
@@ -191,7 +193,7 @@ const BrazilMap: React.FC<BrazilMapProps> = ({ cityData }) => {
                             }}
                         >
                             <p className="text-white text-xs font-bold">{stateCodeToName[hoveredState] || hoveredState}</p>
-                            <p className="text-amber-400 text-sm font-bold">{stateData[hoveredState]} seguidores</p>
+                            <p className="text-amber-400 text-sm font-bold">{Math.round((stateData[hoveredState] / totalState) * 100)}% da audiência</p>
                         </div>
                     )}
                 </div>
@@ -214,7 +216,7 @@ const BrazilMap: React.FC<BrazilMapProps> = ({ cityData }) => {
                                     <span className={`w-2 h-2 rounded-full`} style={{ backgroundColor: getColor(code) }}></span>
                                     {stateCodeToName[code] || code}
                                 </span>
-                                <span className="font-mono text-amber-400 font-bold">{val}</span>
+                                <span className="font-mono text-amber-400 font-bold">{Math.round((Number(val) / totalState) * 100)}%</span>
                             </div>
                             <div className="h-1.5 w-full bg-gray-700/30 rounded-full overflow-hidden">
                                 <motion.div
@@ -229,14 +231,6 @@ const BrazilMap: React.FC<BrazilMapProps> = ({ cityData }) => {
                             </div>
                         </div>
                     ))}
-
-                    {/* Total */}
-                    <div className="pt-3 mt-3 border-t border-white/10 flex justify-between items-center">
-                        <span className="text-xs text-gray-400">Total mapeado</span>
-                        <span className="text-sm font-bold text-white">
-                            {Object.values(stateData).reduce((a: number, b) => a + Number(b), 0)} seguidores
-                        </span>
-                    </div>
                 </div>
             </div>
         </motion.div>

@@ -146,12 +146,6 @@ const AudienceCharts: React.FC<AudienceProps> = ({ cityData, genderAgeData }) =>
                         );
                     })}
                 </div>
-
-                {/* Total Followers Counter */}
-                <div className="mt-5 pt-4 border-t border-white/10 text-center">
-                    <span className="text-xs text-gray-500">Total mapeado: </span>
-                    <span className="text-xs font-bold text-gray-300">{processedGender.total} seguidores</span>
-                </div>
             </motion.div>
 
             {/* Top Cities Chart */}
@@ -177,10 +171,7 @@ const AudienceCharts: React.FC<AudienceProps> = ({ cityData, genderAgeData }) =>
                                         <span className="text-gray-500 font-mono w-4">{i + 1}.</span>
                                         {city}
                                     </span>
-                                    <span className="font-mono text-gray-400 flex items-center gap-2">
-                                        <span className="text-green-400 font-bold">{val}</span>
-                                        <span className="text-gray-600">({pct}%)</span>
-                                    </span>
+                                    <span className="font-mono text-green-400 font-bold">{pct}%</span>
                                 </div>
                                 <div className="h-2 w-full bg-gray-700/30 rounded-full overflow-hidden">
                                     <motion.div
@@ -193,13 +184,6 @@ const AudienceCharts: React.FC<AudienceProps> = ({ cityData, genderAgeData }) =>
                             </div>
                         );
                     })}
-                </div>
-
-                {/* Total */}
-                <div className="mt-5 pt-4 border-t border-white/10 text-center">
-                    <span className="text-xs text-gray-500">Total mapeado: </span>
-                    <span className="text-xs font-bold text-gray-300">{processedCities.totalFollowers} seguidores</span>
-                </div>
             </motion.div>
 
         </div>
