@@ -184,6 +184,7 @@ const AudienceCharts: React.FC<AudienceProps> = ({ cityData, genderAgeData }) =>
                             </div>
                         );
                     })}
+                </div>
             </motion.div>
 
         </div>
