@@ -134,49 +134,316 @@ function Sidebar({
 }
 
 function DashboardTab() {
-    const stats = [
-        { label: 'Total de Posts', value: '12', change: '+2 este mês' },
-        { label: 'Posts Publicados', value: '10', change: '83% do total' },
-        { label: 'Rascunhos', value: '2', change: 'Pendentes' },
-        { label: 'Visualizações', value: '15.2K', change: '+12% vs mês anterior' },
-    ];
+    const [loading, setLoading] = useState(true);
+    const [igMetrics, setIgMetrics] = useState<{
+        followers: number; followersGain: number; followersGrowth: number;
+        reach: number; reachGrowth: number;
+        interactions: number; interactionsGrowth: number;
+    } | null>(null);
+    const [contentStats, setContentStats] = useState<{
+        totalPosts: number; totalLikes: number; totalComments: number;
+    }>({ totalPosts: 0, totalLikes: 0, totalComments: 0 });
+    const [followersHistory, setFollowersHistory] = useState<{ date: string; count: number }[]>([]);
+    const [topPosts, setTopPosts] = useState<{
+        id: string; caption: string; media_url: string; thumbnail_url: string;
+        media_type: string; like_count: number; comments_count: number; permalink: string;
+    }[]>([]);
+
+    useEffect(() => {
+        loadDashboardData();
+    }, []);
+
+    async function loadDashboardData() {
+        setLoading(true);
+        try {
+            // 1. Instagram metrics (últimos 30 dias)
+            const { getAggregatedMetrics } = await import('../lib/metrics');
+            const metrics = await getAggregatedMetrics(30);
+            if (metrics) {
+                setIgMetrics({
+                    followers: metrics.total_followers,
+                    followersGain: metrics.followers_gained,
+                    followersGrowth: metrics.followers_growth,
+                    reach: metrics.total_reach,
+                    reachGrowth: metrics.reach_growth,
+                    interactions: metrics.total_interactions,
+                    interactionsGrowth: metrics.interactions_growth,
+                });
+            }
+
+            // 2. Content stats
+            const { data: posts } = await supabase
+                .from('top_content')
+                .select('id, caption, media_url, thumbnail_url, media_type, like_count, comments_count, permalink')
+                .order('like_count', { ascending: false });
+
+            if (posts) {
+                setContentStats({
+                    totalPosts: posts.length,
+                    totalLikes: posts.reduce((sum, p) => sum + (p.like_count || 0), 0),
+                    totalComments: posts.reduce((sum, p) => sum + (p.comments_count || 0), 0),
+                });
+                setTopPosts(posts.slice(0, 5));
+            }
+
+            // 3. Followers history (all available dates)
+            const { data: history } = await supabase
+                .from('daily_metrics')
+                .select('date, followers_count')
+                .order('date', { ascending: true });
+
+            if (history) {
+                setFollowersHistory(history.filter(h => h.followers_count > 0).map(h => ({
+                    date: h.date,
+                    count: h.followers_count,
+                })));
+            }
+        } catch (err) {
+            console.error('Error loading dashboard data:', err);
+        } finally {
+            setLoading(false);
+        }
+    }
+
+    function formatNum(n: number): string {
+        if (n >= 1000000) return (n / 1000000).toFixed(1) + 'M';
+        if (n >= 1000) return (n / 1000).toFixed(1) + 'K';
+        return n.toLocaleString('pt-BR');
+    }
+
+    function GrowthIndicator({ value }: { value: number }) {
+        if (value === 0) return <span className="text-xs text-zinc-500">—</span>;
+        const isPositive = value > 0;
+        return (
+            <span className={`text-xs font-medium ${isPositive ? 'text-emerald-400' : 'text-red-400'}`}>
+                {isPositive ? '▲' : '▼'} {Math.abs(value).toFixed(1)}%
+            </span>
+        );
+    }
+
+    if (loading) {
+        return (
+            <div className="space-y-8">
+                <div>
+                    <h2 className="text-2xl font-bold text-white mb-2">Dashboard</h2>
+                    <p className="text-zinc-400">Carregando dados...</p>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    {[1, 2, 3, 4].map(i => (
+                        <div key={i} className="bg-zinc-900/60 border border-zinc-800/50 rounded-2xl p-6 animate-pulse">
+                            <div className="h-4 bg-zinc-800 rounded w-24 mb-3"></div>
+                            <div className="h-8 bg-zinc-800 rounded w-16 mb-2"></div>
+                            <div className="h-3 bg-zinc-800 rounded w-20"></div>
+                        </div>
+                    ))}
+                </div>
+            </div>
+        );
+    }
+
+    // Chart calculations
+    const chartWidth = 600;
+    const chartHeight = 150;
+    const chartPadding = { top: 20, right: 10, bottom: 30, left: 50 };
+    const innerW = chartWidth - chartPadding.left - chartPadding.right;
+    const innerH = chartHeight - chartPadding.top - chartPadding.bottom;
+
+    let chartPath = '';
+    let chartAreaPath = '';
+    let chartDots: { x: number; y: number; count: number; date: string }[] = [];
+    if (followersHistory.length > 1) {
+        const minVal = Math.min(...followersHistory.map(h => h.count)) - 5;
+        const maxVal = Math.max(...followersHistory.map(h => h.count)) + 5;
+        const range = maxVal - minVal || 1;
+
+        chartDots = followersHistory.map((h, i) => ({
+            x: chartPadding.left + (i / (followersHistory.length - 1)) * innerW,
+            y: chartPadding.top + innerH - ((h.count - minVal) / range) * innerH,
+            count: h.count,
+            date: h.date,
+        }));
+
+        chartPath = chartDots.map((d, i) => `${i === 0 ? 'M' : 'L'} ${d.x} ${d.y}`).join(' ');
+        chartAreaPath = chartPath + ` L ${chartDots[chartDots.length - 1].x} ${chartPadding.top + innerH} L ${chartDots[0].x} ${chartPadding.top + innerH} Z`;
+    }
 
     return (
         <div className="space-y-8">
             <div>
                 <h2 className="text-2xl font-bold text-white mb-2">Dashboard</h2>
-                <p className="text-zinc-400">Visão geral do seu conteúdo</p>
+                <p className="text-zinc-400">Visão geral do Instagram e conteúdo • Últimos 30 dias</p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                {stats.map((stat, index) => (
-                    <motion.div
-                        key={stat.label}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: index * 0.1 }}
-                        className="bg-zinc-900/60 backdrop-blur-sm border border-zinc-800/50 rounded-2xl p-6"
-                    >
-                        <p className="text-zinc-400 text-sm mb-1">{stat.label}</p>
-                        <p className="text-3xl font-bold text-white mb-2">{stat.value}</p>
-                        <p className="text-xs text-primary">{stat.change}</p>
-                    </motion.div>
-                ))}
+            {/* Row 1: Instagram Metrics */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                {/* Followers */}
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0 }}
+                    className="bg-zinc-900/60 backdrop-blur-sm border border-zinc-800/50 rounded-2xl p-5"
+                >
+                    <p className="text-zinc-400 text-xs font-medium uppercase tracking-wider mb-1">Seguidores</p>
+                    <p className="text-3xl font-bold text-white">{formatNum(igMetrics?.followers || 0)}</p>
+                    <div className="flex items-center gap-2 mt-1">
+                        <span className="text-xs text-emerald-400 font-medium">+{igMetrics?.followersGain || 0} novos</span>
+                        <GrowthIndicator value={igMetrics?.followersGrowth || 0} />
+                    </div>
+                </motion.div>
+
+                {/* Reach */}
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
+                    className="bg-zinc-900/60 backdrop-blur-sm border border-zinc-800/50 rounded-2xl p-5"
+                >
+                    <p className="text-zinc-400 text-xs font-medium uppercase tracking-wider mb-1">Alcance (30d)</p>
+                    <p className="text-3xl font-bold text-white">{formatNum(igMetrics?.reach || 0)}</p>
+                    <GrowthIndicator value={igMetrics?.reachGrowth || 0} />
+                </motion.div>
+
+                {/* Interactions */}
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
+                    className="bg-zinc-900/60 backdrop-blur-sm border border-zinc-800/50 rounded-2xl p-5"
+                >
+                    <p className="text-zinc-400 text-xs font-medium uppercase tracking-wider mb-1">Interações (30d)</p>
+                    <p className="text-3xl font-bold text-white">{formatNum(igMetrics?.interactions || 0)}</p>
+                    <GrowthIndicator value={igMetrics?.interactionsGrowth || 0} />
+                </motion.div>
+
+                {/* Engagement */}
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
+                    className="bg-zinc-900/60 backdrop-blur-sm border border-zinc-800/50 rounded-2xl p-5"
+                >
+                    <p className="text-zinc-400 text-xs font-medium uppercase tracking-wider mb-1">Engajamento</p>
+                    <p className="text-3xl font-bold text-white">
+                        {igMetrics && igMetrics.followers > 0
+                            ? ((igMetrics.interactions / igMetrics.followers) * 100).toFixed(1) + '%'
+                            : '—'}
+                    </p>
+                    <span className="text-xs text-zinc-500">Interações / Seguidores</span>
+                </motion.div>
             </div>
 
-            <div className="bg-zinc-900/60 backdrop-blur-sm border border-zinc-800/50 rounded-2xl p-6">
-                <h3 className="text-lg font-semibold text-white mb-4">Ações Rápidas</h3>
-                <div className="flex flex-wrap gap-3">
-                    <button className="flex items-center gap-2 px-4 py-2 bg-primary text-black rounded-lg font-medium hover:bg-primary/90 transition-colors">
-                        <Plus className="w-4 h-4" />
-                        Novo Post
-                    </button>
-                    <button className="flex items-center gap-2 px-4 py-2 bg-zinc-800 text-white rounded-lg font-medium hover:bg-zinc-700 transition-colors">
-                        <Edit className="w-4 h-4" />
-                        Editar Bio
-                    </button>
-                </div>
+            {/* Row 2: Content Stats */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}
+                    className="bg-zinc-900/60 backdrop-blur-sm border border-zinc-800/50 rounded-2xl p-5"
+                >
+                    <p className="text-zinc-400 text-xs font-medium uppercase tracking-wider mb-1">Posts Indexados</p>
+                    <p className="text-3xl font-bold text-white">{contentStats.totalPosts}</p>
+                    <span className="text-xs text-zinc-500">No banco de dados</span>
+                </motion.div>
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}
+                    className="bg-zinc-900/60 backdrop-blur-sm border border-zinc-800/50 rounded-2xl p-5"
+                >
+                    <p className="text-zinc-400 text-xs font-medium uppercase tracking-wider mb-1">Total de Likes</p>
+                    <p className="text-3xl font-bold text-white">{formatNum(contentStats.totalLikes)}</p>
+                    <span className="text-xs text-zinc-500">Todos os posts</span>
+                </motion.div>
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }}
+                    className="bg-zinc-900/60 backdrop-blur-sm border border-zinc-800/50 rounded-2xl p-5"
+                >
+                    <p className="text-zinc-400 text-xs font-medium uppercase tracking-wider mb-1">Total de Comentários</p>
+                    <p className="text-3xl font-bold text-white">{formatNum(contentStats.totalComments)}</p>
+                    <span className="text-xs text-zinc-500">Todos os posts</span>
+                </motion.div>
             </div>
+
+            {/* Row 3: Followers Chart */}
+            {followersHistory.length > 1 && (
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.7 }}
+                    className="bg-zinc-900/60 backdrop-blur-sm border border-zinc-800/50 rounded-2xl p-6"
+                >
+                    <h3 className="text-lg font-semibold text-white mb-4">📈 Evolução de Seguidores</h3>
+                    <div className="w-full overflow-x-auto">
+                        <svg viewBox={`0 0 ${chartWidth} ${chartHeight}`} className="w-full h-auto" preserveAspectRatio="xMidYMid meet">
+                            <defs>
+                                <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="0%" stopColor="#22c55e" stopOpacity="0.3" />
+                                    <stop offset="100%" stopColor="#22c55e" stopOpacity="0" />
+                                </linearGradient>
+                            </defs>
+                            {/* Grid lines */}
+                            {[0, 0.25, 0.5, 0.75, 1].map(pct => (
+                                <line key={pct}
+                                    x1={chartPadding.left} y1={chartPadding.top + innerH * (1 - pct)}
+                                    x2={chartPadding.left + innerW} y2={chartPadding.top + innerH * (1 - pct)}
+                                    stroke="#27272a" strokeWidth="0.5"
+                                />
+                            ))}
+                            {/* Area fill */}
+                            <path d={chartAreaPath} fill="url(#areaGrad)" />
+                            {/* Line */}
+                            <path d={chartPath} fill="none" stroke="#22c55e" strokeWidth="2" strokeLinejoin="round" />
+                            {/* Dots */}
+                            {chartDots.map((d, i) => (
+                                <g key={i}>
+                                    <circle cx={d.x} cy={d.y} r="3" fill="#22c55e" stroke="#09090b" strokeWidth="1.5" />
+                                    {/* Label on first and last */}
+                                    {(i === 0 || i === chartDots.length - 1) && (
+                                        <text x={d.x} y={d.y - 8} textAnchor="middle" fill="#a1a1aa" fontSize="9" fontWeight="bold">
+                                            {d.count}
+                                        </text>
+                                    )}
+                                </g>
+                            ))}
+                            {/* Date labels */}
+                            {chartDots.filter((_, i) => i === 0 || i === chartDots.length - 1).map((d, i) => (
+                                <text key={i} x={d.x} y={chartPadding.top + innerH + 15} textAnchor="middle" fill="#71717a" fontSize="8">
+                                    {new Date(d.date + 'T12:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })}
+                                </text>
+                            ))}
+                        </svg>
+                    </div>
+                </motion.div>
+            )}
+
+            {/* Row 4: Top Posts */}
+            {topPosts.length > 0 && (
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.8 }}
+                    className="bg-zinc-900/60 backdrop-blur-sm border border-zinc-800/50 rounded-2xl p-6"
+                >
+                    <h3 className="text-lg font-semibold text-white mb-4">🔥 Top Posts por Engajamento</h3>
+                    <div className="space-y-3">
+                        {topPosts.map((post, i) => (
+                            <a
+                                key={post.id}
+                                href={post.permalink}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex items-center gap-4 p-3 rounded-xl hover:bg-zinc-800/50 transition-colors group"
+                            >
+                                <span className="text-lg font-bold text-zinc-600 w-6 text-center">{i + 1}</span>
+                                <div className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 bg-zinc-800">
+                                    <img
+                                        src={post.thumbnail_url || post.media_url}
+                                        alt=""
+                                        className="w-full h-full object-cover"
+                                        onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                                    />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                    <p className="text-sm text-white truncate">
+                                        {post.caption?.slice(0, 60) || 'Sem legenda'}
+                                        {(post.caption?.length || 0) > 60 ? '...' : ''}
+                                    </p>
+                                    <div className="flex items-center gap-3 mt-1">
+                                        <span className="text-xs text-zinc-400">❤️ {post.like_count}</span>
+                                        <span className="text-xs text-zinc-400">💬 {post.comments_count}</span>
+                                        <span className="text-xs text-zinc-500">{post.media_type}</span>
+                                    </div>
+                                </div>
+                                <ExternalLink className="w-4 h-4 text-zinc-600 group-hover:text-primary transition-colors flex-shrink-0" />
+                            </a>
+                        ))}
+                    </div>
+                </motion.div>
+            )}
         </div>
     );
 }
