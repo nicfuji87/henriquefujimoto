@@ -18,10 +18,12 @@ import {
     Link2,
     ExternalLink,
     Newspaper,
+    Activity,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { supabase, Post } from '../lib/supabase';
 import BlogTab from '../components/admin/BlogTab';
+import TrackingTab from '../components/admin/TrackingTab';
 
 // Mock posts for development
 const mockPosts: Post[] = [
@@ -51,7 +53,7 @@ const mockPosts: Post[] = [
     },
 ];
 
-type Tab = 'dashboard' | 'blog' | 'posts' | 'bio' | 'settings';
+type Tab = 'dashboard' | 'blog' | 'posts' | 'bio' | 'tracking' | 'settings';
 
 function Sidebar({
     activeTab,
@@ -69,6 +71,7 @@ function Sidebar({
         { id: 'blog' as Tab, label: 'Blog', icon: Newspaper },
         { id: 'posts' as Tab, label: 'Posts IG', icon: FileText },
         { id: 'bio' as Tab, label: 'Bio / Home', icon: Home },
+        { id: 'tracking' as Tab, label: 'Tracking & SEO', icon: Activity },
         { id: 'settings' as Tab, label: 'Configurações', icon: Settings },
     ];
 
@@ -1856,6 +1859,7 @@ export default function AdminPage() {
                             {activeTab === 'blog' && <BlogTab />}
                             {activeTab === 'posts' && <PostsTab />}
                             {activeTab === 'bio' && <BioTab />}
+                            {activeTab === 'tracking' && <TrackingTab />}
                             {activeTab === 'settings' && <SettingsTab />}
                         </motion.div>
                     </AnimatePresence>

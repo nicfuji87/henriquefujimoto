@@ -8,8 +8,11 @@ import HowToSupport from '../components/HowToSupport';
 import StickyCTA from '../components/StickyCTA';
 
 import Footer from '../components/Footer';
+import { useTracking } from '../hooks/useTracking';
 
 export default function HomePage() {
+    useTracking();
+
     return (
         <main className="relative min-h-screen w-full overflow-x-hidden">
             <Hero />
