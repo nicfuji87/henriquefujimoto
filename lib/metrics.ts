@@ -23,6 +23,7 @@ export interface AggregatedMetrics {
     total_impressions: number;
     total_interactions: number;
     followers_gained: number;
+    total_followers: number;
     reach_growth: number;
     impressions_growth: number;
     interactions_growth: number;
@@ -72,40 +73,30 @@ export async function getAggregatedMetrics(days: number): Promise<AggregatedMetr
     // Calculate Aggregates
     const sum = (arr: any[], key: string) => arr.reduce((acc, curr) => acc + (curr[key] || 0), 0);
 
+    // reach_daily = reach diário real da API
     const currentReach = sum(currentPeriod, 'reach_daily');
-    const currentImpressions = sum(currentPeriod, 'impressions_daily');
-    // Interactions: profile_views + clicks
-    const currentInteractions = currentPeriod.reduce((acc, curr) => {
-        return acc + (curr.profile_views_daily || 0) +
-            (curr.email_contacts || 0) +
-            (curr.website_clicks || 0) +
-            (curr.phone_call_clicks || 0) +
-            (curr.text_message_clicks || 0) +
-            (curr.get_directions_clicks || 0);
-    }, 0);
+    // impressions_daily na verdade armazena total_interactions da API
+    // Usamos como "Interações" no dashboard
+    const currentInteractions = sum(currentPeriod, 'impressions_daily');
+    // Impressões: usamos o reach_28d mais recente do período como visão rolling
+    const latestInPeriod = currentPeriod.length > 0 ? currentPeriod[currentPeriod.length - 1] : null;
+    const currentImpressions = latestInPeriod?.reach_28d || 0;
 
     // Followers Gained: (Last Day Followers - First Day Followers)
-    // If we have data for the period.
     let currentFollowersGained = 0;
+    let totalFollowers = 0;
     if (currentPeriod.length > 0) {
         const first = currentPeriod[0].followers_count;
         const last = currentPeriod[currentPeriod.length - 1].followers_count;
-        currentFollowersGained = last - first; // Simple calc. Logic: gain over the period.
-        // Or sum up 'new_followers' if we had that column. But we only have total count snapshots.
-        // So Last - First is correct for net change.
+        currentFollowersGained = last - first;
+        totalFollowers = last;
     }
 
     // Previous Period aggregates
     const prevReach = previousPeriod ? sum(previousPeriod, 'reach_daily') : 0;
-    const prevImpressions = previousPeriod ? sum(previousPeriod, 'impressions_daily') : 0;
-    const prevInteractions = previousPeriod ? previousPeriod.reduce((acc, curr) => {
-        return acc + (curr.profile_views_daily || 0) +
-            (curr.email_contacts || 0) +
-            (curr.website_clicks || 0) +
-            (curr.phone_call_clicks || 0) +
-            (curr.text_message_clicks || 0) +
-            (curr.get_directions_clicks || 0);
-    }, 0) : 0;
+    const prevInteractions = previousPeriod ? sum(previousPeriod, 'impressions_daily') : 0;
+    const prevLatest = previousPeriod && previousPeriod.length > 0 ? previousPeriod[previousPeriod.length - 1] : null;
+    const prevImpressions = prevLatest?.reach_28d || 0;
 
     let prevFollowersGained = 0;
     if (previousPeriod && previousPeriod.length > 0) {
@@ -154,6 +145,7 @@ export async function getAggregatedMetrics(days: number): Promise<AggregatedMetr
         total_impressions: currentImpressions,
         total_interactions: currentInteractions,
         followers_gained: currentFollowersGained,
+        total_followers: totalFollowers,
         reach_growth: calcGrowth(currentReach, prevReach),
         impressions_growth: calcGrowth(currentImpressions, prevImpressions),
         interactions_growth: calcGrowth(currentInteractions, prevInteractions),

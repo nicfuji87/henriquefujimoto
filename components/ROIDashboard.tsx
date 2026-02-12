@@ -115,10 +115,10 @@ const ROIDashboard: React.FC = () => {
               </div>
             </motion.div>
 
-            {/* 2. Impressions */}
+            {/* 2. Rolling 28d Reach (Impressões / Alcance 28d) */}
             <motion.div variants={item} className="col-span-1 md:col-span-1 group relative overflow-hidden rounded-xl border border-white/10 bg-white/5 p-5 backdrop-blur-xl hover:bg-white/10 transition-colors">
               <div className="flex flex-col gap-1">
-                <p className="text-sm font-medium text-gray-400">Impressões</p>
+                <p className="text-sm font-medium text-gray-400">Alcance 28d</p>
                 <p className="font-sans text-3xl font-bold text-white tracking-tight">
                   {formatNumber(stats?.total_impressions || 0)}
                 </p>
@@ -153,8 +153,13 @@ const ROIDashboard: React.FC = () => {
                 <p className="font-sans text-3xl font-bold text-white tracking-tight">
                   +{formatNumber(stats?.followers_gained || 0)}
                 </p>
-                <div className="mt-2 text-xs font-medium text-gray-500">
-                  Neste período
+                <div className="mt-2 flex items-center gap-2">
+                  <span className="text-xs font-medium text-gray-500">Neste período</span>
+                  {stats?.total_followers ? (
+                    <span className="text-xs font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full border border-primary/20">
+                      Total: {formatNumber(stats.total_followers)}
+                    </span>
+                  ) : null}
                 </div>
               </div>
             </motion.div>

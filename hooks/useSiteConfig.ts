@@ -4,6 +4,8 @@ import { supabase } from '../lib/supabase';
 export type SiteConfig = {
     hero_image: string;
     hero_image_desktop: string;
+    hero_video_mobile: string;
+    hero_video_desktop: string;
     athlete_name: string;
     tagline: string;
     cta_text: string;
@@ -14,6 +16,8 @@ export type SiteConfig = {
 const defaultConfig: SiteConfig = {
     hero_image: '',
     hero_image_desktop: '',
+    hero_video_mobile: '',
+    hero_video_desktop: '',
     athlete_name: 'Henrique Fujimoto',
     tagline: 'Judô & Alta Performance',
     cta_text: 'Apoiar o Atleta',

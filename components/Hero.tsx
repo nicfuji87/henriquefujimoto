@@ -29,28 +29,49 @@ const Hero: React.FC = () => {
 
   return (
     <section className="relative h-[85vh] md:h-screen w-full overflow-hidden flex flex-col justify-end pb-12">
-      {/* Background Image */}
+      {/* Background Image/Video */}
       <div className="absolute inset-0 z-0">
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent z-10"></div>
-        <div className="absolute inset-0 bg-black/40 z-0"></div>
+        <div className="absolute inset-0 bg-black/40 z-[1]"></div>
         {!loading && (
           <>
-            {/* Mobile Image - shown only on mobile */}
-            {config.hero_image && (
+            {/* Mobile: Video or Image */}
+            {config.hero_video_mobile ? (
+              <video
+                src={config.hero_video_mobile}
+                poster={config.hero_image || undefined}
+                autoPlay
+                muted
+                loop
+                playsInline
+                className="w-full h-full object-cover object-top md:hidden"
+              />
+            ) : config.hero_image ? (
               <img
                 src={config.hero_image}
                 alt={config.athlete_name}
                 className="w-full h-full object-cover object-top md:hidden"
               />
-            )}
-            {/* Desktop Image - shown only on desktop */}
-            {(config.hero_image_desktop || config.hero_image) && (
+            ) : null}
+
+            {/* Desktop: Video or Image */}
+            {config.hero_video_desktop ? (
+              <video
+                src={config.hero_video_desktop}
+                poster={config.hero_image_desktop || config.hero_image || undefined}
+                autoPlay
+                muted
+                loop
+                playsInline
+                className="w-full h-full object-cover object-top hidden md:block"
+              />
+            ) : (config.hero_image_desktop || config.hero_image) ? (
               <img
                 src={config.hero_image_desktop || config.hero_image}
                 alt={config.athlete_name}
                 className="w-full h-full object-cover object-top hidden md:block"
               />
-            )}
+            ) : null}
           </>
         )}
         {loading && (

@@ -591,21 +591,43 @@ function BioTab() {
             )}
 
             <div className="bg-zinc-900/60 backdrop-blur-sm border border-zinc-800/50 rounded-2xl p-6 space-y-6">
-                {/* Hero Images Section */}
+                {/* Hero Media Section */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    {/* Mobile Image */}
+                    {/* Mobile Media */}
                     <div className="bg-zinc-800/30 rounded-xl p-4 border border-zinc-700/50">
                         <label className="block text-sm font-medium text-zinc-300 mb-2">
-                            📱 Imagem Mobile (Vertical)
+                            📱 Hero Mobile (Vertical)
                         </label>
                         <p className="text-xs text-zinc-500 mb-3">Ideal: 1080x1920px (9:16)</p>
+
+                        {/* Media Type Toggle */}
+                        <div className="flex gap-1 p-1 bg-zinc-800/70 rounded-lg mb-3">
+                            <button
+                                onClick={() => setConfig(prev => {
+                                    const updated = { ...prev };
+                                    delete updated.hero_video_mobile;
+                                    return updated;
+                                })}
+                                className={`flex-1 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${!config.hero_video_mobile ? 'bg-primary text-black' : 'text-zinc-400 hover:text-white'}`}
+                            >
+                                🖼️ Imagem
+                            </button>
+                            <button
+                                onClick={() => setConfig(prev => ({ ...prev, hero_video_mobile: prev.hero_video_mobile || '' }))}
+                                className={`flex-1 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${config.hero_video_mobile !== undefined && config.hero_video_mobile !== null ? 'bg-primary text-black' : 'text-zinc-400 hover:text-white'}`}
+                            >
+                                🎬 Vídeo
+                            </button>
+                        </div>
+
                         <div className="flex flex-col gap-3">
+                            {/* Image input (always visible as fallback/poster) */}
                             <input
                                 type="url"
                                 value={config.hero_image || ''}
                                 onChange={(e) => setConfig({ ...config, hero_image: e.target.value })}
                                 className="w-full px-4 py-3 bg-zinc-800/50 border border-zinc-700 rounded-xl text-white text-sm focus:outline-none focus:border-primary"
-                                placeholder="URL da imagem"
+                                placeholder={config.hero_video_mobile !== undefined ? "URL imagem de capa (poster)" : "URL da imagem"}
                             />
                             <input
                                 ref={fileInputMobileRef}
@@ -619,10 +641,47 @@ function BioTab() {
                                 disabled={uploadingMobile}
                                 className="w-full px-4 py-2 bg-zinc-700 text-white rounded-lg font-medium hover:bg-zinc-600 transition-colors disabled:opacity-50 text-sm"
                             >
-                                {uploadingMobile ? 'Enviando...' : 'Upload Mobile'}
+                                {uploadingMobile ? 'Enviando...' : 'Upload Imagem Mobile'}
                             </button>
+
+                            {/* Video URL input */}
+                            {config.hero_video_mobile !== undefined && config.hero_video_mobile !== null && (
+                                <div className="mt-2 space-y-2">
+                                    <label className="block text-xs font-medium text-zinc-400">
+                                        🎬 URL do Vídeo Mobile
+                                    </label>
+                                    <input
+                                        type="url"
+                                        value={config.hero_video_mobile || ''}
+                                        onChange={(e) => setConfig({ ...config, hero_video_mobile: e.target.value })}
+                                        className="w-full px-4 py-3 bg-zinc-800/50 border border-zinc-700 rounded-xl text-white text-sm focus:outline-none focus:border-primary"
+                                        placeholder="https://cdn.exemplo.com/video.mp4"
+                                    />
+                                    <p className="text-[10px] text-zinc-600">
+                                        Formatos: .mp4, .webm • Para 200MB+, comprima para ~30-50MB antes
+                                    </p>
+                                </div>
+                            )}
                         </div>
-                        {config.hero_image && (
+
+                        {/* Preview */}
+                        {config.hero_video_mobile ? (
+                            <div className="mt-4 relative rounded-lg overflow-hidden h-48">
+                                <video
+                                    src={config.hero_video_mobile}
+                                    poster={config.hero_image || undefined}
+                                    muted
+                                    loop
+                                    playsInline
+                                    autoPlay
+                                    className="w-full h-full object-cover object-top"
+                                />
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+                                <span className="absolute bottom-2 left-2 text-xs text-white/70 bg-black/40 px-2 py-1 rounded flex items-center gap-1">
+                                    🎬 Vídeo Mobile
+                                </span>
+                            </div>
+                        ) : config.hero_image ? (
                             <div className="mt-4 relative rounded-lg overflow-hidden h-48">
                                 <img
                                     src={config.hero_image}
@@ -632,22 +691,43 @@ function BioTab() {
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
                                 <span className="absolute bottom-2 left-2 text-xs text-white/70 bg-black/40 px-2 py-1 rounded">Mobile</span>
                             </div>
-                        )}
+                        ) : null}
                     </div>
 
-                    {/* Desktop Image */}
+                    {/* Desktop Media */}
                     <div className="bg-zinc-800/30 rounded-xl p-4 border border-zinc-700/50">
                         <label className="block text-sm font-medium text-zinc-300 mb-2">
-                            🖥️ Imagem Desktop (Horizontal)
+                            🖥️ Hero Desktop (Horizontal)
                         </label>
                         <p className="text-xs text-zinc-500 mb-3">Ideal: 1920x1080px (16:9)</p>
+
+                        {/* Media Type Toggle */}
+                        <div className="flex gap-1 p-1 bg-zinc-800/70 rounded-lg mb-3">
+                            <button
+                                onClick={() => setConfig(prev => {
+                                    const updated = { ...prev };
+                                    delete updated.hero_video_desktop;
+                                    return updated;
+                                })}
+                                className={`flex-1 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${!config.hero_video_desktop ? 'bg-primary text-black' : 'text-zinc-400 hover:text-white'}`}
+                            >
+                                🖼️ Imagem
+                            </button>
+                            <button
+                                onClick={() => setConfig(prev => ({ ...prev, hero_video_desktop: prev.hero_video_desktop || '' }))}
+                                className={`flex-1 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${config.hero_video_desktop !== undefined && config.hero_video_desktop !== null ? 'bg-primary text-black' : 'text-zinc-400 hover:text-white'}`}
+                            >
+                                🎬 Vídeo
+                            </button>
+                        </div>
+
                         <div className="flex flex-col gap-3">
                             <input
                                 type="url"
                                 value={config.hero_image_desktop || ''}
                                 onChange={(e) => setConfig({ ...config, hero_image_desktop: e.target.value })}
                                 className="w-full px-4 py-3 bg-zinc-800/50 border border-zinc-700 rounded-xl text-white text-sm focus:outline-none focus:border-primary"
-                                placeholder="URL da imagem"
+                                placeholder={config.hero_video_desktop !== undefined ? "URL imagem de capa (poster)" : "URL da imagem"}
                             />
                             <input
                                 ref={fileInputDesktopRef}
@@ -661,10 +741,47 @@ function BioTab() {
                                 disabled={uploadingDesktop}
                                 className="w-full px-4 py-2 bg-zinc-700 text-white rounded-lg font-medium hover:bg-zinc-600 transition-colors disabled:opacity-50 text-sm"
                             >
-                                {uploadingDesktop ? 'Enviando...' : 'Upload Desktop'}
+                                {uploadingDesktop ? 'Enviando...' : 'Upload Imagem Desktop'}
                             </button>
+
+                            {/* Video URL input */}
+                            {config.hero_video_desktop !== undefined && config.hero_video_desktop !== null && (
+                                <div className="mt-2 space-y-2">
+                                    <label className="block text-xs font-medium text-zinc-400">
+                                        🎬 URL do Vídeo Desktop
+                                    </label>
+                                    <input
+                                        type="url"
+                                        value={config.hero_video_desktop || ''}
+                                        onChange={(e) => setConfig({ ...config, hero_video_desktop: e.target.value })}
+                                        className="w-full px-4 py-3 bg-zinc-800/50 border border-zinc-700 rounded-xl text-white text-sm focus:outline-none focus:border-primary"
+                                        placeholder="https://cdn.exemplo.com/video.mp4"
+                                    />
+                                    <p className="text-[10px] text-zinc-600">
+                                        Formatos: .mp4, .webm • Para 200MB+, comprima para ~30-50MB antes
+                                    </p>
+                                </div>
+                            )}
                         </div>
-                        {config.hero_image_desktop && (
+
+                        {/* Preview */}
+                        {config.hero_video_desktop ? (
+                            <div className="mt-4 relative rounded-lg overflow-hidden h-32">
+                                <video
+                                    src={config.hero_video_desktop}
+                                    poster={config.hero_image_desktop || undefined}
+                                    muted
+                                    loop
+                                    playsInline
+                                    autoPlay
+                                    className="w-full h-full object-cover object-top"
+                                />
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+                                <span className="absolute bottom-2 left-2 text-xs text-white/70 bg-black/40 px-2 py-1 rounded flex items-center gap-1">
+                                    🎬 Vídeo Desktop
+                                </span>
+                            </div>
+                        ) : config.hero_image_desktop ? (
                             <div className="mt-4 relative rounded-lg overflow-hidden h-32">
                                 <img
                                     src={config.hero_image_desktop}
@@ -674,7 +791,7 @@ function BioTab() {
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
                                 <span className="absolute bottom-2 left-2 text-xs text-white/70 bg-black/40 px-2 py-1 rounded">Desktop</span>
                             </div>
-                        )}
+                        ) : null}
                     </div>
                 </div>
 
@@ -1207,9 +1324,145 @@ function SettingsTab() {
     );
 }
 
+function LoginScreen({ onLogin }: { onLogin: () => void }) {
+    const [username, setUsername] = useState('');
+    const [password, setPassword] = useState('');
+    const [error, setError] = useState('');
+    const [loading, setLoading] = useState(false);
+
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        setLoading(true);
+        setError('');
+
+        // Simulate a small delay for UX
+        setTimeout(() => {
+            if (username === 'admin' && password === 'Henrique09') {
+                sessionStorage.setItem('admin_auth', 'true');
+                onLogin();
+            } else {
+                setError('Usuário ou senha incorretos');
+                setLoading(false);
+            }
+        }, 500);
+    };
+
+    return (
+        <div className="min-h-screen bg-background flex items-center justify-center px-4">
+            <motion.div
+                initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                transition={{ duration: 0.5, ease: 'easeOut' }}
+                className="w-full max-w-md"
+            >
+                <div className="bg-zinc-900/80 backdrop-blur-xl border border-zinc-800/50 rounded-2xl p-8 shadow-2xl shadow-black/40">
+                    {/* Logo */}
+                    <div className="text-center mb-8">
+                        <div className="w-16 h-16 rounded-2xl bg-primary/20 flex items-center justify-center mx-auto mb-4 border border-primary/30">
+                            <span className="text-primary font-bold text-2xl font-display">HF</span>
+                        </div>
+                        <h1 className="font-display text-2xl font-bold text-white">
+                            ADMIN <span className="text-primary">PANEL</span>
+                        </h1>
+                        <p className="text-zinc-500 text-sm mt-2">
+                            Acesse o painel administrativo
+                        </p>
+                    </div>
+
+                    {/* Error Message */}
+                    <AnimatePresence>
+                        {error && (
+                            <motion.div
+                                initial={{ opacity: 0, y: -10, height: 0 }}
+                                animate={{ opacity: 1, y: 0, height: 'auto' }}
+                                exit={{ opacity: 0, y: -10, height: 0 }}
+                                className="mb-4 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm text-center"
+                            >
+                                {error}
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+
+                    {/* Login Form */}
+                    <form onSubmit={handleSubmit} className="space-y-5">
+                        <div>
+                            <label className="block text-sm font-medium text-zinc-300 mb-2">
+                                Usuário
+                            </label>
+                            <input
+                                type="text"
+                                value={username}
+                                onChange={(e) => setUsername(e.target.value)}
+                                className="w-full px-4 py-3 bg-zinc-800/50 border border-zinc-700 rounded-xl text-white placeholder-zinc-500 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/50 transition-all"
+                                placeholder="Digite seu usuário"
+                                required
+                                autoFocus
+                            />
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-medium text-zinc-300 mb-2">
+                                Senha
+                            </label>
+                            <input
+                                type="password"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                className="w-full px-4 py-3 bg-zinc-800/50 border border-zinc-700 rounded-xl text-white placeholder-zinc-500 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/50 transition-all"
+                                placeholder="Digite sua senha"
+                                required
+                            />
+                        </div>
+
+                        <button
+                            type="submit"
+                            disabled={loading}
+                            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-primary text-black rounded-xl font-bold text-sm hover:bg-primary/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-primary/20"
+                        >
+                            {loading ? (
+                                <>
+                                    <div className="w-4 h-4 border-2 border-black/30 border-t-black rounded-full animate-spin"></div>
+                                    Entrando...
+                                </>
+                            ) : (
+                                <>
+                                    <LogOut className="w-4 h-4 rotate-180" />
+                                    Entrar
+                                </>
+                            )}
+                        </button>
+                    </form>
+
+                    {/* Back to site */}
+                    <div className="mt-6 text-center">
+                        <Link
+                            to="/"
+                            className="text-xs text-zinc-500 hover:text-primary transition-colors"
+                        >
+                            ← Voltar ao site
+                        </Link>
+                    </div>
+                </div>
+            </motion.div>
+        </div>
+    );
+}
+
 export default function AdminPage() {
     const [activeTab, setActiveTab] = useState<Tab>('dashboard');
     const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [isAuthenticated, setIsAuthenticated] = useState(() => {
+        return sessionStorage.getItem('admin_auth') === 'true';
+    });
+
+    const handleLogout = () => {
+        sessionStorage.removeItem('admin_auth');
+        setIsAuthenticated(false);
+    };
+
+    if (!isAuthenticated) {
+        return <LoginScreen onLogin={() => setIsAuthenticated(true)} />;
+    }
 
     return (
         <div className="min-h-screen bg-background flex">
@@ -1237,6 +1490,13 @@ export default function AdminPage() {
                             <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
                                 <span className="text-primary font-bold text-sm">HF</span>
                             </div>
+                            <button
+                                onClick={handleLogout}
+                                className="p-2 text-zinc-500 hover:text-red-400 rounded-lg hover:bg-zinc-800/50 transition-colors"
+                                title="Sair"
+                            >
+                                <LogOut className="w-4 h-4" />
+                            </button>
                         </div>
                     </div>
                 </header>
