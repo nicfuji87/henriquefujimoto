@@ -476,9 +476,13 @@ function BioTab() {
     const [saving, setSaving] = useState(false);
     const [uploadingMobile, setUploadingMobile] = useState(false);
     const [uploadingDesktop, setUploadingDesktop] = useState(false);
+    const [uploadingVideoMobile, setUploadingVideoMobile] = useState(false);
+    const [uploadingVideoDesktop, setUploadingVideoDesktop] = useState(false);
     const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
     const fileInputMobileRef = React.useRef<HTMLInputElement>(null);
     const fileInputDesktopRef = React.useRef<HTMLInputElement>(null);
+    const fileInputVideoMobileRef = React.useRef<HTMLInputElement>(null);
+    const fileInputVideoDesktopRef = React.useRef<HTMLInputElement>(null);
 
     useEffect(() => {
         fetchConfig();
@@ -569,6 +573,41 @@ function BioTab() {
         }
     }
 
+    async function handleVideoUpload(e: React.ChangeEvent<HTMLInputElement>, videoType: 'mobile' | 'desktop') {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        const setUploading = videoType === 'mobile' ? setUploadingVideoMobile : setUploadingVideoDesktop;
+        const configKey = videoType === 'mobile' ? 'hero_video_mobile' : 'hero_video_desktop';
+
+        setUploading(true);
+        setMessage(null);
+
+        try {
+            const fileExt = file.name.split('.').pop();
+            const fileName = `hero-video-${videoType}-${Date.now()}.${fileExt}`;
+            const filePath = `hero/${fileName}`;
+
+            const { error: uploadError } = await supabase.storage
+                .from('site-videos')
+                .upload(filePath, file, { upsert: true });
+
+            if (uploadError) throw uploadError;
+
+            const { data } = supabase.storage
+                .from('site-videos')
+                .getPublicUrl(filePath);
+
+            setConfig(prev => ({ ...prev, [configKey]: data.publicUrl }));
+            setMessage({ type: 'success', text: `Vídeo ${videoType === 'mobile' ? 'mobile' : 'desktop'} carregado! Clique em Salvar para confirmar.` });
+        } catch (err) {
+            console.error('Error uploading video:', err);
+            setMessage({ type: 'error', text: 'Erro ao fazer upload do vídeo (verifique o tamanho, max ~50MB no plano free)' });
+        } finally {
+            setUploading(false);
+        }
+    }
+
     if (loading) {
         return (
             <div className="flex items-center justify-center h-64">
@@ -648,7 +687,7 @@ function BioTab() {
                             {config.hero_video_mobile !== undefined && config.hero_video_mobile !== null && (
                                 <div className="mt-2 space-y-2">
                                     <label className="block text-xs font-medium text-zinc-400">
-                                        🎬 URL do Vídeo Mobile
+                                        🎬 URL do Vídeo Mobile (Cole o link ou faça upload)
                                     </label>
                                     <input
                                         type="url"
@@ -657,6 +696,22 @@ function BioTab() {
                                         className="w-full px-4 py-3 bg-zinc-800/50 border border-zinc-700 rounded-xl text-white text-sm focus:outline-none focus:border-primary"
                                         placeholder="https://cdn.exemplo.com/video.mp4"
                                     />
+
+                                    <input
+                                        ref={fileInputVideoMobileRef}
+                                        type="file"
+                                        accept="video/*"
+                                        onChange={(e) => handleVideoUpload(e, 'mobile')}
+                                        className="hidden"
+                                    />
+                                    <button
+                                        onClick={() => fileInputVideoMobileRef.current?.click()}
+                                        disabled={uploadingVideoMobile}
+                                        className="w-full px-4 py-2 bg-zinc-700 text-white rounded-lg font-medium hover:bg-zinc-600 transition-colors disabled:opacity-50 text-xs flex items-center justify-center gap-2"
+                                    >
+                                        {uploadingVideoMobile ? 'Enviando Vídeo...' : '☁️ Upload de Arquivo de Vídeo'}
+                                    </button>
+
                                     <p className="text-[10px] text-zinc-600">
                                         Formatos: .mp4, .webm • Para 200MB+, comprima para ~30-50MB antes
                                     </p>
@@ -748,7 +803,7 @@ function BioTab() {
                             {config.hero_video_desktop !== undefined && config.hero_video_desktop !== null && (
                                 <div className="mt-2 space-y-2">
                                     <label className="block text-xs font-medium text-zinc-400">
-                                        🎬 URL do Vídeo Desktop
+                                        🎬 URL do Vídeo Desktop (Cole o link ou faça upload)
                                     </label>
                                     <input
                                         type="url"
@@ -757,6 +812,22 @@ function BioTab() {
                                         className="w-full px-4 py-3 bg-zinc-800/50 border border-zinc-700 rounded-xl text-white text-sm focus:outline-none focus:border-primary"
                                         placeholder="https://cdn.exemplo.com/video.mp4"
                                     />
+
+                                    <input
+                                        ref={fileInputVideoDesktopRef}
+                                        type="file"
+                                        accept="video/*"
+                                        onChange={(e) => handleVideoUpload(e, 'desktop')}
+                                        className="hidden"
+                                    />
+                                    <button
+                                        onClick={() => fileInputVideoDesktopRef.current?.click()}
+                                        disabled={uploadingVideoDesktop}
+                                        className="w-full px-4 py-2 bg-zinc-700 text-white rounded-lg font-medium hover:bg-zinc-600 transition-colors disabled:opacity-50 text-xs flex items-center justify-center gap-2"
+                                    >
+                                        {uploadingVideoDesktop ? 'Enviando Vídeo...' : '☁️ Upload de Arquivo de Vídeo'}
+                                    </button>
+
                                     <p className="text-[10px] text-zinc-600">
                                         Formatos: .mp4, .webm • Para 200MB+, comprima para ~30-50MB antes
                                     </p>
