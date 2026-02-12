@@ -17,9 +17,11 @@ import {
     Upload,
     Link2,
     ExternalLink,
+    Newspaper,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { supabase, Post } from '../lib/supabase';
+import BlogTab from '../components/admin/BlogTab';
 
 // Mock posts for development
 const mockPosts: Post[] = [
@@ -49,7 +51,7 @@ const mockPosts: Post[] = [
     },
 ];
 
-type Tab = 'dashboard' | 'posts' | 'bio' | 'settings';
+type Tab = 'dashboard' | 'blog' | 'posts' | 'bio' | 'settings';
 
 function Sidebar({
     activeTab,
@@ -64,7 +66,8 @@ function Sidebar({
 }) {
     const menuItems = [
         { id: 'dashboard' as Tab, label: 'Dashboard', icon: LayoutDashboard },
-        { id: 'posts' as Tab, label: 'Posts', icon: FileText },
+        { id: 'blog' as Tab, label: 'Blog', icon: Newspaper },
+        { id: 'posts' as Tab, label: 'Posts IG', icon: FileText },
         { id: 'bio' as Tab, label: 'Bio / Home', icon: Home },
         { id: 'settings' as Tab, label: 'Configurações', icon: Settings },
     ];
@@ -1850,6 +1853,7 @@ export default function AdminPage() {
                             transition={{ duration: 0.2 }}
                         >
                             {activeTab === 'dashboard' && <DashboardTab />}
+                            {activeTab === 'blog' && <BlogTab />}
                             {activeTab === 'posts' && <PostsTab />}
                             {activeTab === 'bio' && <BioTab />}
                             {activeTab === 'settings' && <SettingsTab />}
