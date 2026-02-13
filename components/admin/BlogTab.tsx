@@ -23,6 +23,9 @@ interface BlogPost {
     reading_time: number;
     source_url: string | null;
     author: string;
+    cta_type: 'none' | 'affiliate' | 'sponsor' | 'support';
+    cta_label: string | null;
+    cta_link: string | null;
     created_at: string;
     updated_at: string;
     published_at: string | null;
@@ -196,6 +199,8 @@ export default function BlogTab() {
     const [generating, setGenerating] = useState(false);
     const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
     const [sourceUrl, setSourceUrl] = useState('');
+    const [sourceText, setSourceText] = useState('');
+    const [generationMode, setGenerationMode] = useState<'url' | 'text'>('url');
     const [uploadingImage, setUploadingImage] = useState(false);
     const [newKeyword, setNewKeyword] = useState('');
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -236,20 +241,29 @@ export default function BlogTab() {
             reading_time: 1,
             source_url: '',
             author: 'Henrique Fujimoto',
+            cta_type: 'none',
+            cta_label: '',
+            cta_link: '',
         });
         setSourceUrl('');
+        setSourceText('');
         setView('editor');
     }
 
     function openEditPost(post: BlogPost) {
         setEditingPost({ ...post });
         setSourceUrl(post.source_url || '');
+        setSourceText('');
         setView('editor');
     }
 
-    async function handleGenerateFromUrl() {
-        if (!sourceUrl.trim()) {
+    async function handleGenerate() {
+        if (generationMode === 'url' && !sourceUrl.trim()) {
             setMessage({ type: 'error', text: 'Cole uma URL para gerar o conteúdo' });
+            return;
+        }
+        if (generationMode === 'text' && !sourceText.trim()) {
+            setMessage({ type: 'error', text: 'Escreva ou cole um texto base para gerar o conteúdo' });
             return;
         }
 
@@ -260,10 +274,14 @@ export default function BlogTab() {
             const { data: { publicUrl } } = supabase.storage.from('site-images').getPublicUrl('dummy');
             const projectUrl = publicUrl.split('/storage/')[0];
 
+            const payload = generationMode === 'url'
+                ? { url: sourceUrl.trim(), type: 'url' }
+                : { text: sourceText.trim(), type: 'text' };
+
             const response = await fetch(`${projectUrl}/functions/v1/generate-blog-post`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ url: sourceUrl.trim() }),
+                body: JSON.stringify(payload),
             });
 
             if (!response.ok) {
@@ -354,6 +372,9 @@ export default function BlogTab() {
                 reading_time: estimateReadingTime(editingPost.content || ''),
                 source_url: editingPost.source_url || null,
                 author: editingPost.author || 'Henrique Fujimoto',
+                cta_type: editingPost.cta_type || 'none',
+                cta_label: editingPost.cta_label || null,
+                cta_link: editingPost.cta_link || null,
                 updated_at: now,
                 ...(publish && !editingPost.published_at ? { published_at: now } : {}),
             };
@@ -596,26 +617,58 @@ export default function BlogTab() {
             <div className="bg-gradient-to-r from-violet-500/10 via-fuchsia-500/10 to-primary/10 border border-violet-500/20 rounded-2xl p-5">
                 <div className="flex items-center gap-2 mb-3">
                     <Sparkles className="w-5 h-5 text-violet-400" />
-                    <h3 className="text-white font-semibold">Gerar com IA</h3>
+                    <h3 className="text-white font-semibold">Editor Mágico com IA</h3>
                 </div>
+
+                {/* Tabs */}
+                <div className="flex gap-4 mb-3 text-xs border-b border-violet-500/20 pb-2">
+                    <button
+                        onClick={() => setGenerationMode('url')}
+                        className={`font-medium pb-2 -mb-2.5 border-b-2 transition-colors ${generationMode === 'url' ? 'text-violet-400 border-violet-400' : 'text-zinc-500 border-transparent hover:text-zinc-300'}`}
+                    >
+                        🔗 Importar URL
+                    </button>
+                    <button
+                        onClick={() => setGenerationMode('text')}
+                        className={`font-medium pb-2 -mb-2.5 border-b-2 transition-colors ${generationMode === 'text' ? 'text-violet-400 border-violet-400' : 'text-zinc-500 border-transparent hover:text-zinc-300'}`}
+                    >
+                        📝 Digitar Rascunho
+                    </button>
+                </div>
+
                 <p className="text-zinc-400 text-xs mb-3">
-                    Cole a URL de uma notícia, post ou artigo. A IA vai gerar um post otimizado para SEO.
+                    {generationMode === 'url'
+                        ? 'Cole a URL de uma notícia ou artigo de referência. A IA vai reescrever e otimizar.'
+                        : 'Cole seu texto bruto, rascunho ou ideia. A IA vai estruturar, corrigir e aplicar SEO.'}
                 </p>
-                <div className="flex gap-2">
-                    <div className="flex-1 relative">
-                        <Link2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
-                        <input
-                            type="url"
-                            value={sourceUrl}
-                            onChange={(e) => setSourceUrl(e.target.value)}
-                            className="w-full pl-10 pr-4 py-3 bg-zinc-900/80 border border-zinc-700 rounded-xl text-white text-sm focus:outline-none focus:border-violet-500 placeholder-zinc-600"
-                            placeholder="https://exemplo.com/artigo-de-referencia"
-                        />
+
+                <div className="flex flex-col gap-3">
+                    <div className="relative">
+                        {generationMode === 'url' ? (
+                            <>
+                                <Link2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
+                                <input
+                                    type="url"
+                                    value={sourceUrl}
+                                    onChange={(e) => setSourceUrl(e.target.value)}
+                                    className="w-full pl-10 pr-4 py-3 bg-zinc-900/80 border border-zinc-700 rounded-xl text-white text-sm focus:outline-none focus:border-violet-500 placeholder-zinc-600"
+                                    placeholder="https://exemplo.com/artigo-de-referencia"
+                                />
+                            </>
+                        ) : (
+                            <textarea
+                                value={sourceText}
+                                onChange={(e) => setSourceText(e.target.value)}
+                                rows={4}
+                                className="w-full p-4 bg-zinc-900/80 border border-zinc-700 rounded-xl text-white text-sm focus:outline-none focus:border-violet-500 placeholder-zinc-600 resize-none font-sans"
+                                placeholder="Coloque aqui seu texto bruto. Ex: 'Ontem competi no regional, fiquei em 4º lugar... foi dificil mas aprendi que...'"
+                            />
+                        )}
                     </div>
                     <button
-                        onClick={handleGenerateFromUrl}
-                        disabled={generating || !sourceUrl.trim()}
-                        className="flex items-center gap-2 px-5 py-3 bg-violet-600 text-white rounded-xl font-medium hover:bg-violet-500 transition-colors disabled:opacity-50 text-sm whitespace-nowrap"
+                        onClick={handleGenerate}
+                        disabled={generating || (generationMode === 'url' ? !sourceUrl.trim() : !sourceText.trim())}
+                        className="self-end flex items-center gap-2 px-6 py-2.5 bg-violet-600 text-white rounded-xl font-medium hover:bg-violet-500 transition-colors disabled:opacity-50 text-sm whitespace-nowrap shadow-lg shadow-violet-600/20"
                     >
                         {generating ? (
                             <>
@@ -751,8 +804,8 @@ export default function BlogTab() {
                         <div className="flex items-center justify-between mb-1">
                             <label className="text-xs font-medium text-zinc-400">Meta Título</label>
                             <span className={`text-[10px] font-medium ${(editingPost?.meta_title || '').length > 60 ? 'text-red-400'
-                                    : (editingPost?.meta_title || '').length >= 30 ? 'text-emerald-400'
-                                        : 'text-zinc-500'
+                                : (editingPost?.meta_title || '').length >= 30 ? 'text-emerald-400'
+                                    : 'text-zinc-500'
                                 }`}>
                                 {(editingPost?.meta_title || '').length}/60
                             </span>
@@ -767,8 +820,8 @@ export default function BlogTab() {
                         <div className="mt-1 h-1 bg-zinc-800 rounded-full overflow-hidden">
                             <div
                                 className={`h-full transition-all ${(editingPost?.meta_title || '').length > 60 ? 'bg-red-400'
-                                        : (editingPost?.meta_title || '').length >= 30 ? 'bg-emerald-400'
-                                            : 'bg-zinc-600'
+                                    : (editingPost?.meta_title || '').length >= 30 ? 'bg-emerald-400'
+                                        : 'bg-zinc-600'
                                     }`}
                                 style={{ width: `${Math.min(100, ((editingPost?.meta_title || '').length / 60) * 100)}%` }}
                             />
@@ -780,8 +833,8 @@ export default function BlogTab() {
                         <div className="flex items-center justify-between mb-1">
                             <label className="text-xs font-medium text-zinc-400">Meta Descrição</label>
                             <span className={`text-[10px] font-medium ${(editingPost?.meta_description || '').length > 160 ? 'text-red-400'
-                                    : (editingPost?.meta_description || '').length >= 120 ? 'text-emerald-400'
-                                        : 'text-zinc-500'
+                                : (editingPost?.meta_description || '').length >= 120 ? 'text-emerald-400'
+                                    : 'text-zinc-500'
                                 }`}>
                                 {(editingPost?.meta_description || '').length}/160
                             </span>
@@ -796,11 +849,60 @@ export default function BlogTab() {
                         <div className="mt-1 h-1 bg-zinc-800 rounded-full overflow-hidden">
                             <div
                                 className={`h-full transition-all ${(editingPost?.meta_description || '').length > 160 ? 'bg-red-400'
-                                        : (editingPost?.meta_description || '').length >= 120 ? 'bg-emerald-400'
-                                            : 'bg-zinc-600'
+                                    : (editingPost?.meta_description || '').length >= 120 ? 'bg-emerald-400'
+                                        : 'bg-zinc-600'
                                     }`}
                                 style={{ width: `${Math.min(100, ((editingPost?.meta_description || '').length / 160) * 100)}%` }}
                             />
+                        </div>
+                    </div>
+
+                    {/* Monetization / CTA */}
+                    <div className="bg-gradient-to-br from-emerald-500/10 to-primary/10 rounded-xl p-4 border border-emerald-500/20">
+                        <div className="flex items-center gap-2 mb-3">
+                            <BarChart3 className="w-4 h-4 text-emerald-400" />
+                            <label className="text-xs font-medium text-white uppercase tracking-wider">Monetização (CTA)</label>
+                        </div>
+
+                        <div className="space-y-3">
+                            <div>
+                                <label className="block text-[10px] text-zinc-400 mb-1">Tipo de Ação</label>
+                                <select
+                                    value={editingPost?.cta_type || 'none'}
+                                    onChange={(e) => setEditingPost(prev => ({ ...prev, cta_type: e.target.value as any }))}
+                                    className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-primary"
+                                >
+                                    <option value="none">Nenhum</option>
+                                    <option value="affiliate">🎒 Link de Afiliado (Produto)</option>
+                                    <option value="sponsor">🤝 Patrocinador Oficinal</option>
+                                    <option value="support">☕ Apoiar Viagem / Pix</option>
+                                </select>
+                            </div>
+
+                            {editingPost?.cta_type !== 'none' && (
+                                <>
+                                    <div>
+                                        <label className="block text-[10px] text-zinc-400 mb-1">Texto do Botão</label>
+                                        <input
+                                            type="text"
+                                            value={editingPost?.cta_label || ''}
+                                            onChange={(e) => setEditingPost(prev => ({ ...prev, cta_label: e.target.value }))}
+                                            className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-primary"
+                                            placeholder="Ex: Ver na Amazon, Apoiar agora..."
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-[10px] text-zinc-400 mb-1">Link do Botão</label>
+                                        <input
+                                            type="url"
+                                            value={editingPost?.cta_link || ''}
+                                            onChange={(e) => setEditingPost(prev => ({ ...prev, cta_link: e.target.value }))}
+                                            className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-primary"
+                                            placeholder="https://..."
+                                        />
+                                    </div>
+                                </>
+                            )}
                         </div>
                     </div>
 

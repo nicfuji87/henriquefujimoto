@@ -2,11 +2,13 @@ import React from 'react';
 import { MessageCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useSiteConfig } from '../hooks/useSiteConfig';
+import { analytics } from '../lib/analytics';
 
 const StickyCTA: React.FC = () => {
   const { config } = useSiteConfig();
 
   const handleClick = () => {
+    analytics.trackCTA('sticky_footer', config.cta_text || 'Apoiar Atleta');
     if (config.cta_link) {
       window.open(config.cta_link, '_blank');
     }

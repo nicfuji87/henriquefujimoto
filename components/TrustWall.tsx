@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { supabase } from '../lib/supabase';
+import { analytics } from '../lib/analytics';
 
 type Partner = {
   id: string;
@@ -91,6 +92,7 @@ const TrustWall: React.FC = () => {
                     target="_blank"
                     rel="noopener noreferrer"
                     className={wrapperClass}
+                    onClick={() => analytics.trackPartnerClick(partner.name)}
                   >
                     {content}
                   </a>
@@ -98,6 +100,7 @@ const TrustWall: React.FC = () => {
                   <div
                     key={`${partner.id}-${i}`}
                     className={wrapperClass}
+                    onClick={() => analytics.trackEvent('partner_view', { event_label: partner.name })}
                   >
                     {content}
                   </div>

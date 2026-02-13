@@ -12,81 +12,106 @@ Deno.serve(async (req: Request) => {
     }
 
     try {
-        const { url } = await req.json();
+        const { url, text, type } = await req.json();
 
-        if (!url || typeof url !== 'string') {
+        // Determinar o conteúdo base
+        let baseContent = '';
+        let sourceLabel = '';
+
+        if (type === 'text' || text) {
+            // Modo Texto Direto (Rascunho)
+            if (!text || typeof text !== 'string') {
+                return new Response(
+                    JSON.stringify({ error: 'Texto é obrigatório para geração manual' }),
+                    { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+                );
+            }
+            baseContent = text;
+            sourceLabel = 'Rascunho/Ideia original do usuário';
+
+        } else if (url) {
+            // Modo URL (Notícia/Artigo Externo)
+            sourceLabel = `URL de referência: ${url}`;
+            try {
+                const pageResponse = await fetch(url, {
+                    headers: {
+                        'User-Agent': 'Mozilla/5.0 (compatible; blog-generator/1.0)',
+                        'Accept': 'text/html,application/xhtml+xml',
+                    },
+                });
+                const html = await pageResponse.text();
+
+                // Extract text content from HTML (strip tags simpler version)
+                baseContent = html
+                    .replace(/<script[\s\S]*?<\/script>/gi, '')
+                    .replace(/<style[\s\S]*?<\/style>/gi, '')
+                    .replace(/<[^>]+>/g, ' ')
+                    .replace(/\s+/g, ' ')
+                    .trim()
+                    .slice(0, 12000);
+            } catch (fetchError) {
+                console.error('Error fetching URL:', fetchError);
+                return new Response(
+                    JSON.stringify({ error: `Erro ao buscar URL: ${fetchError.message}` }),
+                    { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+                );
+            }
+        } else {
             return new Response(
-                JSON.stringify({ error: 'URL é obrigatória' }),
+                JSON.stringify({ error: 'Forneça uma URL ou texto para gerar o post' }),
                 { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
             );
-        }
-
-        // 1. Fetch page content
-        let pageContent = '';
-        try {
-            const pageResponse = await fetch(url, {
-                headers: {
-                    'User-Agent': 'Mozilla/5.0 (compatible; blog-generator/1.0)',
-                    'Accept': 'text/html,application/xhtml+xml',
-                },
-            });
-            const html = await pageResponse.text();
-
-            // Extract text content from HTML (strip tags)
-            pageContent = html
-                .replace(/<script[\s\S]*?<\/script>/gi, '')
-                .replace(/<style[\s\S]*?<\/style>/gi, '')
-                .replace(/<[^>]+>/g, ' ')
-                .replace(/\s+/g, ' ')
-                .trim()
-                .slice(0, 8000); // Limit to avoid token overflow
-        } catch (fetchError) {
-            console.error('Error fetching URL:', fetchError);
-            pageContent = `URL: ${url} (não foi possível extrair o conteúdo automaticamente)`;
         }
 
         // 2. Call OpenAI to generate blog post
         const openaiKey = Deno.env.get('OPENAI_API_KEY');
         if (!openaiKey) {
             return new Response(
-                JSON.stringify({ error: 'OPENAI_API_KEY não configurada no Supabase Secrets' }),
+                JSON.stringify({ error: 'OPENAI_API_KEY não configurada' }),
                 { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
             );
         }
 
-        const systemPrompt = `Você é um redator de blog profissional especializado em SEO para o atleta de judô Henrique Fujimoto.
+        const systemPrompt = `Você é um editor-chefe de blog profissional e especialista em SEO para o atleta de judô Henrique Fujimoto.
+Seu trabalho é pegar um conteúdo bruto (rascunho, ideia ou notícia) e transformá-lo em um artigo de blog de ALTO NÍVEL.
 
-Seu trabalho é transformar conteúdo de referência em posts de blog originais, informativos e otimizados para mecanismos de busca.
+CONTEXTO:
+- Henrique é um atleta Sub-15 faixa amarela, federado.
+- Foco: Jornada para a faixa preta, superação, treinos, competições e vida saudável.
+- Tom de voz: Inspirador, resiliente, educado, mas com energia de atleta.
 
-REGRAS:
-- Escreva em português brasileiro
-- Tom: profissional mas acessível, inspirador
-- Sempre em primeira pessoa quando mencionar o Henrique, ou em terceira se for notícia
-- Otimize para SEO: use headers H2, parágrafos curtos, palavras-chave naturalmente distribuídas
-- Inclua um parágrafo de introdução cativante
-- Termine com um call-to-action (convidar a acompanhar, seguir, apoiar)
-- O conteúdo deve ter pelo menos 800 palavras
-- Use formatação Markdown: ## para subtítulos, **negrito** para ênfase, listas quando apropriado
+REGRAS DE FORMATAÇÃO:
+- Use Markdown avançado.
+- Título H1 não precisa colocar no corpo (já vai no campo title), comece com uma introdução forte.
+- Use H2 (##) para seções principais e H3 (###) para subseções.
+- Use **negrito** para palavras-chave e frases de impacto.
+- Use listas (bullets ou numeradas) para facilitar a leitura.
+- Parágrafos curtos (máx 3-4 linhas) para leitura mobile.
 
-RETORNE um JSON válido com exatamente esta estrutura:
+REGRAS DE SEO:
+- Foque em uma palavra-chave principal.
+- Inclua termos relacionados semanticamente.
+- O texto deve ter entre 600 a 1200 palavras (se o input permitir).
+
+ESTRUTURA DE RETORNO (JSON OBRIGATÓRIO):
 {
-    "title": "Título do post (máx 70 chars, SEO otimizado)",
-    "excerpt": "Resumo do post (1-2 frases, 100-160 chars)",
-    "content": "Conteúdo completo em Markdown",
-    "meta_title": "Título SEO (30-60 chars, com keyword principal)",
-    "meta_description": "Descrição para Google (120-155 chars, com CTA)",
+    "title": "Título H1 Irresistível (máx 60 chars, SEO forte)",
+    "excerpt": "Resumo magnético para o card do blog (140-160 chars)",
+    "content": "Conteúdo completo em Markdown...",
+    "meta_title": "Título SEO para o Google (focado na keyword)",
+    "meta_description": "Descrição SEO para o Google (com CTA e keyword)",
     "keywords": ["keyword1", "keyword2", "keyword3", "keyword4", "keyword5"],
-    "category": "judô|treino|competição|nutrição|vida-de-atleta|notícias|geral"
+    "category": "judô|treino|competição|vida-de-atleta|notícias|geral"
 }`;
 
-        const userPrompt = `Com base no conteúdo abaixo, escreva um post de blog completo e otimizado para SEO.
+        const userPrompt = `Transforme este conteúdo base em um post de blog incrível:
 
-URL de referência: ${url}
+ORIGEM: ${sourceLabel}
 
-Conteúdo extraído:
-${pageContent}
+CONTEÚDO BASE:
+${baseContent.slice(0, 15000)}
 
-Gere o post em formato JSON conforme instruído.`;
+Gere o JSON completo.`;
 
         const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
             method: 'POST',
@@ -109,32 +134,21 @@ Gere o post em formato JSON conforme instruído.`;
         if (!openaiResponse.ok) {
             const errText = await openaiResponse.text();
             console.error('OpenAI error:', errText);
-            return new Response(
-                JSON.stringify({ error: `Erro na API OpenAI: ${openaiResponse.status}` }),
-                { status: 502, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-            );
+            throw new Error(`OpenAI API Error: ${openaiResponse.status}`);
         }
 
         const openaiData = await openaiResponse.json();
         const generatedContent = openaiData.choices?.[0]?.message?.content;
 
-        if (!generatedContent) {
-            return new Response(
-                JSON.stringify({ error: 'A IA não retornou conteúdo' }),
-                { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-            );
-        }
+        return new Response(generatedContent, {
+            status: 200,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
 
-        const parsedContent = JSON.parse(generatedContent);
-
-        return new Response(
-            JSON.stringify(parsedContent),
-            { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
     } catch (error) {
         console.error('Error:', error);
         return new Response(
-            JSON.stringify({ error: error.message || 'Erro interno' }),
+            JSON.stringify({ error: error.message || 'Erro interno no servidor' }),
             { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
     }

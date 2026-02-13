@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Calendar, Clock, User, Tag, Share2 } from 'lucide-react';
+import { ArrowLeft, Calendar, Clock, User, Tag, Share2, ExternalLink, Package, Handshake, Coffee } from 'lucide-react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 
@@ -18,6 +18,9 @@ interface BlogPost {
     status: string;
     reading_time: number;
     author: string;
+    cta_type: 'none' | 'affiliate' | 'sponsor' | 'support';
+    cta_label: string | null;
+    cta_link: string | null;
     created_at: string;
     published_at: string | null;
 }
@@ -322,6 +325,46 @@ export default function BlogPostPage() {
                                     {kw}
                                 </span>
                             ))}
+                        </div>
+                    </motion.div>
+                )}
+
+                {/* Monetization CTA */}
+                {post.cta_type !== 'none' && post.cta_link && (
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ delay: 0.45 }}
+                        className="mt-12 p-1.5 rounded-3xl bg-gradient-to-br from-zinc-700/50 via-zinc-800/50 to-zinc-900/50 border border-zinc-700/50 overflow-hidden shadow-2xl"
+                    >
+                        <div className="bg-zinc-900/90 rounded-[22px] p-6 flex flex-col items-center text-center">
+                            <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mb-4">
+                                {post.cta_type === 'affiliate' && <Package className="w-7 h-7 text-primary" />}
+                                {post.cta_type === 'sponsor' && <Handshake className="w-7 h-7 text-primary" />}
+                                {post.cta_type === 'support' && <Coffee className="w-7 h-7 text-primary" />}
+                            </div>
+
+                            <h3 className="text-xl font-bold text-white mb-2">
+                                {post.cta_type === 'affiliate' && 'Recomendação do Henrique'}
+                                {post.cta_type === 'sponsor' && 'Parceiro Oficial'}
+                                {post.cta_type === 'support' && 'Apoie a Jornada'}
+                            </h3>
+
+                            <p className="text-zinc-400 text-sm max-w-sm mb-6">
+                                {post.cta_type === 'affiliate' && 'Equipamentos e produtos que eu uso e confio para alcançar o alto rendimento.'}
+                                {post.cta_type === 'sponsor' && 'Esta marca acredita no judô brasileiro e apoia minha evolução como atleta.'}
+                                {post.cta_type === 'support' && 'Sua contribuição ajuda a custear inscrições, viagens e equipamentos para as próximas competições.'}
+                            </p>
+
+                            <a
+                                href={post.cta_link}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="group flex items-center gap-3 px-8 py-4 bg-primary text-black rounded-2xl font-bold hover:bg-primary/90 transition-all hover:scale-105 active:scale-95 shadow-lg shadow-primary/20"
+                            >
+                                {post.cta_label || 'Ver Mais'}
+                                <ExternalLink className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+                            </a>
                         </div>
                     </motion.div>
                 )}
