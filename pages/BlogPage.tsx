@@ -6,7 +6,6 @@ import {
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
-import { useTracking } from '../hooks/useTracking';
 
 // ─── Constants & Styles ──────────────────────────────────
 const CATEGORY_STYLES: Record<string, { label: string; color: string; icon: string }> = {
@@ -185,7 +184,6 @@ function PostCard({ post, index }: { post: BlogPost; index: number }) {
 // ─── Main Page Component ─────────────────────────────────
 
 export default function BlogPage() {
-    useTracking();
     const [posts, setPosts] = useState<BlogPost[]>([]);
     const [loading, setLoading] = useState(true);
     const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -224,7 +222,7 @@ export default function BlogPage() {
     });
 
     const activeCategories = Array.from(new Set(posts.map(p => p.category.toLowerCase())))
-        .filter(c => CATEGORY_STYLES[c] || CATEGORY_STYLES['geral']);
+        .filter((c): c is string => !!(CATEGORY_STYLES[c as string] || CATEGORY_STYLES['geral']));
 
     // Logic to separate Featured vs Grid
     const isDefaultView = !selectedCategory && !searchQuery;
@@ -325,7 +323,7 @@ export default function BlogPage() {
                                     Todos
                                 </button>
                                 {activeCategories.map(cat => {
-                                    const style = CATEGORY_STYLES[cat] || CATEGORY_STYLES['geral'];
+                                    const style = CATEGORY_STYLES[cat as string] || CATEGORY_STYLES['geral'];
                                     const isActive = selectedCategory === cat;
                                     return (
                                         <button

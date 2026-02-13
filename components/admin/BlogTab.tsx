@@ -41,6 +41,24 @@ const CATEGORIES = [
     { value: 'geral', label: '📝 Geral' },
 ];
 
+function normalizeCategory(cat: string): string {
+    if (!cat) return 'geral';
+    const lower = cat.toLowerCase().trim();
+
+    // Direct match
+    if (CATEGORIES.some(c => c.value === lower)) return lower;
+
+    // Mapping logic
+    if (lower.includes('judo') || lower.includes('judô')) return 'judô';
+    if (lower.includes('treino') || lower.includes('workout') || lower.includes('training')) return 'treino';
+    if (lower.includes('competição') || lower.includes('competition') || lower.includes('campeonato') || lower.includes('torneio')) return 'competição';
+    if (lower.includes('nutrição') || lower.includes('nutrition') || lower.includes('dieta') || lower.includes('alimentação')) return 'nutrição';
+    if (lower.includes('atleta') || lower.includes('athlete') || lower.includes('lifestyle') || lower.includes('rotina')) return 'vida-de-atleta';
+    if (lower.includes('notícia') || lower.includes('news') || lower.includes('novidade')) return 'notícias';
+
+    return 'geral';
+}
+
 // ─── SEO Helpers ─────────────────────────────────────────
 function slugify(text: string): string {
     return text
@@ -300,7 +318,7 @@ export default function BlogTab() {
                 meta_title: result.meta_title || result.title || '',
                 meta_description: result.meta_description || result.excerpt || '',
                 keywords: result.keywords || [],
-                category: result.category || prev?.category || 'geral',
+                category: normalizeCategory(result.category || prev?.category || 'geral'),
                 reading_time: estimateReadingTime(result.content || ''),
                 source_url: sourceUrl.trim(),
             }));
@@ -367,7 +385,7 @@ export default function BlogTab() {
                 meta_description: editingPost.meta_description || editingPost.excerpt || null,
                 keywords: editingPost.keywords || [],
                 og_image: editingPost.og_image || null,
-                category: editingPost.category || 'geral',
+                category: normalizeCategory(editingPost.category || 'geral'),
                 status: publish ? 'published' : (editingPost.status || 'draft'),
                 reading_time: estimateReadingTime(editingPost.content || ''),
                 source_url: editingPost.source_url || null,

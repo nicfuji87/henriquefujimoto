@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 
 interface TrackingConfig {
@@ -19,6 +20,8 @@ let cachedConfig: TrackingConfig | null = null;
 
 export function useTracking() {
     const [config, setConfig] = useState<TrackingConfig | null>(cachedConfig);
+
+    const location = useLocation();
 
     useEffect(() => {
         if (cachedConfig) {
@@ -46,6 +49,34 @@ export function useTracking() {
 
         load();
     }, []);
+
+    // Track PageView on route change
+    useEffect(() => {
+        if (!config) return;
+
+        // Small delay to ensure title is updated
+        const timeout = setTimeout(() => {
+            // GA4
+            if ((window as any).gtag) {
+                (window as any).gtag('event', 'page_view', {
+                    page_path: location.pathname + location.search,
+                    page_title: document.title
+                });
+            }
+
+            // Meta Pixel
+            if ((window as any).fbq) {
+                (window as any).fbq('track', 'PageView');
+            }
+
+            // TikTok Pixel
+            if ((window as any).ttq) {
+                (window as any).ttq.page();
+            }
+        }, 100);
+
+        return () => clearTimeout(timeout);
+    }, [location, config]);
 
     return config;
 }
