@@ -154,6 +154,14 @@ function DashboardTab() {
         id: string; caption: string; media_url: string; thumbnail_url: string;
         media_type: string; like_count: number; comments_count: number; permalink: string;
     }[]>([]);
+    const [gaMetrics, setGaMetrics] = useState<{
+        activeUsers: number;
+        sessions: number;
+        screenPageViews: number;
+        engagementRate: number;
+        history: { date: string; users: number }[];
+        mock?: boolean;
+    } | null>(null);
 
     useEffect(() => {
         loadDashboardData();
@@ -203,6 +211,21 @@ function DashboardTab() {
                     date: h.date,
                     count: h.followers_count,
                 })));
+            }
+
+            // 4. GA4 Metrics
+            try {
+                const { data: { publicUrl } } = supabase.storage.from('site-images').getPublicUrl('dummy');
+                const projectUrl = publicUrl.split('/storage/')[0];
+                const res = await fetch(`${projectUrl}/functions/v1/get-ga4-metrics`);
+                if (res.ok) {
+                    const data = await res.json();
+                    if (!data.error) {
+                        setGaMetrics(data);
+                    }
+                }
+            } catch (e) {
+                console.error('GA Error', e);
             }
         } catch (err) {
             console.error('Error loading dashboard data:', err);
@@ -277,8 +300,59 @@ function DashboardTab() {
         <div className="space-y-8">
             <div>
                 <h2 className="text-2xl font-bold text-white mb-2">Dashboard</h2>
-                <p className="text-zinc-400">Visão geral do Instagram e conteúdo • Últimos 30 dias</p>
+                <p className="text-zinc-400">Visão geral do Site e Instagram • Últimos 30 dias</p>
             </div>
+
+            {/* Row 0: Site Analytics (GA4) */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0 }}
+                    className="bg-zinc-900/60 backdrop-blur-sm border border-zinc-800/50 rounded-2xl p-5 relative overflow-hidden"
+                >
+                    <div className="absolute top-0 right-0 p-3 opacity-10">
+                        <Activity className="w-16 h-16 text-blue-500" />
+                    </div>
+                    <p className="text-zinc-400 text-xs font-medium uppercase tracking-wider mb-1">Usuários Ativos (30d)</p>
+                    <p className="text-3xl font-bold text-white">{formatNum(gaMetrics?.activeUsers || 0)}</p>
+                    <span className="text-xs text-blue-400 font-medium">Google Analytics 4</span>
+                </motion.div>
+
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
+                    className="bg-zinc-900/60 backdrop-blur-sm border border-zinc-800/50 rounded-2xl p-5"
+                >
+                    <p className="text-zinc-400 text-xs font-medium uppercase tracking-wider mb-1">Visualizações de Página</p>
+                    <p className="text-3xl font-bold text-white">{formatNum(gaMetrics?.screenPageViews || 0)}</p>
+                    <span className="text-xs text-zinc-500">Total de views</span>
+                </motion.div>
+
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
+                    className="bg-zinc-900/60 backdrop-blur-sm border border-zinc-800/50 rounded-2xl p-5"
+                >
+                    <p className="text-zinc-400 text-xs font-medium uppercase tracking-wider mb-1">Sessões</p>
+                    <p className="text-3xl font-bold text-white">{formatNum(gaMetrics?.sessions || 0)}</p>
+                    <span className="text-xs text-zinc-500">Visitas únicas</span>
+                </motion.div>
+
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
+                    className="bg-zinc-900/60 backdrop-blur-sm border border-zinc-800/50 rounded-2xl p-5"
+                >
+                    <p className="text-zinc-400 text-xs font-medium uppercase tracking-wider mb-1">Engajamento Médio</p>
+                    <p className="text-3xl font-bold text-white">{gaMetrics ? (gaMetrics.engagementRate * 100).toFixed(1) + '%' : '0%'}</p>
+                    <span className="text-xs text-zinc-500">Taxa de interação</span>
+                </motion.div>
+            </div>
+
+            {gaMetrics?.mock && (
+                <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-4 flex items-center gap-3">
+                    <Activity className="w-5 h-5 text-amber-500" />
+                    <p className="text-sm text-amber-200">
+                        Ative o Google Analytics configurando as variáveis <code>GA4_CREDENTIALS</code> e <code>GA4_PROPERTY_ID</code> no Supabase.
+                    </p>
+                </div>
+            )}
 
             {/* Row 1: Instagram Metrics */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
