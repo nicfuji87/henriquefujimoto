@@ -6,6 +6,7 @@ import TopContent from '../components/TopContent';
 import WhySupport from '../components/WhySupport';
 import HowToSupport from '../components/HowToSupport';
 import StickyCTA from '../components/StickyCTA';
+import LatestPosts from '../components/LatestPosts';
 
 import Footer from '../components/Footer';
 import { useTracking } from '../hooks/useTracking';
@@ -22,6 +23,7 @@ export default function HomePage() {
                 <HowToSupport />
                 <TrustWall />
                 <TopContent />
+                <LatestPosts />
             </div>
             <Footer />
             <StickyCTA />
