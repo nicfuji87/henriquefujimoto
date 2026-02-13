@@ -49,8 +49,9 @@ function renderMarkdown(md: string): string {
         // Horizontal rules
         .replace(/^---$/gm, '<hr class="border-zinc-700 my-8" />')
         // Line breaks -> paragraphs
-        .replace(/\n\n/g, '</p><p class="text-zinc-300 leading-relaxed mb-4">')
-        .replace(/\n/g, '<br />');
+        .replace(/\n{3,}/g, '\n\n') // Collapse multiple empty lines
+        .replace(/\n\n/g, '</p><p class="text-zinc-300 leading-relaxed mb-4">');
+    // Removed the single \n -> <br /> replacement to avoid extra spacing and behave like standard markdown
 
     // Wrap in paragraph
     html = '<p class="text-zinc-300 leading-relaxed mb-4">' + html + '</p>';
@@ -218,7 +219,7 @@ export default function BlogPostPage() {
 
     if (!post) return null;
 
-    const catStyle = CATEGORY_STYLES[post.category] || CATEGORY_STYLES['geral'];
+    const catStyle = CATEGORY_STYLES[post.category.toLowerCase()] || CATEGORY_STYLES['geral'];
     const date = new Date(post.published_at || post.created_at).toLocaleDateString('pt-BR', {
         day: 'numeric',
         month: 'long',
@@ -250,13 +251,14 @@ export default function BlogPostPage() {
 
             {/* Hero / Cover */}
             {post.og_image && (
-                <div className="relative h-64 md:h-96 overflow-hidden">
-                    <img
-                        src={post.og_image}
-                        alt={post.title}
-                        className="w-full h-full object-cover"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent" />
+                <div className="max-w-4xl mx-auto px-4 mt-6">
+                    <div className="relative w-full aspect-video overflow-hidden rounded-2xl shadow-2xl border border-zinc-800/50">
+                        <img
+                            src={post.og_image}
+                            alt={post.title}
+                            className="w-full h-full object-cover"
+                        />
+                    </div>
                 </div>
             )}
 
