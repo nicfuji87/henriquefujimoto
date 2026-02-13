@@ -185,8 +185,7 @@ serve(async (req) => {
                 users: h.users
             }));
 
-            // 3. Get Top Pages (Blog) for Dashboard Highlights
-            // Fetch top 5 blog posts by views (30 days) directly from GA4 for live dashboard
+            // 3. Get Top Pages (Blog) for Dashboard Highlights (Live 30 days)
             const topPagesResponse = await analyticsData.properties.runReport({
                 property: `properties/${propertyId}`,
                 requestBody: {
@@ -207,11 +206,45 @@ serve(async (req) => {
                 }
             });
 
-            const topPages = topPagesResponse.data.rows?.map((row: any) => ({
-                path: row.dimensionValues?.[0]?.value || "",
-                views: parseInt(row.metricValues?.[0]?.value || "0")
-            })) || [];
+            const rawTopPages = topPagesResponse.data.rows || [];
 
+            // Extract slugs to query database
+            const slugs = rawTopPages.map((row: any) => {
+                const path = row.dimensionValues?.[0]?.value || "";
+                const slug = path.replace(/^\/blog\//, "").replace(/\/$/, "").split('?')[0];
+                return slug;
+            }).filter((s: string) => s && s !== 'blog'); // Filter valid slugs
+
+            let enrichedPages = rawTopPages.map((row: any) => {
+                const path = row.dimensionValues?.[0]?.value || "";
+                const slug = path.replace(/^\/blog\//, "").replace(/\/$/, "").split('?')[0];
+                return {
+                    path,
+                    slug,
+                    views: parseInt(row.metricValues?.[0]?.value || "0"),
+                    title: slug, // Default to slug
+                    image: null as string | null
+                };
+            }).filter((p: any) => p.slug && p.slug !== 'blog'); // Filter out the main blog page strictly
+
+            // Fetch metadata from Supabase
+            if (slugs.length > 0) {
+                const { data: posts } = await supabase
+                    .from('posts')
+                    .select('slug, title, image_url')
+                    .in('slug', slugs);
+
+                if (posts) {
+                    enrichedPages = enrichedPages.map((p: any) => {
+                        const post = posts.find((dbPost: any) => dbPost.slug === p.slug);
+                        return {
+                            ...p,
+                            title: post?.title || p.title,
+                            image: post?.image_url || null
+                        };
+                    });
+                }
+            }
 
             return new Response(
                 JSON.stringify({
@@ -220,7 +253,7 @@ serve(async (req) => {
                     screenPageViews: parseInt(totals?.[2]?.value || "0"),
                     engagementRate: parseFloat(totals?.[3]?.value || "0"),
                     history: formattedHistory,
-                    topPages: topPages
+                    topPages: enrichedPages
                 }),
                 { headers: { ...corsHeaders, "Content-Type": "application/json" } }
             );

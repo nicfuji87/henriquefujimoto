@@ -160,7 +160,7 @@ function DashboardTab() {
         screenPageViews: number;
         engagementRate: number;
         history: { date: string; users: number }[];
-        topPages?: { path: string; views: number }[];
+        topPages?: { path: string; views: number; title?: string; image?: string | null }[];
         mock?: boolean;
     } | null>(null);
 
@@ -362,27 +362,34 @@ function DashboardTab() {
                         <FileText className="w-5 h-5 text-purple-500" />
                         Posts Mais Lidos (30d)
                     </h3>
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-left">
-                            <thead className="text-xs text-zinc-500 uppercase border-b border-zinc-800">
-                                <tr>
-                                    <th className="pb-3 pl-2">Página/Post</th>
-                                    <th className="pb-3 text-right">Visualizações</th>
-                                </tr>
-                            </thead>
-                            <tbody className="text-sm">
-                                {gaMetrics.topPages.map((page, i) => (
-                                    <tr key={i} className="border-b border-zinc-800/50 last:border-0 hover:bg-zinc-800/30 transition-colors">
-                                        <td className="py-3 pl-2 text-zinc-300 font-medium truncate max-w-[200px] md:max-w-none" title={page.path}>
-                                            {page.path.replace('/blog/', '')}
-                                        </td>
-                                        <td className="py-3 text-right text-white font-bold">
-                                            {formatNum(page.views)}
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+                        {gaMetrics.topPages.slice(0, 5).map((page, i) => (
+                            <div key={i} className="group relative bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden hover:border-purple-500/50 transition-all">
+                                <div className="aspect-[16/9] w-full bg-zinc-800 relative overflow-hidden">
+                                    {page.image ? (
+                                        <img src={page.image} alt={page.title || ''} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                                    ) : (
+                                        <div className="w-full h-full flex items-center justify-center text-zinc-600">
+                                            <FileText className="w-8 h-8 opacity-20" />
+                                        </div>
+                                    )}
+                                    <div className="absolute top-2 right-2 bg-black/60 backdrop-blur-md px-2 py-1 rounded text-xs font-bold text-white">
+                                        #{i + 1}
+                                    </div>
+                                </div>
+                                <div className="p-3">
+                                    <h4 className="text-sm font-medium text-white line-clamp-2 mb-2 min-h-[40px]" title={page.title}>
+                                        {page.title || page.path.replace('/blog/', '')}
+                                    </h4>
+                                    <div className="flex items-center justify-between text-xs text-zinc-400">
+                                        <div className="flex items-center gap-1">
+                                            <Eye className="w-3 h-3 text-purple-400" />
+                                            <span className="text-zinc-300 font-bold">{formatNum(page.views)}</span> views
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
                     </div>
                 </div>
             )}
