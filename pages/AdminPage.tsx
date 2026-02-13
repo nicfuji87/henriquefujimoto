@@ -160,6 +160,7 @@ function DashboardTab() {
         screenPageViews: number;
         engagementRate: number;
         history: { date: string; users: number }[];
+        topPages?: { path: string; views: number }[];
         mock?: boolean;
     } | null>(null);
 
@@ -351,6 +352,38 @@ function DashboardTab() {
                     <p className="text-sm text-amber-200">
                         Ative o Google Analytics configurando as variáveis <code>GA4_CREDENTIALS</code> e <code>GA4_PROPERTY_ID</code> no Supabase.
                     </p>
+                </div>
+            )}
+
+            {/* Row 0.5: Top Blog Posts */}
+            {gaMetrics?.topPages && gaMetrics.topPages.length > 0 && (
+                <div className="bg-zinc-900/60 backdrop-blur-sm border border-zinc-800/50 rounded-2xl p-6">
+                    <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                        <FileText className="w-5 h-5 text-purple-500" />
+                        Posts Mais Lidos (30d)
+                    </h3>
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-left">
+                            <thead className="text-xs text-zinc-500 uppercase border-b border-zinc-800">
+                                <tr>
+                                    <th className="pb-3 pl-2">Página/Post</th>
+                                    <th className="pb-3 text-right">Visualizações</th>
+                                </tr>
+                            </thead>
+                            <tbody className="text-sm">
+                                {gaMetrics.topPages.map((page, i) => (
+                                    <tr key={i} className="border-b border-zinc-800/50 last:border-0 hover:bg-zinc-800/30 transition-colors">
+                                        <td className="py-3 pl-2 text-zinc-300 font-medium truncate max-w-[200px] md:max-w-none" title={page.path}>
+                                            {page.path.replace('/blog/', '')}
+                                        </td>
+                                        <td className="py-3 text-right text-white font-bold">
+                                            {formatNum(page.views)}
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             )}
 
