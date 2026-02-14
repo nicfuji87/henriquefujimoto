@@ -93,8 +93,8 @@ function Sidebar({
 
             {/* Sidebar */}
             <aside
-                className={`fixed lg:static inset - y - 0 left - 0 z - 50 w - 64 bg - zinc - 900 / 95 backdrop - blur - xl border - r border - zinc - 800 / 50 transform transition - transform duration - 300 ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
-                    } `}
+                className={`fixed lg:static inset-y-0 left-0 z-50 w-64 bg-zinc-900/95 backdrop-blur-xl border-r border-zinc-800/50 transform transition-transform duration-300 ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+                    }`}
             >
                 <div className="flex flex-col h-full">
                     {/* Logo */}
@@ -113,10 +113,10 @@ function Sidebar({
                                     setActiveTab(item.id);
                                     setIsOpen(false);
                                 }}
-                                className={`w - full flex items - center gap - 3 px - 4 py - 3 rounded - xl transition - all ${activeTab === item.id
-                                    ? 'bg-primary/20 text-primary'
-                                    : 'text-zinc-400 hover:bg-zinc-800/50 hover:text-white'
-                                    } `}
+                                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${activeTab === item.id
+                                        ? 'bg-primary/20 text-primary'
+                                        : 'text-zinc-400 hover:bg-zinc-800/50 hover:text-white'
+                                    }`}
                             >
                                 <item.icon className="w-5 h-5" />
                                 <span className="font-medium">{item.label}</span>
