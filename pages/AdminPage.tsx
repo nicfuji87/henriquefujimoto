@@ -554,16 +554,14 @@ function DashboardTab() {
                                 {chartDots.map((d, i) => (
                                     <g key={i}>
                                         <circle cx={d.x} cy={d.y} r="3" fill="#22c55e" stroke="#09090b" strokeWidth="1.5" />
-                                        {/* Label on first and last */}
-                                        {(i === 0 || i === chartDots.length - 1) && (
-                                            <text x={d.x} y={d.y - 8} textAnchor="middle" fill="#a1a1aa" fontSize="9" fontWeight="bold">
-                                                {d.count}
-                                            </text>
-                                        )}
+                                        {/* Label on all points */}
+                                        <text x={d.x} y={d.y - 8} textAnchor="middle" fill="#a1a1aa" fontSize="9" fontWeight="bold">
+                                            {d.count}
+                                        </text>
                                     </g>
                                 ))}
                                 {/* Date labels */}
-                                {chartDots.filter((_, i) => i === 0 || i === chartDots.length - 1).map((d, i) => (
+                                {chartDots.map((d, i) => (
                                     <text key={i} x={d.x} y={chartPadding.top + innerH + 15} textAnchor="middle" fill="#71717a" fontSize="8">
                                         {new Date(d.date + 'T12:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })}
                                     </text>
