@@ -212,7 +212,11 @@ serve(async (req) => {
             const topPagesResponse = await runReport(accessToken, propertyId, {
                 dateRanges: [{ startDate: "30daysAgo", endDate: "today" }],
                 dimensions: [{ name: "pagePath" }],
-                metrics: [{ name: "screenPageViews" }],
+                metrics: [
+                    { name: "screenPageViews" },
+                    { name: "userEngagementDuration" },
+                    { name: "activeUsers" }
+                ],
                 dimensionFilter: {
                     filter: {
                         fieldName: "pagePath",
@@ -235,14 +239,36 @@ serve(async (req) => {
                 slug = slug.replace(/\/$/, "");
                 slug = slug.split('?')[0];
 
+                const views = parseInt(row.metricValues?.[0]?.value || "0");
+                const totalDuration = parseFloat(row.metricValues?.[1]?.value || "0");
+                const users = parseInt(row.metricValues?.[2]?.value || "0");
+                const avgTime = users > 0 ? totalDuration / users : 0;
+
                 return {
                     path,
                     slug,
-                    views: parseInt(row.metricValues?.[0]?.value || "0"),
+                    views,
+                    avgTime,
                     title: slug,
                     image: null as string | null
                 };
             }).filter((p: any) => p.slug && p.slug !== 'blog' && p.slug !== '');
+
+            // 4. Get Locations (City/Region)
+            const locationsResponse = await runReport(accessToken, propertyId, {
+                dateRanges: [{ startDate: "30daysAgo", endDate: "today" }],
+                dimensions: [{ name: "city" }, { name: "region" }, { name: "country" }],
+                metrics: [{ name: "activeUsers" }],
+                orderBys: [{ metric: { metricName: "activeUsers" }, desc: true }],
+                limit: 10
+            });
+
+            const locations = locationsResponse.rows?.map((row: any) => ({
+                city: row.dimensionValues?.[0]?.value,
+                region: row.dimensionValues?.[1]?.value,
+                country: row.dimensionValues?.[2]?.value,
+                users: parseInt(row.metricValues?.[0]?.value || "0")
+            })) || [];
 
             // Fetch metadata from Supabase
             if (topPages.length > 0) {
@@ -272,7 +298,8 @@ serve(async (req) => {
                     screenPageViews: parseInt(totals?.[2]?.value || "0"),
                     engagementRate: parseFloat(totals?.[3]?.value || "0"),
                     history: formattedHistory,
-                    topPages: topPages
+                    topPages: topPages,
+                    locations: locations
                 }),
                 { headers: { ...corsHeaders, "Content-Type": "application/json" } }
             );

@@ -19,6 +19,7 @@ import {
     ExternalLink,
     Newspaper,
     Activity,
+    Clock, MapPin
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { supabase, Post } from '../lib/supabase';
@@ -92,8 +93,8 @@ function Sidebar({
 
             {/* Sidebar */}
             <aside
-                className={`fixed lg:static inset-y-0 left-0 z-50 w-64 bg-zinc-900/95 backdrop-blur-xl border-r border-zinc-800/50 transform transition-transform duration-300 ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
-                    }`}
+                className={`fixed lg:static inset - y - 0 left - 0 z - 50 w - 64 bg - zinc - 900 / 95 backdrop - blur - xl border - r border - zinc - 800 / 50 transform transition - transform duration - 300 ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+                    } `}
             >
                 <div className="flex flex-col h-full">
                     {/* Logo */}
@@ -112,10 +113,10 @@ function Sidebar({
                                     setActiveTab(item.id);
                                     setIsOpen(false);
                                 }}
-                                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${activeTab === item.id
-                                    ? 'bg-primary/20 text-primary'
-                                    : 'text-zinc-400 hover:bg-zinc-800/50 hover:text-white'
-                                    }`}
+                                className={`w - full flex items - center gap - 3 px - 4 py - 3 rounded - xl transition - all ${activeTab === item.id
+                                        ? 'bg-primary/20 text-primary'
+                                        : 'text-zinc-400 hover:bg-zinc-800/50 hover:text-white'
+                                    } `}
                             >
                                 <item.icon className="w-5 h-5" />
                                 <span className="font-medium">{item.label}</span>
@@ -160,7 +161,8 @@ function DashboardTab() {
         screenPageViews: number;
         engagementRate: number;
         history: { date: string; users: number }[];
-        topPages?: { path: string; views: number; title?: string; image?: string | null }[];
+        topPages?: { path: string; views: number; avgTime: number; title?: string; image?: string | null }[];
+        locations?: { city: string; region: string; country: string; users: number }[];
         mock?: boolean;
     } | null>(null);
 
@@ -218,7 +220,7 @@ function DashboardTab() {
             try {
                 const { data: { publicUrl } } = supabase.storage.from('site-images').getPublicUrl('dummy');
                 const projectUrl = publicUrl.split('/storage/')[0];
-                const res = await fetch(`${projectUrl}/functions/v1/get-ga4-metrics`);
+                const res = await fetch(`${projectUrl} /functions/v1 / get - ga4 - metrics`);
                 if (res.ok) {
                     const data = await res.json();
                     if (!data.error) {
@@ -245,7 +247,7 @@ function DashboardTab() {
         if (value === 0) return <span className="text-xs text-zinc-500">—</span>;
         const isPositive = value > 0;
         return (
-            <span className={`text-xs font-medium ${isPositive ? 'text-emerald-400' : 'text-red-400'}`}>
+            <span className={`text - xs font - medium ${isPositive ? 'text-emerald-400' : 'text-red-400'} `}>
                 {isPositive ? '▲' : '▼'} {Math.abs(value).toFixed(1)}%
             </span>
         );
@@ -293,7 +295,7 @@ function DashboardTab() {
             date: h.date,
         }));
 
-        chartPath = chartDots.map((d, i) => `${i === 0 ? 'M' : 'L'} ${d.x} ${d.y}`).join(' ');
+        chartPath = chartDots.map((d, i) => `${i === 0 ? 'M' : 'L'} ${d.x} ${d.y} `).join(' ');
         chartAreaPath = chartPath + ` L ${chartDots[chartDots.length - 1].x} ${chartPadding.top + innerH} L ${chartDots[0].x} ${chartPadding.top + innerH} Z`;
     }
 
@@ -355,49 +357,97 @@ function DashboardTab() {
                 </div>
             )}
 
-            {/* Row 0.5: Top Blog Posts */}
-            {gaMetrics?.topPages && gaMetrics.topPages.length > 0 && (
-                <div className="bg-zinc-900/60 backdrop-blur-sm border border-zinc-800/50 rounded-2xl p-6">
-                    <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-                        <FileText className="w-5 h-5 text-purple-500" />
-                        Posts Mais Lidos (30d)
-                    </h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-                        {gaMetrics.topPages.slice(0, 5).map((page, i) => (
-                            <div key={i} className="group relative bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden hover:border-purple-500/50 transition-all">
-                                <div className="aspect-[16/9] w-full bg-zinc-800 relative overflow-hidden">
-                                    {page.image ? (
-                                        <img src={page.image} alt={page.title || ''} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                                    ) : (
-                                        <div className="w-full h-full flex items-center justify-center text-zinc-600">
-                                            <FileText className="w-8 h-8 opacity-20" />
-                                        </div>
-                                    )}
-                                    <div className="absolute top-2 right-2 bg-black/60 backdrop-blur-md px-2 py-1 rounded text-xs font-bold text-white">
-                                        #{i + 1}
-                                    </div>
-                                </div>
-                                <div className="p-3">
-                                    <h4 className="text-sm font-medium text-white line-clamp-2 mb-2 min-h-[40px]" title={page.title}>
-                                        {page.title || page.path.replace('/blog/', '')}
-                                    </h4>
-                                    <div className="flex items-center justify-between text-xs text-zinc-400">
-                                        <div className="flex items-center gap-1">
-                                            <Eye className="w-3 h-3 text-purple-400" />
-                                            <span className="text-zinc-300 font-bold">{formatNum(page.views)}</span> views
+            {/* Row 0.5: Top Blog Posts & Locations */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {gaMetrics?.topPages && gaMetrics.topPages.length > 0 && (
+                    <div className="lg:col-span-2 bg-zinc-900/60 backdrop-blur-sm border border-zinc-800/50 rounded-2xl p-6">
+                        <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                            <FileText className="w-5 h-5 text-purple-500" />
+                            Posts Mais Lidos (30d)
+                        </h3>
+                        <div className="space-y-4">
+                            {gaMetrics.topPages.slice(0, 5).map((page, i) => (
+                                <div key={i} className="group flex items-center gap-4 bg-zinc-900/50 hover:bg-zinc-800/50 border border-zinc-800 rounded-xl p-3 transition-all">
+                                    <div className="w-16 h-16 flex-shrink-0 bg-zinc-800 rounded-lg overflow-hidden relative">
+                                        {page.image ? (
+                                            <img src={page.image} alt={page.title || ''} className="w-full h-full object-cover" />
+                                        ) : (
+                                            <div className="w-full h-full flex items-center justify-center text-zinc-600">
+                                                <FileText className="w-6 h-6 opacity-20" />
+                                            </div>
+                                        )}
+                                        <div className="absolute top-0 left-0 bg-black/60 px-1.5 py-0.5 rounded-br text-[10px] font-bold text-white">
+                                            #{i + 1}
                                         </div>
                                     </div>
-                                </div>
+                                    <div className="flex-1 min-w-0">
+                                        <h4 className="text-sm font-medium text-white line-clamp-1 mb-1" title={page.title}>
+                                            {page.title || page.path.replace('/blog/', '')}
+                                        </h4>
+                                        <div className="flex items-center gap-4 text-xs text-zinc-400">
+                                            <div className="flex items-center gap-1.5">
+                                                <Eye className="w-3.5 h-3.5 text-purple-400" />
+                                                <span className="text-zinc-300 font-bold">{formatNum(page.views)}</span> views
+                                            </div>
+                                            <div className="flex items-center gap-1.5" title="Tempo Médio na Página">
+                                                <Clock className="w-3.5 h-3.5 text-blue-400" />
+                                                <span className="text-zinc-300 font-bold">
+                                                    {Math.floor(page.avgTime / 60)}m {Math.floor(page.avgTime % 60)}s
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="hidden sm:block">
+                                        <a href={`https://henriquefujimoto.com.br/blog/${page.slug}`} target="_blank" rel="noreferrer" className="p-2 hover:bg-zinc-700 rounded-lg text-zinc-400 hover:text-white transition-colors">
+                                            <ExternalLink className="w-4 h-4" />
+                                        </a >
+                                    </div >
+                                </div >
+                            ))}
+                        </div >
+                    </div >
+                )}
+
+                {/* Locations */}
+                {
+                    gaMetrics?.locations && gaMetrics.locations.length > 0 && (
+                        <div className="bg-zinc-900/60 backdrop-blur-sm border border-zinc-800/50 rounded-2xl p-6">
+                            <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                                <MapPin className="w-5 h-5 text-green-500" />
+                                Top Cidades (30d)
+                            </h3>
+                            <div className="space-y-3">
+                                {gaMetrics.locations.slice(0, 8).map((loc, i) => (
+                                    <div key={i} className="flex items-center justify-between p-2 rounded-lg hover:bg-zinc-800/30 transition-colors">
+                                        <div className="flex items-center gap-3">
+                                            <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${i === 0 ? 'bg-yellow-500/20 text-yellow-500' :
+                                                i === 1 ? 'bg-zinc-300/20 text-zinc-300' :
+                                                    i === 2 ? 'bg-amber-700/20 text-amber-700' :
+                                                        'bg-zinc-800 text-zinc-500'
+                                                }`}>
+                                                {i + 1}
+                                            </div>
+                                            <div>
+                                                <p className="text-sm font-medium text-white">{loc.city === '(not set)' ? 'Desconhecido' : loc.city}</p>
+                                                <p className="text-xs text-zinc-500">{loc.region}, {loc.country}</p>
+                                            </div>
+                                        </div>
+                                        <div className="text-right">
+                                            <p className="text-sm font-bold text-white">{formatNum(loc.users)}</p>
+                                            <p className="text-[10px] text-zinc-500">usuários</p>
+                                        </div>
+                                    </div>
+                                ))}
                             </div>
-                        ))}
-                    </div>
-                </div>
-            )}
+                        </div>
+                    )
+                }
+            </div >
 
             {/* Row 1: Instagram Metrics */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            < div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4" >
                 {/* Followers */}
-                <motion.div
+                < motion.div
                     initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0 }}
                     className="bg-zinc-900/60 backdrop-blur-sm border border-zinc-800/50 rounded-2xl p-5"
                 >
@@ -407,30 +457,30 @@ function DashboardTab() {
                         <span className="text-xs text-emerald-400 font-medium">+{igMetrics?.followersGain || 0} novos</span>
                         <GrowthIndicator value={igMetrics?.followersGrowth || 0} />
                     </div>
-                </motion.div>
+                </motion.div >
 
                 {/* Reach */}
-                <motion.div
+                < motion.div
                     initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
                     className="bg-zinc-900/60 backdrop-blur-sm border border-zinc-800/50 rounded-2xl p-5"
                 >
                     <p className="text-zinc-400 text-xs font-medium uppercase tracking-wider mb-1">Alcance (30d)</p>
                     <p className="text-3xl font-bold text-white">{formatNum(igMetrics?.reach || 0)}</p>
                     <GrowthIndicator value={igMetrics?.reachGrowth || 0} />
-                </motion.div>
+                </motion.div >
 
                 {/* Interactions */}
-                <motion.div
+                < motion.div
                     initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
                     className="bg-zinc-900/60 backdrop-blur-sm border border-zinc-800/50 rounded-2xl p-5"
                 >
                     <p className="text-zinc-400 text-xs font-medium uppercase tracking-wider mb-1">Interações (30d)</p>
                     <p className="text-3xl font-bold text-white">{formatNum(igMetrics?.interactions || 0)}</p>
                     <GrowthIndicator value={igMetrics?.interactionsGrowth || 0} />
-                </motion.div>
+                </motion.div >
 
                 {/* Engagement */}
-                <motion.div
+                < motion.div
                     initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
                     className="bg-zinc-900/60 backdrop-blur-sm border border-zinc-800/50 rounded-2xl p-5"
                 >
@@ -441,11 +491,11 @@ function DashboardTab() {
                             : '—'}
                     </p>
                     <span className="text-xs text-zinc-500">Interações / Seguidores</span>
-                </motion.div>
-            </div>
+                </motion.div >
+            </div >
 
             {/* Row 2: Content Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            < div className="grid grid-cols-1 md:grid-cols-3 gap-4" >
                 <motion.div
                     initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}
                     className="bg-zinc-900/60 backdrop-blur-sm border border-zinc-800/50 rounded-2xl p-5"
@@ -470,101 +520,105 @@ function DashboardTab() {
                     <p className="text-3xl font-bold text-white">{formatNum(contentStats.totalComments)}</p>
                     <span className="text-xs text-zinc-500">Todos os posts</span>
                 </motion.div>
-            </div>
+            </div >
 
             {/* Row 3: Followers Chart */}
-            {followersHistory.length > 1 && (
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.7 }}
-                    className="bg-zinc-900/60 backdrop-blur-sm border border-zinc-800/50 rounded-2xl p-6"
-                >
-                    <h3 className="text-lg font-semibold text-white mb-4">📈 Evolução de Seguidores</h3>
-                    <div className="w-full overflow-x-auto">
-                        <svg viewBox={`0 0 ${chartWidth} ${chartHeight}`} className="w-full h-auto" preserveAspectRatio="xMidYMid meet">
-                            <defs>
-                                <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="0%" stopColor="#22c55e" stopOpacity="0.3" />
-                                    <stop offset="100%" stopColor="#22c55e" stopOpacity="0" />
-                                </linearGradient>
-                            </defs>
-                            {/* Grid lines */}
-                            {[0, 0.25, 0.5, 0.75, 1].map(pct => (
-                                <line key={pct}
-                                    x1={chartPadding.left} y1={chartPadding.top + innerH * (1 - pct)}
-                                    x2={chartPadding.left + innerW} y2={chartPadding.top + innerH * (1 - pct)}
-                                    stroke="#27272a" strokeWidth="0.5"
-                                />
-                            ))}
-                            {/* Area fill */}
-                            <path d={chartAreaPath} fill="url(#areaGrad)" />
-                            {/* Line */}
-                            <path d={chartPath} fill="none" stroke="#22c55e" strokeWidth="2" strokeLinejoin="round" />
-                            {/* Dots */}
-                            {chartDots.map((d, i) => (
-                                <g key={i}>
-                                    <circle cx={d.x} cy={d.y} r="3" fill="#22c55e" stroke="#09090b" strokeWidth="1.5" />
-                                    {/* Label on first and last */}
-                                    {(i === 0 || i === chartDots.length - 1) && (
-                                        <text x={d.x} y={d.y - 8} textAnchor="middle" fill="#a1a1aa" fontSize="9" fontWeight="bold">
-                                            {d.count}
-                                        </text>
-                                    )}
-                                </g>
-                            ))}
-                            {/* Date labels */}
-                            {chartDots.filter((_, i) => i === 0 || i === chartDots.length - 1).map((d, i) => (
-                                <text key={i} x={d.x} y={chartPadding.top + innerH + 15} textAnchor="middle" fill="#71717a" fontSize="8">
-                                    {new Date(d.date + 'T12:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })}
-                                </text>
-                            ))}
-                        </svg>
-                    </div>
-                </motion.div>
-            )}
+            {
+                followersHistory.length > 1 && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.7 }}
+                        className="bg-zinc-900/60 backdrop-blur-sm border border-zinc-800/50 rounded-2xl p-6"
+                    >
+                        <h3 className="text-lg font-semibold text-white mb-4">📈 Evolução de Seguidores</h3>
+                        <div className="w-full overflow-x-auto">
+                            <svg viewBox={`0 0 ${chartWidth} ${chartHeight}`} className="w-full h-auto" preserveAspectRatio="xMidYMid meet">
+                                <defs>
+                                    <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="0%" stopColor="#22c55e" stopOpacity="0.3" />
+                                        <stop offset="100%" stopColor="#22c55e" stopOpacity="0" />
+                                    </linearGradient>
+                                </defs>
+                                {/* Grid lines */}
+                                {[0, 0.25, 0.5, 0.75, 1].map(pct => (
+                                    <line key={pct}
+                                        x1={chartPadding.left} y1={chartPadding.top + innerH * (1 - pct)}
+                                        x2={chartPadding.left + innerW} y2={chartPadding.top + innerH * (1 - pct)}
+                                        stroke="#27272a" strokeWidth="0.5"
+                                    />
+                                ))}
+                                {/* Area fill */}
+                                <path d={chartAreaPath} fill="url(#areaGrad)" />
+                                {/* Line */}
+                                <path d={chartPath} fill="none" stroke="#22c55e" strokeWidth="2" strokeLinejoin="round" />
+                                {/* Dots */}
+                                {chartDots.map((d, i) => (
+                                    <g key={i}>
+                                        <circle cx={d.x} cy={d.y} r="3" fill="#22c55e" stroke="#09090b" strokeWidth="1.5" />
+                                        {/* Label on first and last */}
+                                        {(i === 0 || i === chartDots.length - 1) && (
+                                            <text x={d.x} y={d.y - 8} textAnchor="middle" fill="#a1a1aa" fontSize="9" fontWeight="bold">
+                                                {d.count}
+                                            </text>
+                                        )}
+                                    </g>
+                                ))}
+                                {/* Date labels */}
+                                {chartDots.filter((_, i) => i === 0 || i === chartDots.length - 1).map((d, i) => (
+                                    <text key={i} x={d.x} y={chartPadding.top + innerH + 15} textAnchor="middle" fill="#71717a" fontSize="8">
+                                        {new Date(d.date + 'T12:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })}
+                                    </text>
+                                ))}
+                            </svg>
+                        </div>
+                    </motion.div>
+                )
+            }
 
             {/* Row 4: Top Posts */}
-            {topPosts.length > 0 && (
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.8 }}
-                    className="bg-zinc-900/60 backdrop-blur-sm border border-zinc-800/50 rounded-2xl p-6"
-                >
-                    <h3 className="text-lg font-semibold text-white mb-4">🔥 Top Posts por Engajamento</h3>
-                    <div className="space-y-3">
-                        {topPosts.map((post, i) => (
-                            <a
-                                key={post.id}
-                                href={post.permalink}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="flex items-center gap-4 p-3 rounded-xl hover:bg-zinc-800/50 transition-colors group"
-                            >
-                                <span className="text-lg font-bold text-zinc-600 w-6 text-center">{i + 1}</span>
-                                <div className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 bg-zinc-800">
-                                    <img
-                                        src={post.thumbnail_url || post.media_url}
-                                        alt=""
-                                        className="w-full h-full object-cover"
-                                        onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
-                                    />
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                    <p className="text-sm text-white truncate">
-                                        {post.caption?.slice(0, 60) || 'Sem legenda'}
-                                        {(post.caption?.length || 0) > 60 ? '...' : ''}
-                                    </p>
-                                    <div className="flex items-center gap-3 mt-1">
-                                        <span className="text-xs text-zinc-400">❤️ {post.like_count}</span>
-                                        <span className="text-xs text-zinc-400">💬 {post.comments_count}</span>
-                                        <span className="text-xs text-zinc-500">{post.media_type}</span>
+            {
+                topPosts.length > 0 && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.8 }}
+                        className="bg-zinc-900/60 backdrop-blur-sm border border-zinc-800/50 rounded-2xl p-6"
+                    >
+                        <h3 className="text-lg font-semibold text-white mb-4">🔥 Top Posts por Engajamento</h3>
+                        <div className="space-y-3">
+                            {topPosts.map((post, i) => (
+                                <a
+                                    key={post.id}
+                                    href={post.permalink}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="flex items-center gap-4 p-3 rounded-xl hover:bg-zinc-800/50 transition-colors group"
+                                >
+                                    <span className="text-lg font-bold text-zinc-600 w-6 text-center">{i + 1}</span>
+                                    <div className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 bg-zinc-800">
+                                        <img
+                                            src={post.thumbnail_url || post.media_url}
+                                            alt=""
+                                            className="w-full h-full object-cover"
+                                            onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                                        />
                                     </div>
-                                </div>
-                                <ExternalLink className="w-4 h-4 text-zinc-600 group-hover:text-primary transition-colors flex-shrink-0" />
-                            </a>
-                        ))}
-                    </div>
-                </motion.div>
-            )}
-        </div>
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-sm text-white truncate">
+                                            {post.caption?.slice(0, 60) || 'Sem legenda'}
+                                            {(post.caption?.length || 0) > 60 ? '...' : ''}
+                                        </p>
+                                        <div className="flex items-center gap-3 mt-1">
+                                            <span className="text-xs text-zinc-400">❤️ {post.like_count}</span>
+                                            <span className="text-xs text-zinc-400">💬 {post.comments_count}</span>
+                                            <span className="text-xs text-zinc-500">{post.media_type}</span>
+                                        </div>
+                                    </div>
+                                    <ExternalLink className="w-4 h-4 text-zinc-600 group-hover:text-primary transition-colors flex-shrink-0" />
+                                </a>
+                            ))}
+                        </div>
+                    </motion.div>
+                )
+            }
+        </div >
     );
 }
 
