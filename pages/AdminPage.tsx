@@ -114,8 +114,8 @@ function Sidebar({
                                     setIsOpen(false);
                                 }}
                                 className={`w - full flex items - center gap - 3 px - 4 py - 3 rounded - xl transition - all ${activeTab === item.id
-                                        ? 'bg-primary/20 text-primary'
-                                        : 'text-zinc-400 hover:bg-zinc-800/50 hover:text-white'
+                                    ? 'bg-primary/20 text-primary'
+                                    : 'text-zinc-400 hover:bg-zinc-800/50 hover:text-white'
                                     } `}
                             >
                                 <item.icon className="w-5 h-5" />
@@ -220,7 +220,7 @@ function DashboardTab() {
             try {
                 const { data: { publicUrl } } = supabase.storage.from('site-images').getPublicUrl('dummy');
                 const projectUrl = publicUrl.split('/storage/')[0];
-                const res = await fetch(`${projectUrl} /functions/v1 / get - ga4 - metrics`);
+                const res = await fetch(`${projectUrl}/functions/v1/get-ga4-metrics`);
                 if (res.ok) {
                     const data = await res.json();
                     if (!data.error) {
