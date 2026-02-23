@@ -25,6 +25,7 @@ import { Link } from 'react-router-dom';
 import { supabase, Post } from '../lib/supabase';
 import BlogTab from '../components/admin/BlogTab';
 import TrackingTab from '../components/admin/TrackingTab';
+import JourneyTab from '../components/admin/JourneyTab';
 
 // Mock posts for development
 const mockPosts: Post[] = [
@@ -54,7 +55,7 @@ const mockPosts: Post[] = [
     },
 ];
 
-type Tab = 'dashboard' | 'blog' | 'posts' | 'bio' | 'tracking' | 'settings';
+type Tab = 'dashboard' | 'blog' | 'posts' | 'bio' | 'journey' | 'tracking' | 'settings';
 
 function Sidebar({
     activeTab,
@@ -72,6 +73,7 @@ function Sidebar({
         { id: 'blog' as Tab, label: 'Blog', icon: Newspaper },
         { id: 'posts' as Tab, label: 'Posts IG', icon: FileText },
         { id: 'bio' as Tab, label: 'Bio / Home', icon: Home },
+        { id: 'journey' as Tab, label: 'Jornada', icon: MapPin },
         { id: 'tracking' as Tab, label: 'Tracking & SEO', icon: Activity },
         { id: 'settings' as Tab, label: 'Configurações', icon: Settings },
     ];
@@ -114,8 +116,8 @@ function Sidebar({
                                     setIsOpen(false);
                                 }}
                                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${activeTab === item.id
-                                        ? 'bg-primary/20 text-primary'
-                                        : 'text-zinc-400 hover:bg-zinc-800/50 hover:text-white'
+                                    ? 'bg-primary/20 text-primary'
+                                    : 'text-zinc-400 hover:bg-zinc-800/50 hover:text-white'
                                     }`}
                             >
                                 <item.icon className="w-5 h-5" />
@@ -155,6 +157,7 @@ function DashboardTab() {
         id: string; caption: string; media_url: string; thumbnail_url: string;
         media_type: string; like_count: number; comments_count: number; permalink: string;
     }[]>([]);
+    const [pageViews, setPageViews] = useState<{ page_path: string; page_title: string; views: number; unique_views: number }[]>([]);
     const [gaMetrics, setGaMetrics] = useState<{
         activeUsers: number;
         sessions: number;
@@ -216,7 +219,27 @@ function DashboardTab() {
                 })));
             }
 
-            // 4. GA4 Metrics
+            // 4. Page views (internal tracking)
+            const { data: pvData } = await supabase
+                .rpc('get_page_views_summary');
+            if (pvData) {
+                setPageViews(pvData);
+            } else {
+                // Fallback: manual aggregation
+                const { data: rawPv } = await supabase
+                    .from('page_views')
+                    .select('page_path, page_title');
+                if (rawPv) {
+                    const agg: Record<string, { page_path: string; page_title: string; views: number; sessions: Set<string> }> = {};
+                    rawPv.forEach((r: any) => {
+                        if (!agg[r.page_path]) agg[r.page_path] = { page_path: r.page_path, page_title: r.page_title || r.page_path, views: 0, sessions: new Set() };
+                        agg[r.page_path].views++;
+                    });
+                    setPageViews(Object.values(agg).map(a => ({ page_path: a.page_path, page_title: a.page_title, views: a.views, unique_views: a.sessions.size })).sort((a, b) => b.views - a.views));
+                }
+            }
+
+            // 5. GA4 Metrics
             try {
                 const { data: { publicUrl } } = supabase.storage.from('site-images').getPublicUrl('dummy');
                 const projectUrl = publicUrl.split('/storage/')[0];
@@ -273,16 +296,23 @@ function DashboardTab() {
         );
     }
 
-    // Chart calculations
-    const chartWidth = 600;
-    const chartHeight = 150;
-    const chartPadding = { top: 20, right: 10, bottom: 30, left: 50 };
+    // Chart calculations — dynamic width based on data points for mobile
+    const minPointSpacing = 55;
+    const baseWidth = 600;
+    const chartWidth = Math.max(baseWidth, followersHistory.length * minPointSpacing + 60);
+    const chartHeight = 170;
+    const chartPadding = { top: 25, right: 15, bottom: 35, left: 50 };
     const innerW = chartWidth - chartPadding.left - chartPadding.right;
     const innerH = chartHeight - chartPadding.top - chartPadding.bottom;
+    const chartNeedsScroll = chartWidth > baseWidth;
+
+    // Show fewer date labels when there are many data points
+    const maxLabels = 15;
+    const labelInterval = followersHistory.length > maxLabels ? Math.ceil(followersHistory.length / maxLabels) : 1;
 
     let chartPath = '';
     let chartAreaPath = '';
-    let chartDots: { x: number; y: number; count: number; date: string }[] = [];
+    let chartDots: { x: number; y: number; count: number; date: string; showLabel: boolean }[] = [];
     if (followersHistory.length > 1) {
         const minVal = Math.min(...followersHistory.map(h => h.count)) - 5;
         const maxVal = Math.max(...followersHistory.map(h => h.count)) + 5;
@@ -293,6 +323,7 @@ function DashboardTab() {
             y: chartPadding.top + innerH - ((h.count - minVal) / range) * innerH,
             count: h.count,
             date: h.date,
+            showLabel: i === 0 || i === followersHistory.length - 1 || i % labelInterval === 0,
         }));
 
         chartPath = chartDots.map((d, i) => `${i === 0 ? 'M' : 'L'} ${d.x} ${d.y} `).join(' ');
@@ -527,11 +558,19 @@ function DashboardTab() {
                 followersHistory.length > 1 && (
                     <motion.div
                         initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.7 }}
-                        className="bg-zinc-900/60 backdrop-blur-sm border border-zinc-800/50 rounded-2xl p-6"
+                        className="bg-zinc-900/60 backdrop-blur-sm border border-zinc-800/50 rounded-2xl p-6 overflow-hidden"
                     >
-                        <h3 className="text-lg font-semibold text-white mb-4">📈 Evolução de Seguidores</h3>
-                        <div className="w-full overflow-x-auto">
-                            <svg viewBox={`0 0 ${chartWidth} ${chartHeight}`} className="w-full h-auto" preserveAspectRatio="xMidYMid meet">
+                        <div className="flex items-center justify-between mb-4">
+                            <h3 className="text-lg font-semibold text-white">📈 Evolução de Seguidores</h3>
+                            <span className="text-xs text-zinc-500">{followersHistory.length} registros</span>
+                        </div>
+                        <div className={`w-full ${chartNeedsScroll ? 'overflow-x-auto' : ''}`} style={{ WebkitOverflowScrolling: 'touch' }}>
+                            <svg
+                                viewBox={`0 0 ${chartWidth} ${chartHeight}`}
+                                className={chartNeedsScroll ? 'h-auto' : 'w-full h-auto'}
+                                preserveAspectRatio="xMidYMid meet"
+                                style={chartNeedsScroll ? { width: `${chartWidth}px`, minWidth: `${chartWidth}px` } : undefined}
+                            >
                                 <defs>
                                     <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
                                         <stop offset="0%" stopColor="#22c55e" stopOpacity="0.3" />
@@ -550,29 +589,80 @@ function DashboardTab() {
                                 <path d={chartAreaPath} fill="url(#areaGrad)" />
                                 {/* Line */}
                                 <path d={chartPath} fill="none" stroke="#22c55e" strokeWidth="2" strokeLinejoin="round" />
-                                {/* Dots */}
+                                {/* Dots + value labels */}
                                 {chartDots.map((d, i) => (
                                     <g key={i}>
                                         <circle cx={d.x} cy={d.y} r="3" fill="#22c55e" stroke="#09090b" strokeWidth="1.5" />
-                                        {/* Label on all points */}
-                                        <text x={d.x} y={d.y - 8} textAnchor="middle" fill="#a1a1aa" fontSize="9" fontWeight="bold">
-                                            {d.count}
-                                        </text>
+                                        {d.showLabel && (
+                                            <text x={d.x} y={d.y - 10} textAnchor="middle" fill="#a1a1aa" fontSize="9" fontWeight="bold">
+                                                {d.count}
+                                            </text>
+                                        )}
                                     </g>
                                 ))}
                                 {/* Date labels */}
                                 {chartDots.map((d, i) => (
-                                    <text key={i} x={d.x} y={chartPadding.top + innerH + 15} textAnchor="middle" fill="#71717a" fontSize="8">
-                                        {new Date(d.date + 'T12:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })}
-                                    </text>
+                                    d.showLabel ? (
+                                        <text key={i} x={d.x} y={chartPadding.top + innerH + 18} textAnchor="middle" fill="#71717a" fontSize="8">
+                                            {new Date(d.date + 'T12:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })}
+                                        </text>
+                                    ) : null
                                 ))}
                             </svg>
+                        </div>
+                        {chartNeedsScroll && (
+                            <p className="text-[10px] text-zinc-600 mt-2 text-center">← Deslize para ver todos os dados →</p>
+                        )}
+                    </motion.div>
+                )
+            }
+
+            {/* Row 4: Page Views Tracking */}
+            {
+                pageViews.length > 0 && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.75 }}
+                        className="bg-zinc-900/60 backdrop-blur-sm border border-zinc-800/50 rounded-2xl p-6"
+                    >
+                        <div className="flex items-center justify-between mb-4">
+                            <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+                                <Eye className="w-5 h-5 text-blue-400" />
+                                Páginas Mais Acessadas
+                            </h3>
+                            <span className="text-xs text-zinc-500">
+                                {pageViews.reduce((sum, p) => sum + p.views, 0)} views totais
+                            </span>
+                        </div>
+                        <div className="space-y-3">
+                            {pageViews.map((pv, i) => {
+                                const maxViews = pageViews[0]?.views || 1;
+                                const pct = (pv.views / maxViews) * 100;
+                                return (
+                                    <div key={pv.page_path} className="flex items-center gap-3">
+                                        <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 ${i === 0 ? 'bg-yellow-500/20 text-yellow-400'
+                                                : i === 1 ? 'bg-zinc-400/20 text-zinc-300'
+                                                    : i === 2 ? 'bg-amber-700/20 text-amber-600'
+                                                        : 'bg-zinc-800 text-zinc-500'
+                                            }`}>{i + 1}</div>
+                                        <div className="flex-1 min-w-0">
+                                            <div className="flex items-center justify-between mb-1">
+                                                <span className="text-sm font-medium text-white truncate">{pv.page_title || pv.page_path}</span>
+                                                <span className="text-xs font-bold text-blue-400 ml-2 flex-shrink-0">{pv.views}</span>
+                                            </div>
+                                            <div className="w-full h-1.5 bg-zinc-800 rounded-full overflow-hidden">
+                                                <div className="h-full bg-gradient-to-r from-blue-500 to-cyan-400 rounded-full transition-all" style={{ width: `${pct}%` }} />
+                                            </div>
+                                            <span className="text-[10px] text-zinc-600 mt-0.5 block">{pv.page_path}</span>
+                                        </div>
+                                    </div>
+                                );
+                            })}
                         </div>
                     </motion.div>
                 )
             }
 
-            {/* Row 4: Top Posts */}
+            {/* Row 5: Top Posts */}
             {
                 topPosts.length > 0 && (
                     <motion.div
@@ -2025,6 +2115,7 @@ export default function AdminPage() {
                             {activeTab === 'blog' && <BlogTab />}
                             {activeTab === 'posts' && <PostsTab />}
                             {activeTab === 'bio' && <BioTab />}
+                            {activeTab === 'journey' && <JourneyTab />}
                             {activeTab === 'tracking' && <TrackingTab />}
                             {activeTab === 'settings' && <SettingsTab />}
                         </motion.div>
