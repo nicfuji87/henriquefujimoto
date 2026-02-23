@@ -17,6 +17,7 @@ import {
 import Hero from '../components/Hero';
 import Footer from '../components/Footer';
 import StickyCTA from '../components/StickyCTA';
+import CompetitionsSection from '../components/CompetitionsSection';
 import { trackPageView } from '../lib/pageTracking';
 import { getAggregatedMetrics } from '../lib/metrics';
 import { supabase } from '../lib/supabase';
@@ -360,6 +361,9 @@ export default function HomePage() {
                         );
                     })}
                 </div>
+
+                {/* Histórico Competitivo */}
+                <CompetitionsSection />
 
                 {/* Quick social links */}
                 <motion.div
