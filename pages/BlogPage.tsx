@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
+import { trackPageView } from '../lib/pageTracking';
 
 // ─── Constants & Styles ──────────────────────────────────
 const CATEGORY_STYLES: Record<string, { label: string; color: string; icon: string }> = {
@@ -191,6 +192,7 @@ export default function BlogPage() {
 
     useEffect(() => {
         document.title = 'Blog — Henrique Fujimoto';
+        trackPageView('/blog', 'Blog & Notícias');
         fetchPosts();
     }, []);
 
