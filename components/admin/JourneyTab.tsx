@@ -2,12 +2,22 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Save, Plus, Trash2, GripVertical, AlertCircle, CheckCircle2, Upload, Image, Film, Trophy, X } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 
+// ─── Types ───────────────────────────────────────────
+interface MediaItem {
+    url: string;
+    type: 'image' | 'video';
+    caption?: string;
+}
+
 interface Milestone {
     year: string;
     title: string;
     description: string;
+    /** Legacy single-media (kept for backward compat) */
     media_url?: string;
     media_type?: 'image' | 'video';
+    /** Multi-media array (new) */
+    media_items?: MediaItem[];
 }
 
 interface Stat {
@@ -44,6 +54,15 @@ const MEDAL_OPTIONS = [
     { value: 'bronze', label: '🥉 Bronze' },
 ];
 
+/** Merges legacy media_url into media_items so the UI always works with the array */
+function normalizeMilestone(m: Milestone): Milestone {
+    const items: MediaItem[] = m.media_items ? [...m.media_items] : [];
+    if (m.media_url && !items.some(i => i.url === m.media_url)) {
+        items.unshift({ url: m.media_url, type: m.media_type || 'image' });
+    }
+    return { ...m, media_items: items };
+}
+
 export default function JourneyTab() {
     const [profile, setProfile] = useState<AthleteProfile | null>(null);
     const [competitions, setCompetitions] = useState<Competition[]>([]);
@@ -51,15 +70,13 @@ export default function JourneyTab() {
     const [saving, setSaving] = useState(false);
     const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
     const [newValue, setNewValue] = useState('');
-    const [uploadingMilestone, setUploadingMilestone] = useState<number | null>(null);
+    const [uploadingFor, setUploadingFor] = useState<number | null>(null);
     const [activeSection, setActiveSection] = useState<'bio' | 'competitions'>('bio');
     const [editingComp, setEditingComp] = useState<Competition | null>(null);
     const [savingComp, setSavingComp] = useState(false);
     const fileInputRefs = useRef<Record<number, HTMLInputElement | null>>({});
 
-    useEffect(() => {
-        fetchAll();
-    }, []);
+    useEffect(() => { fetchAll(); }, []);
 
     async function fetchAll() {
         try {
@@ -67,9 +84,12 @@ export default function JourneyTab() {
                 supabase.from('athlete_profile').select('*').limit(1).single(),
                 supabase.from('competitions').select('*').order('date', { ascending: false }),
             ]);
-
             if (profileRes.error) throw profileRes.error;
-            setProfile(profileRes.data);
+            const raw = profileRes.data as AthleteProfile;
+            setProfile({
+                ...raw,
+                milestones: raw.milestones.map(normalizeMilestone),
+            });
             setCompetitions(compRes.data || []);
         } catch (err) {
             console.error('Error fetching data:', err);
@@ -79,12 +99,11 @@ export default function JourneyTab() {
         }
     }
 
-    // ─── Profile Save ───
+    // ─── Profile Save ─────────────────────────────────
     async function handleSave() {
         if (!profile) return;
         setSaving(true);
         setMessage(null);
-
         try {
             const { error } = await supabase
                 .from('athlete_profile')
@@ -97,23 +116,25 @@ export default function JourneyTab() {
                     updated_at: new Date().toISOString(),
                 })
                 .eq('id', profile.id);
-
             if (error) throw error;
             setMessage({ type: 'success', text: 'Jornada atualizada com sucesso!' });
-        } catch (err) {
+        } catch (err: any) {
             console.error('Error saving profile:', err);
-            setMessage({ type: 'error', text: 'Erro ao salvar. Tente novamente.' });
+            setMessage({ type: 'error', text: `Erro ao salvar: ${err?.message || 'Tente novamente.'}` });
         } finally {
             setSaving(false);
         }
     }
 
-    // ─── Milestone handlers ───
+    // ─── Milestone helpers ────────────────────────────
     function addMilestone() {
         if (!profile) return;
         setProfile({
             ...profile,
-            milestones: [...profile.milestones, { year: new Date().getFullYear().toString(), title: '', description: '' }],
+            milestones: [...profile.milestones, {
+                year: new Date().getFullYear().toString(),
+                title: '', description: '', media_items: [],
+            }],
         });
     }
 
@@ -138,148 +159,126 @@ export default function JourneyTab() {
         setProfile({ ...profile, milestones: updated });
     }
 
-    async function handleMilestoneMediaUpload(e: React.ChangeEvent<HTMLInputElement>, index: number) {
-        const file = e.target.files?.[0];
-        if (!file || !profile) return;
+    // ─── Multi-media upload ───────────────────────────
+    async function handleMediaUpload(e: React.ChangeEvent<HTMLInputElement>, milestoneIndex: number) {
+        const files = e.target.files;
+        if (!files || files.length === 0 || !profile) return;
 
-        setUploadingMilestone(index);
+        setUploadingFor(milestoneIndex);
         setMessage(null);
 
         try {
-            const isVideo = file.type.startsWith('video/');
-            const bucket = isVideo ? 'site-videos' : 'site-images';
-            const fileExt = file.name.split('.').pop();
-            const fileName = `milestone-${index}-${Date.now()}.${fileExt}`;
-            const filePath = `journey/${fileName}`;
+            const newItems: MediaItem[] = [];
 
-            const { error: uploadError } = await supabase.storage
-                .from(bucket)
-                .upload(filePath, file, { upsert: true });
+            for (const file of Array.from(files) as File[]) {
+                const isVideo = (file as File).type.startsWith('video/');
+                const bucket = isVideo ? 'site-videos' : 'site-images';
+                const ext = (file as File).name.split('.').pop();
+                const fileName = `milestone-${milestoneIndex}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}.${ext}`;
+                const filePath = `journey/${fileName}`;
 
-            if (uploadError) throw uploadError;
+                const { error: uploadError } = await supabase.storage
+                    .from(bucket)
+                    .upload(filePath, file as File, { upsert: true });
+                if (uploadError) throw uploadError;
 
-            const { data: { publicUrl } } = supabase.storage
-                .from(bucket)
-                .getPublicUrl(filePath);
+                const { data: { publicUrl } } = supabase.storage.from(bucket).getPublicUrl(filePath);
+                newItems.push({ url: publicUrl, type: isVideo ? 'video' : 'image' });
+            }
 
             const updated = [...profile.milestones];
-            updated[index] = {
-                ...updated[index],
-                media_url: publicUrl,
-                media_type: isVideo ? 'video' : 'image',
+            const existing = updated[milestoneIndex].media_items || [];
+            updated[milestoneIndex] = {
+                ...updated[milestoneIndex],
+                media_items: [...existing, ...newItems],
             };
             setProfile({ ...profile, milestones: updated });
-            setMessage({ type: 'success', text: `Mídia do marco ${index + 1} enviada!` });
-        } catch (err) {
+            setMessage({ type: 'success', text: `${newItems.length} arquivo(s) enviado(s)!` });
+        } catch (err: any) {
             console.error('Upload error:', err);
-            setMessage({ type: 'error', text: 'Erro ao enviar arquivo.' });
+            setMessage({ type: 'error', text: `Erro ao enviar: ${err?.message || 'Tente novamente.'}` });
         } finally {
-            setUploadingMilestone(null);
+            setUploadingFor(null);
             if (e.target) e.target.value = '';
         }
     }
 
-    function removeMilestoneMedia(index: number) {
+    function removeMediaItem(milestoneIndex: number, itemIndex: number) {
         if (!profile) return;
         const updated = [...profile.milestones];
-        updated[index] = { ...updated[index], media_url: undefined, media_type: undefined };
+        const items = [...(updated[milestoneIndex].media_items || [])];
+        items.splice(itemIndex, 1);
+        updated[milestoneIndex] = { ...updated[milestoneIndex], media_items: items };
         setProfile({ ...profile, milestones: updated });
     }
 
-    // ─── Stats handlers ───
+    function updateMediaCaption(milestoneIndex: number, itemIndex: number, caption: string) {
+        if (!profile) return;
+        const updated = [...profile.milestones];
+        const items = [...(updated[milestoneIndex].media_items || [])];
+        items[itemIndex] = { ...items[itemIndex], caption };
+        updated[milestoneIndex] = { ...updated[milestoneIndex], media_items: items };
+        setProfile({ ...profile, milestones: updated });
+    }
+
+    // ─── Stats ────────────────────────────────────────
     function addStat() {
         if (!profile) return;
         setProfile({ ...profile, stats: [...profile.stats, { value: '', label: '' }] });
     }
-
     function updateStat(index: number, field: keyof Stat, value: string) {
         if (!profile) return;
         const updated = [...profile.stats];
         updated[index] = { ...updated[index], [field]: value };
         setProfile({ ...profile, stats: updated });
     }
-
     function removeStat(index: number) {
         if (!profile) return;
         setProfile({ ...profile, stats: profile.stats.filter((_, i) => i !== index) });
     }
 
-    // ─── Values handlers ───
+    // ─── Values ───────────────────────────────────────
     function addValue() {
         if (!profile || !newValue.trim()) return;
         setProfile({ ...profile, values_list: [...profile.values_list, newValue.trim()] });
         setNewValue('');
     }
-
     function removeValue(index: number) {
         if (!profile) return;
         setProfile({ ...profile, values_list: profile.values_list.filter((_, i) => i !== index) });
     }
 
-    // ─── Competition handlers ───
+    // ─── Competition handlers ─────────────────────────
     function newCompetition(): Competition {
-        return {
-            id: '',
-            name: '',
-            date: new Date().toISOString().split('T')[0],
-            location: '',
-            category: '',
-            weight_class: '',
-            placement: '',
-            medal_type: null,
-            notes: '',
-            display_order: competitions.length,
-        };
+        return { id: '', name: '', date: new Date().toISOString().split('T')[0], location: '', category: '', weight_class: '', placement: '', medal_type: null, notes: '', display_order: competitions.length };
     }
 
     async function saveCompetition(comp: Competition) {
         setSavingComp(true);
         setMessage(null);
-
         try {
             if (comp.id) {
-                // Update
-                const { error } = await supabase
-                    .from('competitions')
-                    .update({
-                        name: comp.name,
-                        date: comp.date,
-                        location: comp.location,
-                        category: comp.category,
-                        weight_class: comp.weight_class,
-                        placement: comp.placement,
-                        medal_type: comp.medal_type || null,
-                        notes: comp.notes,
-                        display_order: comp.display_order,
-                    })
-                    .eq('id', comp.id);
-
+                const { error } = await supabase.from('competitions').update({
+                    name: comp.name, date: comp.date, location: comp.location, category: comp.category,
+                    weight_class: comp.weight_class, placement: comp.placement, medal_type: comp.medal_type || null,
+                    notes: comp.notes, display_order: comp.display_order,
+                }).eq('id', comp.id);
                 if (error) throw error;
             } else {
-                // Insert
                 const { error } = await supabase.from('competitions').insert({
-                    name: comp.name,
-                    date: comp.date,
-                    location: comp.location,
-                    category: comp.category,
-                    weight_class: comp.weight_class,
-                    placement: comp.placement,
-                    medal_type: comp.medal_type || null,
-                    notes: comp.notes,
-                    display_order: comp.display_order,
+                    name: comp.name, date: comp.date, location: comp.location, category: comp.category,
+                    weight_class: comp.weight_class, placement: comp.placement, medal_type: comp.medal_type || null,
+                    notes: comp.notes, display_order: comp.display_order,
                 });
-
                 if (error) throw error;
             }
-
             setMessage({ type: 'success', text: 'Competição salva com sucesso!' });
             setEditingComp(null);
-            // Reload competitions
             const { data } = await supabase.from('competitions').select('*').order('date', { ascending: false });
             setCompetitions(data || []);
-        } catch (err) {
+        } catch (err: any) {
             console.error('Error saving competition:', err);
-            setMessage({ type: 'error', text: 'Erro ao salvar competição.' });
+            setMessage({ type: 'error', text: `Erro ao salvar: ${err?.message}` });
         } finally {
             setSavingComp(false);
         }
@@ -292,29 +291,24 @@ export default function JourneyTab() {
             if (error) throw error;
             setCompetitions(competitions.filter((c) => c.id !== id));
             setMessage({ type: 'success', text: 'Competição removida.' });
-        } catch (err) {
-            console.error('Error deleting:', err);
-            setMessage({ type: 'error', text: 'Erro ao excluir.' });
+        } catch (err: any) {
+            setMessage({ type: 'error', text: `Erro ao excluir: ${err?.message}` });
         }
     }
 
-    // ─── Render ───
-    if (loading) {
-        return (
-            <div className="flex items-center justify-center h-64">
-                <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-            </div>
-        );
-    }
+    // ─── Render ───────────────────────────────────────
+    if (loading) return (
+        <div className="flex items-center justify-center h-64">
+            <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+        </div>
+    );
 
-    if (!profile) {
-        return (
-            <div className="text-center text-zinc-400 py-20">
-                <AlertCircle className="w-12 h-12 mx-auto mb-4 text-red-400" />
-                <p>Perfil não encontrado. Verifique a tabela athlete_profile.</p>
-            </div>
-        );
-    }
+    if (!profile) return (
+        <div className="text-center text-zinc-400 py-20">
+            <AlertCircle className="w-12 h-12 mx-auto mb-4 text-red-400" />
+            <p>Perfil não encontrado. Verifique a tabela athlete_profile.</p>
+        </div>
+    );
 
     const medalEmoji = (type: string | null) => {
         if (type === 'gold') return '🥇';
@@ -335,16 +329,10 @@ export default function JourneyTab() {
 
             {/* Section Toggle */}
             <div className="flex gap-2 border-b border-zinc-800 pb-1">
-                <button
-                    onClick={() => setActiveSection('bio')}
-                    className={`px-4 py-2 rounded-t-lg text-sm font-medium transition-colors ${activeSection === 'bio' ? 'bg-zinc-800 text-white' : 'text-zinc-500 hover:text-zinc-300'}`}
-                >
+                <button onClick={() => setActiveSection('bio')} className={`px-4 py-2 rounded-t-lg text-sm font-medium transition-colors ${activeSection === 'bio' ? 'bg-zinc-800 text-white' : 'text-zinc-500 hover:text-zinc-300'}`}>
                     📝 Bio & Timeline
                 </button>
-                <button
-                    onClick={() => setActiveSection('competitions')}
-                    className={`px-4 py-2 rounded-t-lg text-sm font-medium transition-colors ${activeSection === 'competitions' ? 'bg-zinc-800 text-white' : 'text-zinc-500 hover:text-zinc-300'}`}
-                >
+                <button onClick={() => setActiveSection('competitions')} className={`px-4 py-2 rounded-t-lg text-sm font-medium transition-colors ${activeSection === 'competitions' ? 'bg-zinc-800 text-white' : 'text-zinc-500 hover:text-zinc-300'}`}>
                     🏆 Competições ({competitions.length})
                 </button>
             </div>
@@ -357,37 +345,23 @@ export default function JourneyTab() {
                 </div>
             )}
 
-            {/* ══════════════════════════════════════════ */}
-            {/* BIO & TIMELINE SECTION */}
-            {/* ══════════════════════════════════════════ */}
+            {/* ══ BIO & TIMELINE ══ */}
             {activeSection === 'bio' && (
                 <>
-                    {/* ─── Bio Section ─── */}
+                    {/* Bio Section */}
                     <section className="bg-zinc-900/50 border border-zinc-800 rounded-2xl p-6 space-y-4">
                         <h3 className="text-lg font-bold text-white flex items-center gap-2">📝 Bio Principal</h3>
                         <div>
                             <label className="block text-xs font-bold uppercase tracking-wider text-zinc-400 mb-2">Título</label>
-                            <input
-                                type="text"
-                                value={profile.bio_title}
-                                onChange={(e) => setProfile({ ...profile, bio_title: e.target.value })}
-                                className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-primary transition-colors"
-                                placeholder="Ex: Do tatame para o mundo"
-                            />
+                            <input type="text" value={profile.bio_title} onChange={(e) => setProfile({ ...profile, bio_title: e.target.value })} className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-primary transition-colors" placeholder="Ex: Do tatame para o mundo" />
                         </div>
                         <div>
                             <label className="block text-xs font-bold uppercase tracking-wider text-zinc-400 mb-2">Descrição</label>
-                            <textarea
-                                value={profile.bio_description}
-                                onChange={(e) => setProfile({ ...profile, bio_description: e.target.value })}
-                                rows={4}
-                                className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-primary transition-colors resize-none"
-                                placeholder="Conte a história do atleta..."
-                            />
+                            <textarea value={profile.bio_description} onChange={(e) => setProfile({ ...profile, bio_description: e.target.value })} rows={4} className="w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-primary transition-colors resize-none" placeholder="Conte a história do atleta..." />
                         </div>
                     </section>
 
-                    {/* ─── Stats Section ─── */}
+                    {/* Stats Section */}
                     <section className="bg-zinc-900/50 border border-zinc-800 rounded-2xl p-6 space-y-4">
                         <div className="flex items-center justify-between">
                             <h3 className="text-lg font-bold text-white">📊 Estatísticas Rápidas</h3>
@@ -409,7 +383,7 @@ export default function JourneyTab() {
                         </div>
                     </section>
 
-                    {/* ─── Milestones Section ─── */}
+                    {/* Milestones Section */}
                     <section className="bg-zinc-900/50 border border-zinc-800 rounded-2xl p-6 space-y-4">
                         <div className="flex items-center justify-between">
                             <h3 className="text-lg font-bold text-white">🕐 Linha do Tempo</h3>
@@ -417,89 +391,150 @@ export default function JourneyTab() {
                                 <Plus className="w-3 h-3" /> Adicionar marco
                             </button>
                         </div>
-                        <div className="space-y-4">
-                            {profile.milestones.map((milestone, index) => (
-                                <div key={index} className="bg-zinc-800/50 rounded-xl p-4 space-y-3 border border-zinc-700/50">
-                                    <div className="flex items-center justify-between">
-                                        <div className="flex items-center gap-2">
-                                            <GripVertical className="w-4 h-4 text-zinc-600" />
-                                            <span className="text-xs font-bold text-zinc-400 uppercase tracking-wider">Marco {index + 1}</span>
-                                        </div>
-                                        <div className="flex items-center gap-1">
-                                            <button onClick={() => moveMilestone(index, -1)} disabled={index === 0} className="p-1.5 text-zinc-500 hover:text-white disabled:opacity-30 rounded-lg hover:bg-zinc-700 transition-colors" title="Mover para cima">↑</button>
-                                            <button onClick={() => moveMilestone(index, 1)} disabled={index === profile.milestones.length - 1} className="p-1.5 text-zinc-500 hover:text-white disabled:opacity-30 rounded-lg hover:bg-zinc-700 transition-colors" title="Mover para baixo">↓</button>
-                                            <button onClick={() => removeMilestone(index)} className="p-1.5 text-zinc-500 hover:text-red-400 rounded-lg hover:bg-red-500/10 transition-colors"><Trash2 className="w-4 h-4" /></button>
-                                        </div>
-                                    </div>
 
-                                    <div className="grid grid-cols-[100px_1fr] gap-3">
-                                        <div>
-                                            <label className="block text-[10px] font-bold uppercase tracking-wider text-zinc-500 mb-1">Ano</label>
-                                            <input type="text" value={milestone.year} onChange={(e) => updateMilestone(index, 'year', e.target.value)} className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-primary" placeholder="2024" />
-                                        </div>
-                                        <div>
-                                            <label className="block text-[10px] font-bold uppercase tracking-wider text-zinc-500 mb-1">Título</label>
-                                            <input type="text" value={milestone.title} onChange={(e) => updateMilestone(index, 'title', e.target.value)} className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-primary" placeholder="Nome do marco" />
-                                        </div>
-                                    </div>
-
-                                    <div>
-                                        <label className="block text-[10px] font-bold uppercase tracking-wider text-zinc-500 mb-1">Descrição</label>
-                                        <textarea value={milestone.description} onChange={(e) => updateMilestone(index, 'description', e.target.value)} rows={2} className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-primary resize-none" placeholder="Descreva este momento da jornada..." />
-                                    </div>
-
-                                    {/* Media Upload */}
-                                    <div>
-                                        <label className="block text-[10px] font-bold uppercase tracking-wider text-zinc-500 mb-2">Foto ou Vídeo</label>
-                                        {milestone.media_url ? (
-                                            <div className="relative inline-block">
-                                                {milestone.media_type === 'video' ? (
-                                                    <video src={milestone.media_url} className="h-24 w-auto rounded-lg border border-zinc-700" muted />
-                                                ) : (
-                                                    <img src={milestone.media_url} alt="" className="h-24 w-auto rounded-lg border border-zinc-700 object-cover" />
-                                                )}
-                                                <button
-                                                    onClick={() => removeMilestoneMedia(index)}
-                                                    className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center text-white shadow-lg hover:bg-red-600 transition-colors"
-                                                >
-                                                    <X className="w-3 h-3" />
-                                                </button>
-                                                <div className="absolute bottom-1 left-1">
-                                                    <span className="text-[9px] font-bold uppercase bg-black/60 text-white px-1.5 py-0.5 rounded flex items-center gap-1">
-                                                        {milestone.media_type === 'video' ? <><Film className="w-2.5 h-2.5" /> Vídeo</> : <><Image className="w-2.5 h-2.5" /> Foto</>}
+                        <div className="space-y-5">
+                            {profile.milestones.map((milestone, index) => {
+                                const mediaItems = milestone.media_items || [];
+                                return (
+                                    <div key={index} className="bg-zinc-800/50 rounded-xl p-4 space-y-4 border border-zinc-700/50">
+                                        {/* Card header */}
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex items-center gap-2">
+                                                <GripVertical className="w-4 h-4 text-zinc-600" />
+                                                <span className="text-xs font-bold text-zinc-400 uppercase tracking-wider">Marco {index + 1}</span>
+                                                {mediaItems.length > 0 && (
+                                                    <span className="text-[10px] px-2 py-0.5 bg-primary/10 border border-primary/20 text-primary rounded-full font-bold">
+                                                        {mediaItems.length} mídia{mediaItems.length > 1 ? 's' : ''}
                                                     </span>
+                                                )}
+                                            </div>
+                                            <div className="flex items-center gap-1">
+                                                <button onClick={() => moveMilestone(index, -1)} disabled={index === 0} className="p-1.5 text-zinc-500 hover:text-white disabled:opacity-30 rounded-lg hover:bg-zinc-700 transition-colors" title="Mover para cima">↑</button>
+                                                <button onClick={() => moveMilestone(index, 1)} disabled={index === profile.milestones.length - 1} className="p-1.5 text-zinc-500 hover:text-white disabled:opacity-30 rounded-lg hover:bg-zinc-700 transition-colors" title="Mover para baixo">↓</button>
+                                                <button onClick={() => removeMilestone(index)} className="p-1.5 text-zinc-500 hover:text-red-400 rounded-lg hover:bg-red-500/10 transition-colors"><Trash2 className="w-4 h-4" /></button>
+                                            </div>
+                                        </div>
+
+                                        {/* Year + Title */}
+                                        <div className="grid grid-cols-[100px_1fr] gap-3">
+                                            <div>
+                                                <label className="block text-[10px] font-bold uppercase tracking-wider text-zinc-500 mb-1">Ano</label>
+                                                <input type="text" value={milestone.year} onChange={(e) => updateMilestone(index, 'year', e.target.value)} className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-primary" placeholder="2024" />
+                                            </div>
+                                            <div>
+                                                <label className="block text-[10px] font-bold uppercase tracking-wider text-zinc-500 mb-1">Título</label>
+                                                <input type="text" value={milestone.title} onChange={(e) => updateMilestone(index, 'title', e.target.value)} className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-primary" placeholder="Nome do marco" />
+                                            </div>
+                                        </div>
+
+                                        {/* Description */}
+                                        <div>
+                                            <label className="block text-[10px] font-bold uppercase tracking-wider text-zinc-500 mb-1">Descrição</label>
+                                            <textarea value={milestone.description} onChange={(e) => updateMilestone(index, 'description', e.target.value)} rows={2} className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-primary resize-none" placeholder="Descreva este momento da jornada..." />
+                                        </div>
+
+                                        {/* ── Multi-media section ── */}
+                                        <div>
+                                            <div className="flex items-center justify-between mb-2">
+                                                <label className="block text-[10px] font-bold uppercase tracking-wider text-zinc-500">
+                                                    Fotos & Vídeos
+                                                    <span className="text-zinc-600 normal-case font-normal ml-1">(pode adicionar vários)</span>
+                                                </label>
+                                                <div>
+                                                    <input
+                                                        ref={(el) => { fileInputRefs.current[index] = el; }}
+                                                        type="file"
+                                                        accept="image/*,video/*"
+                                                        multiple
+                                                        onChange={(e) => handleMediaUpload(e, index)}
+                                                        className="hidden"
+                                                    />
+                                                    <button
+                                                        onClick={() => fileInputRefs.current[index]?.click()}
+                                                        disabled={uploadingFor === index}
+                                                        className="flex items-center gap-1.5 px-3 py-1.5 bg-zinc-700 border border-zinc-600 rounded-lg text-xs text-zinc-200 hover:border-primary/50 hover:text-white transition-colors disabled:opacity-50"
+                                                    >
+                                                        {uploadingFor === index ? (
+                                                            <><div className="w-3 h-3 border border-primary border-t-transparent rounded-full animate-spin" /> Enviando...</>
+                                                        ) : (
+                                                            <><Upload className="w-3 h-3" /> Adicionar arquivo</>
+                                                        )}
+                                                    </button>
                                                 </div>
                                             </div>
-                                        ) : (
-                                            <div>
-                                                <input
-                                                    ref={(el) => { fileInputRefs.current[index] = el; }}
-                                                    type="file"
-                                                    accept="image/*,video/*"
-                                                    onChange={(e) => handleMilestoneMediaUpload(e, index)}
-                                                    className="hidden"
-                                                />
+
+                                            {/* Media grid */}
+                                            {mediaItems.length > 0 ? (
+                                                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                                                    {mediaItems.map((item, itemIdx) => (
+                                                        <div key={itemIdx} className="group relative bg-zinc-900 rounded-lg overflow-hidden border border-zinc-700 hover:border-zinc-500 transition-colors">
+                                                            {/* Thumbnail */}
+                                                            <div className="aspect-square relative">
+                                                                {item.type === 'video' ? (
+                                                                    <div className="w-full h-full flex items-center justify-center bg-zinc-800">
+                                                                        <video src={item.url} className="absolute inset-0 w-full h-full object-cover opacity-70" muted />
+                                                                        <Film className="w-6 h-6 text-white relative z-10 drop-shadow-lg" />
+                                                                    </div>
+                                                                ) : (
+                                                                    <img src={item.url} alt="" className="w-full h-full object-cover" />
+                                                                )}
+                                                                {/* Type badge */}
+                                                                <div className="absolute bottom-1 left-1">
+                                                                    <span className="text-[9px] font-bold uppercase bg-black/70 text-white px-1.5 py-0.5 rounded flex items-center gap-0.5">
+                                                                        {item.type === 'video' ? <><Film className="w-2 h-2" /> Vídeo</> : <><Image className="w-2 h-2" /> Foto</>}
+                                                                    </span>
+                                                                </div>
+                                                                {/* Remove button */}
+                                                                <button
+                                                                    onClick={() => removeMediaItem(index, itemIdx)}
+                                                                    className="absolute top-1 right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600 shadow-lg"
+                                                                    title="Remover"
+                                                                >
+                                                                    <X className="w-3 h-3 text-white" />
+                                                                </button>
+                                                            </div>
+                                                            {/* Caption */}
+                                                            <input
+                                                                type="text"
+                                                                value={item.caption || ''}
+                                                                onChange={(e) => updateMediaCaption(index, itemIdx, e.target.value)}
+                                                                placeholder="Legenda (opcional)"
+                                                                className="w-full bg-transparent px-2 py-1.5 text-[10px] text-zinc-400 placeholder-zinc-600 focus:outline-none focus:text-white border-t border-zinc-700"
+                                                            />
+                                                        </div>
+                                                    ))}
+                                                    {/* Add more button */}
+                                                    <button
+                                                        onClick={() => fileInputRefs.current[index]?.click()}
+                                                        disabled={uploadingFor === index}
+                                                        className="aspect-square flex flex-col items-center justify-center gap-1 border border-dashed border-zinc-600 rounded-lg text-zinc-500 hover:border-primary/40 hover:text-primary transition-colors disabled:opacity-40"
+                                                    >
+                                                        <Plus className="w-5 h-5" />
+                                                        <span className="text-[10px]">Adicionar</span>
+                                                    </button>
+                                                </div>
+                                            ) : (
                                                 <button
                                                     onClick={() => fileInputRefs.current[index]?.click()}
-                                                    disabled={uploadingMilestone === index}
-                                                    className="flex items-center gap-2 px-3 py-2 bg-zinc-800 border border-dashed border-zinc-600 rounded-lg text-xs text-zinc-400 hover:border-primary/50 hover:text-zinc-300 transition-colors disabled:opacity-50"
+                                                    disabled={uploadingFor === index}
+                                                    className="w-full flex flex-col items-center justify-center gap-2 py-6 border border-dashed border-zinc-700 rounded-lg text-zinc-500 hover:border-primary/40 hover:text-zinc-400 transition-colors disabled:opacity-40"
                                                 >
-                                                    {uploadingMilestone === index ? (
-                                                        <><div className="w-3 h-3 border border-primary border-t-transparent rounded-full animate-spin" /> Enviando...</>
-                                                    ) : (
-                                                        <><Upload className="w-3 h-3" /> Enviar foto ou vídeo</>
-                                                    )}
+                                                    <Upload className="w-5 h-5" />
+                                                    <span className="text-xs text-center">
+                                                        Clique para adicionar fotos ou vídeos<br />
+                                                        <span className="text-zinc-600">Selecione múltiplos arquivos de uma vez</span>
+                                                    </span>
                                                 </button>
-                                            </div>
-                                        )}
+                                            )}
+                                        </div>
                                     </div>
-                                </div>
-                            ))}
+                                );
+                            })}
                             {profile.milestones.length === 0 && <p className="text-sm text-zinc-500 text-center py-4">Nenhum marco adicionado</p>}
                         </div>
                     </section>
 
-                    {/* ─── Values Section ─── */}
+                    {/* Values Section */}
                     <section className="bg-zinc-900/50 border border-zinc-800 rounded-2xl p-6 space-y-4">
                         <h3 className="text-lg font-bold text-white">🥋 Valores do Atleta</h3>
                         <div className="flex flex-wrap gap-2">
@@ -518,7 +553,7 @@ export default function JourneyTab() {
                         </div>
                     </section>
 
-                    {/* Bio Save Button */}
+                    {/* Save Button */}
                     <div className="flex justify-end pb-8">
                         <button onClick={handleSave} disabled={saving} className="flex items-center gap-2 px-6 py-3 bg-primary text-black font-bold rounded-xl hover:bg-primary/90 disabled:opacity-50 transition-all shadow-lg shadow-primary/20">
                             <Save className="w-5 h-5" />
@@ -528,9 +563,7 @@ export default function JourneyTab() {
                 </>
             )}
 
-            {/* ══════════════════════════════════════════ */}
-            {/* COMPETITIONS SECTION */}
-            {/* ══════════════════════════════════════════ */}
+            {/* ══ COMPETITIONS ══ */}
             {activeSection === 'competitions' && (
                 <>
                     <div className="flex items-center justify-between">
@@ -538,73 +571,36 @@ export default function JourneyTab() {
                             <Trophy className="w-5 h-5 text-amber-400" />
                             Histórico de Competições
                         </h3>
-                        <button
-                            onClick={() => setEditingComp(newCompetition())}
-                            className="flex items-center gap-1.5 px-4 py-2 bg-primary text-black font-bold rounded-lg text-sm hover:bg-primary/90 transition-colors"
-                        >
-                            <Plus className="w-4 h-4" />
-                            Nova Competição
+                        <button onClick={() => setEditingComp(newCompetition())} className="flex items-center gap-1.5 px-4 py-2 bg-primary text-black font-bold rounded-lg text-sm hover:bg-primary/90 transition-colors">
+                            <Plus className="w-4 h-4" /> Nova Competição
                         </button>
                     </div>
 
-                    {/* Competition Editor Modal */}
+                    {/* Competition Editor */}
                     {editingComp && (
                         <div className="bg-zinc-900/80 border border-zinc-700 rounded-2xl p-6 space-y-4">
                             <div className="flex items-center justify-between mb-2">
                                 <h4 className="text-white font-bold">{editingComp.id ? 'Editar' : 'Nova'} Competição</h4>
                                 <button onClick={() => setEditingComp(null)} className="p-1.5 text-zinc-500 hover:text-white rounded-lg hover:bg-zinc-800"><X className="w-4 h-4" /></button>
                             </div>
-
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-[10px] font-bold uppercase tracking-wider text-zinc-500 mb-1">Nome da Competição*</label>
-                                    <input type="text" value={editingComp.name} onChange={(e) => setEditingComp({ ...editingComp, name: e.target.value })} className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-primary" placeholder="Ex: Campeonato Paulista Sub-15" />
-                                </div>
-                                <div>
-                                    <label className="block text-[10px] font-bold uppercase tracking-wider text-zinc-500 mb-1">Data*</label>
-                                    <input type="date" value={editingComp.date} onChange={(e) => setEditingComp({ ...editingComp, date: e.target.value })} className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-primary" />
-                                </div>
-                                <div>
-                                    <label className="block text-[10px] font-bold uppercase tracking-wider text-zinc-500 mb-1">Local</label>
-                                    <input type="text" value={editingComp.location} onChange={(e) => setEditingComp({ ...editingComp, location: e.target.value })} className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-primary" placeholder="Ex: São Paulo, SP" />
-                                </div>
-                                <div>
-                                    <label className="block text-[10px] font-bold uppercase tracking-wider text-zinc-500 mb-1">Categoria</label>
-                                    <input type="text" value={editingComp.category} onChange={(e) => setEditingComp({ ...editingComp, category: e.target.value })} className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-primary" placeholder="Ex: Sub-15" />
-                                </div>
-                                <div>
-                                    <label className="block text-[10px] font-bold uppercase tracking-wider text-zinc-500 mb-1">Peso</label>
-                                    <input type="text" value={editingComp.weight_class} onChange={(e) => setEditingComp({ ...editingComp, weight_class: e.target.value })} className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-primary" placeholder="Ex: -55kg" />
-                                </div>
-                                <div>
-                                    <label className="block text-[10px] font-bold uppercase tracking-wider text-zinc-500 mb-1">Colocação*</label>
-                                    <input type="text" value={editingComp.placement} onChange={(e) => setEditingComp({ ...editingComp, placement: e.target.value })} className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-primary" placeholder="Ex: 1º lugar" />
-                                </div>
+                                <div><label className="block text-[10px] font-bold uppercase tracking-wider text-zinc-500 mb-1">Nome da Competição*</label><input type="text" value={editingComp.name} onChange={(e) => setEditingComp({ ...editingComp, name: e.target.value })} className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-primary" placeholder="Ex: Campeonato Paulista Sub-15" /></div>
+                                <div><label className="block text-[10px] font-bold uppercase tracking-wider text-zinc-500 mb-1">Data*</label><input type="date" value={editingComp.date} onChange={(e) => setEditingComp({ ...editingComp, date: e.target.value })} className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-primary" /></div>
+                                <div><label className="block text-[10px] font-bold uppercase tracking-wider text-zinc-500 mb-1">Local</label><input type="text" value={editingComp.location} onChange={(e) => setEditingComp({ ...editingComp, location: e.target.value })} className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-primary" placeholder="Ex: São Paulo, SP" /></div>
+                                <div><label className="block text-[10px] font-bold uppercase tracking-wider text-zinc-500 mb-1">Categoria</label><input type="text" value={editingComp.category} onChange={(e) => setEditingComp({ ...editingComp, category: e.target.value })} className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-primary" placeholder="Ex: Sub-15" /></div>
+                                <div><label className="block text-[10px] font-bold uppercase tracking-wider text-zinc-500 mb-1">Peso</label><input type="text" value={editingComp.weight_class} onChange={(e) => setEditingComp({ ...editingComp, weight_class: e.target.value })} className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-primary" placeholder="Ex: -55kg" /></div>
+                                <div><label className="block text-[10px] font-bold uppercase tracking-wider text-zinc-500 mb-1">Colocação*</label><input type="text" value={editingComp.placement} onChange={(e) => setEditingComp({ ...editingComp, placement: e.target.value })} className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-primary" placeholder="Ex: 1º lugar" /></div>
                                 <div>
                                     <label className="block text-[10px] font-bold uppercase tracking-wider text-zinc-500 mb-1">Medalha</label>
-                                    <select
-                                        value={editingComp.medal_type || ''}
-                                        onChange={(e) => setEditingComp({ ...editingComp, medal_type: e.target.value || null })}
-                                        className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-primary"
-                                    >
-                                        {MEDAL_OPTIONS.map((opt) => (
-                                            <option key={opt.value} value={opt.value}>{opt.label}</option>
-                                        ))}
+                                    <select value={editingComp.medal_type || ''} onChange={(e) => setEditingComp({ ...editingComp, medal_type: e.target.value || null })} className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-primary">
+                                        {MEDAL_OPTIONS.map((opt) => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
                                     </select>
                                 </div>
-                                <div>
-                                    <label className="block text-[10px] font-bold uppercase tracking-wider text-zinc-500 mb-1">Observações</label>
-                                    <input type="text" value={editingComp.notes} onChange={(e) => setEditingComp({ ...editingComp, notes: e.target.value })} className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-primary" placeholder="Detalhes adicionais..." />
-                                </div>
+                                <div><label className="block text-[10px] font-bold uppercase tracking-wider text-zinc-500 mb-1">Observações</label><input type="text" value={editingComp.notes} onChange={(e) => setEditingComp({ ...editingComp, notes: e.target.value })} className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-primary" placeholder="Detalhes adicionais..." /></div>
                             </div>
-
                             <div className="flex justify-end gap-2 pt-2">
                                 <button onClick={() => setEditingComp(null)} className="px-4 py-2 text-sm text-zinc-400 hover:text-white rounded-lg hover:bg-zinc-800 transition-colors">Cancelar</button>
-                                <button
-                                    onClick={() => saveCompetition(editingComp)}
-                                    disabled={savingComp || !editingComp.name || !editingComp.placement}
-                                    className="flex items-center gap-2 px-5 py-2 bg-primary text-black font-bold rounded-lg text-sm hover:bg-primary/90 disabled:opacity-50 transition-colors"
-                                >
+                                <button onClick={() => saveCompetition(editingComp)} disabled={savingComp || !editingComp.name || !editingComp.placement} className="flex items-center gap-2 px-5 py-2 bg-primary text-black font-bold rounded-lg text-sm hover:bg-primary/90 disabled:opacity-50 transition-colors">
                                     <Save className="w-4 h-4" />
                                     {savingComp ? 'Salvando...' : 'Salvar'}
                                 </button>
@@ -622,14 +618,8 @@ export default function JourneyTab() {
                     ) : (
                         <div className="space-y-2">
                             {competitions.map((comp) => (
-                                <div
-                                    key={comp.id}
-                                    className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-4 flex items-center gap-4 hover:border-zinc-700 transition-colors group"
-                                >
-                                    {/* Medal Icon */}
+                                <div key={comp.id} className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-4 flex items-center gap-4 hover:border-zinc-700 transition-colors group">
                                     <div className="text-2xl flex-shrink-0">{medalEmoji(comp.medal_type)}</div>
-
-                                    {/* Info */}
                                     <div className="flex-1 min-w-0">
                                         <div className="flex items-center gap-2 flex-wrap">
                                             <span className="text-white font-bold text-sm">{comp.name}</span>
@@ -641,20 +631,12 @@ export default function JourneyTab() {
                                             {comp.location && <span>📍 {comp.location}</span>}
                                         </div>
                                     </div>
-
-                                    {/* Placement */}
                                     <div className="text-right flex-shrink-0">
                                         <span className="text-sm font-bold text-primary">{comp.placement}</span>
                                     </div>
-
-                                    {/* Actions */}
                                     <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <button onClick={() => setEditingComp(comp)} className="p-1.5 text-zinc-500 hover:text-white rounded-lg hover:bg-zinc-800 transition-colors" title="Editar">
-                                            <Save className="w-4 h-4" />
-                                        </button>
-                                        <button onClick={() => deleteCompetition(comp.id)} className="p-1.5 text-zinc-500 hover:text-red-400 rounded-lg hover:bg-red-500/10 transition-colors" title="Excluir">
-                                            <Trash2 className="w-4 h-4" />
-                                        </button>
+                                        <button onClick={() => setEditingComp(comp)} className="p-1.5 text-zinc-500 hover:text-white rounded-lg hover:bg-zinc-800 transition-colors" title="Editar"><Save className="w-4 h-4" /></button>
+                                        <button onClick={() => deleteCompetition(comp.id)} className="p-1.5 text-zinc-500 hover:text-red-400 rounded-lg hover:bg-red-500/10 transition-colors" title="Excluir"><Trash2 className="w-4 h-4" /></button>
                                     </div>
                                 </div>
                             ))}

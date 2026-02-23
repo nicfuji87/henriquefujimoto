@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Trophy, Target, Flame, Star, Instagram, Loader2, X, Play, MapPin, Calendar } from 'lucide-react';
+import { Trophy, Target, Flame, Star, Instagram, Loader2, X, Play, MapPin, Calendar, ChevronLeft, ChevronRight, Image as ImageIcon, Film } from 'lucide-react';
 import SectionNav from '../components/SectionNav';
 import TopContent from '../components/TopContent';
 import Footer from '../components/Footer';
@@ -8,12 +8,21 @@ import StickyCTA from '../components/StickyCTA';
 import { trackPageView } from '../lib/pageTracking';
 import { supabase } from '../lib/supabase';
 
+interface MediaItem {
+    url: string;
+    type: 'image' | 'video';
+    caption?: string;
+}
+
 interface Milestone {
     year: string;
     title: string;
     description: string;
+    /** Legacy */
     media_url?: string;
     media_type?: 'image' | 'video';
+    /** Multi-media */
+    media_items?: MediaItem[];
 }
 
 interface Stat {
@@ -41,6 +50,15 @@ interface Competition {
     notes: string;
 }
 
+/** Merges legacy media_url into media_items */
+function getMilestoneMedia(m: Milestone): MediaItem[] {
+    const items: MediaItem[] = m.media_items ? [...m.media_items] : [];
+    if (m.media_url && !items.some(i => i.url === m.media_url)) {
+        items.unshift({ url: m.media_url, type: m.media_type || 'image' });
+    }
+    return items;
+}
+
 // Map icon by index for visual variety in the timeline
 const MILESTONE_ICONS = [
     <Star className="w-5 h-5" />,
@@ -48,6 +66,7 @@ const MILESTONE_ICONS = [
     <Flame className="w-5 h-5" />,
     <Target className="w-5 h-5" />,
 ];
+
 
 function StatCard({ value, label }: { value: string; label: string }) {
     return (
@@ -58,14 +77,26 @@ function StatCard({ value, label }: { value: string; label: string }) {
     );
 }
 
-function MediaModal({ media, onClose }: { media: { url: string; type: 'image' | 'video'; title: string }; onClose: () => void }) {
+interface SelectedMedia {
+    items: MediaItem[];
+    startIndex: number;
+    title: string;
+}
+
+function MediaModal({ media, onClose }: { media: SelectedMedia; onClose: () => void }) {
+    const [currentIdx, setCurrentIdx] = useState(media.startIndex);
+    const current = media.items[currentIdx];
+    const total = media.items.length;
+
     useEffect(() => {
         function handleKey(e: KeyboardEvent) {
             if (e.key === 'Escape') onClose();
+            if (e.key === 'ArrowRight') setCurrentIdx(i => Math.min(i + 1, total - 1));
+            if (e.key === 'ArrowLeft') setCurrentIdx(i => Math.max(i - 1, 0));
         }
         window.addEventListener('keydown', handleKey);
         return () => window.removeEventListener('keydown', handleKey);
-    }, [onClose]);
+    }, [onClose, total]);
 
     return (
         <motion.div
@@ -79,34 +110,94 @@ function MediaModal({ media, onClose }: { media: { url: string; type: 'image' | 
                 initial={{ scale: 0.9, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.9, opacity: 0 }}
-                className="relative max-w-4xl max-h-[85vh] w-full"
+                className="relative max-w-4xl max-h-[90vh] w-full flex flex-col"
                 onClick={(e) => e.stopPropagation()}
             >
-                {/* Close button */}
-                <button
-                    onClick={onClose}
-                    className="absolute -top-12 right-0 w-10 h-10 bg-white/10 border border-white/10 rounded-full flex items-center justify-center text-white hover:bg-white/20 transition-colors z-10"
-                >
-                    <X className="w-5 h-5" />
-                </button>
+                {/* Header row */}
+                <div className="flex items-center justify-between mb-3">
+                    <p className="text-white text-sm font-bold">{media.title}</p>
+                    <div className="flex items-center gap-3">
+                        {total > 1 && (
+                            <span className="text-gray-400 text-xs">{currentIdx + 1} / {total}</span>
+                        )}
+                        <button
+                            onClick={onClose}
+                            className="w-8 h-8 bg-white/10 border border-white/10 rounded-full flex items-center justify-center text-white hover:bg-white/20 transition-colors"
+                        >
+                            <X className="w-4 h-4" />
+                        </button>
+                    </div>
+                </div>
 
-                {/* Title */}
-                <p className="text-white text-sm font-bold mb-3 text-center">{media.title}</p>
+                {/* Media + nav */}
+                <div className="relative flex items-center">
+                    {/* Prev */}
+                    {total > 1 && (
+                        <button
+                            onClick={() => setCurrentIdx(i => Math.max(i - 1, 0))}
+                            disabled={currentIdx === 0}
+                            className="absolute left-0 z-10 -translate-x-12 w-10 h-10 bg-white/10 border border-white/10 rounded-full flex items-center justify-center text-white hover:bg-white/20 disabled:opacity-30 transition-all"
+                        >
+                            <ChevronLeft className="w-5 h-5" />
+                        </button>
+                    )}
 
-                {/* Media */}
-                {media.type === 'video' ? (
-                    <video
-                        src={media.url}
-                        controls
-                        autoPlay
-                        className="w-full max-h-[75vh] rounded-xl object-contain bg-black"
-                    />
-                ) : (
-                    <img
-                        src={media.url}
-                        alt={media.title}
-                        className="w-full max-h-[75vh] rounded-xl object-contain"
-                    />
+                    <AnimatePresence mode="wait">
+                        <motion.div
+                            key={currentIdx}
+                            initial={{ opacity: 0, x: 20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: -20 }}
+                            transition={{ duration: 0.15 }}
+                            className="w-full"
+                        >
+                            {current.type === 'video' ? (
+                                <video
+                                    src={current.url}
+                                    controls
+                                    autoPlay
+                                    className="w-full max-h-[72vh] rounded-xl object-contain bg-black"
+                                />
+                            ) : (
+                                <img
+                                    src={current.url}
+                                    alt={current.caption || media.title}
+                                    className="w-full max-h-[72vh] rounded-xl object-contain"
+                                />
+                            )}
+                        </motion.div>
+                    </AnimatePresence>
+
+                    {/* Next */}
+                    {total > 1 && (
+                        <button
+                            onClick={() => setCurrentIdx(i => Math.min(i + 1, total - 1))}
+                            disabled={currentIdx === total - 1}
+                            className="absolute right-0 z-10 translate-x-12 w-10 h-10 bg-white/10 border border-white/10 rounded-full flex items-center justify-center text-white hover:bg-white/20 disabled:opacity-30 transition-all"
+                        >
+                            <ChevronRight className="w-5 h-5" />
+                        </button>
+                    )}
+                </div>
+
+                {/* Caption + dot nav */}
+                {(current.caption || total > 1) && (
+                    <div className="mt-3 text-center space-y-2">
+                        {current.caption && (
+                            <p className="text-gray-400 text-sm">{current.caption}</p>
+                        )}
+                        {total > 1 && (
+                            <div className="flex justify-center gap-1.5">
+                                {media.items.map((_, i) => (
+                                    <button
+                                        key={i}
+                                        onClick={() => setCurrentIdx(i)}
+                                        className={`w-1.5 h-1.5 rounded-full transition-all ${i === currentIdx ? 'bg-primary scale-125' : 'bg-white/30 hover:bg-white/50'}`}
+                                    />
+                                ))}
+                            </div>
+                        )}
+                    </div>
                 )}
             </motion.div>
         </motion.div>
@@ -124,7 +215,7 @@ export default function ConteudoPage() {
     const [profile, setProfile] = useState<AthleteProfile | null>(null);
     const [competitions, setCompetitions] = useState<Competition[]>([]);
     const [loading, setLoading] = useState(true);
-    const [selectedMedia, setSelectedMedia] = useState<{ url: string; type: 'image' | 'video'; title: string } | null>(null);
+    const [selectedMedia, setSelectedMedia] = useState<SelectedMedia | null>(null);
 
     useEffect(() => {
         trackPageView('/conteudo', 'Conheça o Henrique');
@@ -234,8 +325,8 @@ export default function ConteudoPage() {
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: 0.1 }}
                             className={`grid gap-3 mb-12 ${profile.stats.length === 1 ? 'grid-cols-1 max-w-xs mx-auto' :
-                                    profile.stats.length === 2 ? 'grid-cols-2' :
-                                        'grid-cols-3'
+                                profile.stats.length === 2 ? 'grid-cols-2' :
+                                    'grid-cols-3'
                                 }`}
                         >
                             {profile.stats.map((stat, index) => (
@@ -264,74 +355,115 @@ export default function ConteudoPage() {
                             <div className="absolute left-6 top-0 bottom-0 w-px bg-gradient-to-b from-primary/50 via-primary/20 to-transparent" />
 
                             <div className="space-y-8">
-                                {profile.milestones.map((milestone, index) => (
-                                    <motion.div
-                                        key={index}
-                                        initial={{ opacity: 0, x: -20 }}
-                                        whileInView={{ opacity: 1, x: 0 }}
-                                        viewport={{ once: true }}
-                                        transition={{ delay: index * 0.1 }}
-                                        className="relative pl-16"
-                                    >
-                                        {/* Timeline dot */}
-                                        <div className="absolute left-[14px] top-1 w-7 h-7 rounded-full bg-primary/10 border-2 border-primary/40 flex items-center justify-center">
-                                            <div className="text-primary">
-                                                {MILESTONE_ICONS[index % MILESTONE_ICONS.length]}
+                                {profile.milestones.map((milestone, index) => {
+                                    const mediaItems = getMilestoneMedia(milestone);
+                                    const SHOW_LIMIT = 4;
+                                    const visibleItems = mediaItems.slice(0, SHOW_LIMIT);
+                                    const overflow = mediaItems.length - SHOW_LIMIT;
+
+                                    return (
+                                        <motion.div
+                                            key={index}
+                                            initial={{ opacity: 0, x: -20 }}
+                                            whileInView={{ opacity: 1, x: 0 }}
+                                            viewport={{ once: true }}
+                                            transition={{ delay: index * 0.1 }}
+                                            className="relative pl-16"
+                                        >
+                                            {/* Timeline dot */}
+                                            <div className="absolute left-[14px] top-1 w-7 h-7 rounded-full bg-primary/10 border-2 border-primary/40 flex items-center justify-center">
+                                                <div className="text-primary">
+                                                    {MILESTONE_ICONS[index % MILESTONE_ICONS.length]}
+                                                </div>
                                             </div>
-                                        </div>
 
-                                        {/* Content */}
-                                        <div className="bg-white/[0.02] border border-white/[0.06] rounded-xl p-5">
-                                            <span className="text-primary text-xs font-bold uppercase tracking-widest">{milestone.year}</span>
-                                            <h4 className="text-white font-bold text-lg mt-1 mb-2">{milestone.title}</h4>
-                                            <p className="text-gray-400 text-sm leading-relaxed">{milestone.description}</p>
+                                            {/* Content */}
+                                            <div className="bg-white/[0.02] border border-white/[0.06] rounded-xl p-5">
+                                                <span className="text-primary text-xs font-bold uppercase tracking-widest">{milestone.year}</span>
+                                                <h4 className="text-white font-bold text-lg mt-1 mb-2">{milestone.title}</h4>
+                                                <p className="text-gray-400 text-sm leading-relaxed">{milestone.description}</p>
 
-                                            {/* Media thumbnail */}
-                                            {milestone.media_url && (
-                                                <button
-                                                    onClick={() => setSelectedMedia({
-                                                        url: milestone.media_url!,
-                                                        type: milestone.media_type || 'image',
-                                                        title: `${milestone.year} — ${milestone.title}`,
-                                                    })}
-                                                    className="mt-4 relative group rounded-lg overflow-hidden border border-white/10 hover:border-primary/30 transition-all inline-block"
-                                                >
-                                                    {milestone.media_type === 'video' ? (
-                                                        <div className="relative">
-                                                            <video
-                                                                src={milestone.media_url}
-                                                                className="h-24 w-auto max-w-[200px] object-cover rounded-lg"
-                                                                muted
-                                                            />
-                                                            <div className="absolute inset-0 bg-black/30 flex items-center justify-center group-hover:bg-black/10 transition-colors">
-                                                                <div className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center group-hover:scale-110 transition-transform">
-                                                                    <Play className="w-5 h-5 text-white fill-white ml-0.5" />
+                                                {/* ── Media Gallery ── */}
+                                                {mediaItems.length > 0 && (
+                                                    <div className="mt-4">
+                                                        {mediaItems.length === 1 ? (
+                                                            // Single media: legacy style
+                                                            <button
+                                                                onClick={() => setSelectedMedia({
+                                                                    items: mediaItems,
+                                                                    startIndex: 0,
+                                                                    title: `${milestone.year} — ${milestone.title}`,
+                                                                })}
+                                                                className="relative group rounded-lg overflow-hidden border border-white/10 hover:border-primary/30 transition-all inline-block"
+                                                            >
+                                                                {mediaItems[0].type === 'video' ? (
+                                                                    <div className="relative">
+                                                                        <video src={mediaItems[0].url} className="h-28 w-auto max-w-[220px] object-cover rounded-lg" muted />
+                                                                        <div className="absolute inset-0 bg-black/30 flex items-center justify-center group-hover:bg-black/10 transition-colors">
+                                                                            <div className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center group-hover:scale-110 transition-transform">
+                                                                                <Play className="w-5 h-5 text-white fill-white ml-0.5" />
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                ) : (
+                                                                    <div className="relative">
+                                                                        <img src={mediaItems[0].url} alt={mediaItems[0].caption || milestone.title} className="h-28 w-auto max-w-[220px] object-cover rounded-lg group-hover:scale-105 transition-transform duration-300" />
+                                                                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors rounded-lg" />
+                                                                    </div>
+                                                                )}
+                                                                {mediaItems[0].caption && (
+                                                                    <p className="text-[10px] text-gray-500 mt-1 text-left px-0.5">{mediaItems[0].caption}</p>
+                                                                )}
+                                                            </button>
+                                                        ) : (
+                                                            // Multi-media grid
+                                                            <div>
+                                                                <div className="flex items-center gap-1.5 mb-2">
+                                                                    <ImageIcon className="w-3 h-3 text-gray-500" />
+                                                                    <span className="text-[10px] text-gray-500 font-medium uppercase tracking-wider">{mediaItems.length} fotos/vídeos</span>
+                                                                </div>
+                                                                <div className="grid grid-cols-4 gap-1.5">
+                                                                    {visibleItems.map((item, itemIdx) => (
+                                                                        <button
+                                                                            key={itemIdx}
+                                                                            onClick={() => setSelectedMedia({
+                                                                                items: mediaItems,
+                                                                                startIndex: itemIdx,
+                                                                                title: `${milestone.year} — ${milestone.title}`,
+                                                                            })}
+                                                                            className="relative group aspect-square rounded-lg overflow-hidden border border-white/[0.06] hover:border-primary/30 transition-all"
+                                                                        >
+                                                                            {item.type === 'video' ? (
+                                                                                <div className="w-full h-full bg-zinc-800 flex items-center justify-center">
+                                                                                    <video src={item.url} className="absolute inset-0 w-full h-full object-cover opacity-60" muted />
+                                                                                    <Film className="w-4 h-4 text-white relative z-10 drop-shadow" />
+                                                                                </div>
+                                                                            ) : (
+                                                                                <img src={item.url} alt={item.caption || ''} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                                                                            )}
+                                                                            {/* Overflow badge on last visible */}
+                                                                            {itemIdx === SHOW_LIMIT - 1 && overflow > 0 && (
+                                                                                <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+                                                                                    <span className="text-white font-bold text-sm">+{overflow}</span>
+                                                                                </div>
+                                                                            )}
+                                                                        </button>
+                                                                    ))}
                                                                 </div>
                                                             </div>
-                                                        </div>
-                                                    ) : (
-                                                        <div className="relative">
-                                                            <img
-                                                                src={milestone.media_url}
-                                                                alt={milestone.title}
-                                                                className="h-24 w-auto max-w-[200px] object-cover rounded-lg group-hover:scale-105 transition-transform duration-300"
-                                                            />
-                                                            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors rounded-lg" />
-                                                        </div>
-                                                    )}
-                                                    <span className="absolute bottom-1 right-1 text-[9px] font-bold uppercase bg-black/60 text-white/80 px-1.5 py-0.5 rounded backdrop-blur-sm">
-                                                        Clique para ver
-                                                    </span>
-                                                </button>
-                                            )}
-                                        </div>
-                                    </motion.div>
-                                ))}
+                                                        )}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </motion.div>
+                                    );
+                                })}
                             </div>
                         </div>
                     </div>
                 </section>
             )}
+
 
             {/* Competitions Section */}
             {competitions.length > 0 && (
