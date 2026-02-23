@@ -5,13 +5,14 @@ import {
     BarChart3,
     Heart,
     Newspaper,
-    Play,
+    User,
     TrendingUp,
     Users,
     Eye,
     ChevronRight,
     ArrowRight,
-    Zap
+    Calendar,
+    Clock
 } from 'lucide-react';
 import Hero from '../components/Hero';
 import Footer from '../components/Footer';
@@ -19,6 +20,23 @@ import StickyCTA from '../components/StickyCTA';
 import { trackPageView } from '../lib/pageTracking';
 import { getAggregatedMetrics } from '../lib/metrics';
 import { supabase } from '../lib/supabase';
+
+interface Partner {
+    id: string;
+    name: string;
+    logo_url: string | null;
+}
+
+interface BlogPost {
+    id: string;
+    title: string;
+    slug: string;
+    og_image: string | null;
+    category: string;
+    published_at: string | null;
+    created_at: string;
+    reading_time: number;
+}
 
 interface HubCardProps {
     to: string;
@@ -29,10 +47,10 @@ interface HubCardProps {
     subtitle: string;
     teaser: React.ReactNode;
     delay?: number;
-    badge?: string;
+    ctaText?: string;
 }
 
-function HubCard({ to, icon, accentColor, bgGradient, title, subtitle, teaser, delay = 0, badge }: HubCardProps) {
+function HubCard({ to, icon, accentColor, bgGradient, title, subtitle, teaser, delay = 0, ctaText }: HubCardProps) {
     return (
         <motion.div
             initial={{ opacity: 0, y: 25 }}
@@ -46,15 +64,6 @@ function HubCard({ to, icon, accentColor, bgGradient, title, subtitle, teaser, d
             >
                 {/* Gradient overlay on hover */}
                 <div className={`absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 ${bgGradient}`} />
-
-                {/* Badge */}
-                {badge && (
-                    <div className="absolute top-3 right-3 z-10">
-                        <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border ${accentColor === 'text-green-400' ? 'bg-green-500/10 border-green-500/20 text-green-400' : accentColor === 'text-blue-400' ? 'bg-blue-500/10 border-blue-500/20 text-blue-400' : accentColor === 'text-amber-400' ? 'bg-amber-500/10 border-amber-500/20 text-amber-400' : 'bg-pink-500/10 border-pink-500/20 text-pink-400'}`}>
-                            {badge}
-                        </span>
-                    </div>
-                )}
 
                 <div className="relative z-10 p-6">
                     {/* Header */}
@@ -73,13 +82,27 @@ function HubCard({ to, icon, accentColor, bgGradient, title, subtitle, teaser, d
                     <div className="border-t border-white/5 pt-4">
                         {teaser}
                     </div>
+
+                    {/* CTA Text */}
+                    {ctaText && (
+                        <div className="mt-3 flex items-center gap-1.5">
+                            <span className={`text-xs font-bold flex items-center gap-1 ${accentColor === 'text-green-400' ? 'text-green-400' :
+                                    accentColor === 'text-blue-400' ? 'text-blue-400' :
+                                        accentColor === 'text-amber-400' ? 'text-amber-400' :
+                                            'text-pink-400'
+                                }`}>
+                                {ctaText}
+                                <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
+                            </span>
+                        </div>
+                    )}
                 </div>
 
                 {/* Bottom accent line on hover */}
                 <div className={`absolute bottom-0 left-0 right-0 h-0.5 scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-left ${accentColor === 'text-green-400' ? 'bg-gradient-to-r from-green-500 to-emerald-400' :
-                        accentColor === 'text-blue-400' ? 'bg-gradient-to-r from-blue-500 to-cyan-400' :
-                            accentColor === 'text-amber-400' ? 'bg-gradient-to-r from-amber-500 to-yellow-400' :
-                                'bg-gradient-to-r from-pink-500 to-rose-400'
+                    accentColor === 'text-blue-400' ? 'bg-gradient-to-r from-blue-500 to-cyan-400' :
+                        accentColor === 'text-amber-400' ? 'bg-gradient-to-r from-amber-500 to-yellow-400' :
+                            'bg-gradient-to-r from-pink-500 to-rose-400'
                     }`} />
             </Link>
         </motion.div>
@@ -88,23 +111,31 @@ function HubCard({ to, icon, accentColor, bgGradient, title, subtitle, teaser, d
 
 export default function HomePage() {
     const [metrics, setMetrics] = useState<any>(null);
-    const [postCount, setPostCount] = useState(0);
-    const [partnerCount, setPartnerCount] = useState(0);
+    const [partners, setPartners] = useState<Partner[]>([]);
+    const [latestPost, setLatestPost] = useState<BlogPost | null>(null);
 
     useEffect(() => {
         trackPageView('/', 'Hub Principal');
 
-        // Load teaser data
         async function loadTeasers() {
-            const [metricsData, posts, partners] = await Promise.all([
+            const [metricsData, partnersRes, postsRes] = await Promise.all([
                 getAggregatedMetrics(30),
-                supabase.from('blog_posts').select('id', { count: 'exact' }).eq('status', 'published'),
-                supabase.from('partners').select('id', { count: 'exact' }).eq('is_active', true),
+                supabase
+                    .from('partners')
+                    .select('id, name, logo_url')
+                    .eq('is_active', true)
+                    .order('display_order', { ascending: true }),
+                supabase
+                    .from('blog_posts')
+                    .select('id, title, slug, og_image, category, published_at, created_at, reading_time')
+                    .eq('status', 'published')
+                    .order('published_at', { ascending: false })
+                    .limit(1),
             ]);
 
             setMetrics(metricsData);
-            setPostCount(posts.count || 0);
-            setPartnerCount(partners.count || 0);
+            setPartners(partnersRes.data || []);
+            setLatestPost(postsRes.data?.[0] || null);
         }
 
         loadTeasers();
@@ -115,6 +146,9 @@ export default function HomePage() {
         if (n >= 1000) return (n / 1000).toFixed(1) + 'K';
         return n.toString();
     };
+
+    // Duplicate partners array for marquee effect
+    const marqueePartners = [...partners, ...partners];
 
     return (
         <main className="relative min-h-screen w-full overflow-x-hidden">
@@ -137,15 +171,16 @@ export default function HomePage() {
 
                 {/* Hub Cards Grid */}
                 <div className="max-w-5xl mx-auto px-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {/* Card: Números */}
+
+                    {/* ─── Card: Números & Métricas ─── */}
                     <HubCard
                         to="/numeros"
                         icon={<BarChart3 className="w-6 h-6" />}
                         accentColor="text-green-400"
                         bgGradient="bg-gradient-to-br from-green-500/5 to-transparent"
                         title="Números & Métricas"
-                        subtitle="Impacto e alcance nas redes"
-                        badge="Atualizado"
+                        subtitle="O impacto digital do Henrique em números reais"
+                        ctaText="Ver mais"
                         delay={0.05}
                         teaser={
                             <div className="flex items-center gap-4">
@@ -184,7 +219,7 @@ export default function HomePage() {
                         }
                     />
 
-                    {/* Card: Apoiar */}
+                    {/* ─── Card: Apoie o Henrique ─── */}
                     <HubCard
                         to="/apoiar"
                         icon={<Heart className="w-6 h-6" />}
@@ -192,44 +227,61 @@ export default function HomePage() {
                         bgGradient="bg-gradient-to-br from-pink-500/5 to-transparent"
                         title="Apoie o Henrique"
                         subtitle="Faça parte dessa jornada"
-                        badge={`${partnerCount} parceiros`}
+                        ctaText="Entenda como apoiar"
                         delay={0.1}
                         teaser={
-                            <div className="space-y-2">
-                                <div className="flex items-center gap-2 text-xs text-gray-400">
-                                    <Zap className="w-3 h-3 text-pink-400 flex-shrink-0" />
-                                    <span>Patrocínio de marca, apoio em competições e mais</span>
-                                </div>
-                                <div className="flex items-center gap-2 text-xs">
-                                    <span className="text-pink-400 font-bold flex items-center gap-1.5">
-                                        Descubra como participar
-                                        <ArrowRight className="w-3 h-3" />
-                                    </span>
-                                </div>
+                            <div className="space-y-3">
+                                {/* Rolling partner logos marquee */}
+                                {partners.length > 0 && (
+                                    <div className="relative overflow-hidden rounded-lg h-10">
+                                        <div className="absolute left-0 top-0 bottom-0 w-6 bg-gradient-to-r from-black/60 to-transparent z-10 pointer-events-none" />
+                                        <div className="absolute right-0 top-0 bottom-0 w-6 bg-gradient-to-l from-black/60 to-transparent z-10 pointer-events-none" />
+                                        <motion.div
+                                            className="flex gap-6 items-center w-max"
+                                            animate={{ x: ['0%', '-50%'] }}
+                                            transition={{ repeat: Infinity, duration: 12, ease: 'linear' }}
+                                        >
+                                            {marqueePartners.map((p, i) => (
+                                                p.logo_url ? (
+                                                    <img
+                                                        key={`${p.id}-${i}`}
+                                                        src={p.logo_url}
+                                                        alt={p.name}
+                                                        className="h-8 w-auto max-w-[100px] object-contain opacity-50 grayscale"
+                                                    />
+                                                ) : (
+                                                    <span key={`${p.id}-${i}`} className="text-xs font-bold text-gray-600 whitespace-nowrap">{p.name}</span>
+                                                )
+                                            ))}
+                                        </motion.div>
+                                    </div>
+                                )}
+                                <p className="text-[11px] text-gray-500">Parceiros de confiança que já apoiam o Henrique</p>
                             </div>
                         }
                     />
 
-                    {/* Card: Conteúdo */}
+                    {/* ─── Card: Conheça o Henrique ─── */}
                     <HubCard
                         to="/conteudo"
-                        icon={<Play className="w-6 h-6" />}
+                        icon={<User className="w-6 h-6" />}
                         accentColor="text-amber-400"
                         bgGradient="bg-gradient-to-br from-amber-500/5 to-transparent"
-                        title="Conteúdo"
-                        subtitle="O melhor do Instagram"
+                        title="Conheça o Henrique"
+                        subtitle="A história por trás do atleta"
+                        ctaText="Saiba mais"
                         delay={0.15}
                         teaser={
-                            <div className="flex items-center gap-3">
-                                <div className="flex items-center gap-1.5 text-xs text-gray-400">
-                                    <Play className="w-3 h-3 text-amber-400" />
-                                    <span>Vídeos, fotos e momentos do treino e competição</span>
+                            <div className="space-y-2">
+                                <div className="flex items-center gap-3 text-xs text-gray-400">
+                                    <span className="text-amber-400 text-lg">🥋</span>
+                                    <span>Judoca desde os 4 anos, competidor de alto rendimento e sonho olímpico</span>
                                 </div>
                             </div>
                         }
                     />
 
-                    {/* Card: Blog */}
+                    {/* ─── Card: Blog & Notícias ─── */}
                     <HubCard
                         to="/blog"
                         icon={<Newspaper className="w-6 h-6" />}
@@ -237,13 +289,40 @@ export default function HomePage() {
                         bgGradient="bg-gradient-to-br from-blue-500/5 to-transparent"
                         title="Blog & Notícias"
                         subtitle="Artigos e novidades"
-                        badge={postCount > 0 ? `${postCount} ${postCount === 1 ? 'post' : 'posts'}` : undefined}
+                        ctaText="Veja outros posts"
                         delay={0.2}
                         teaser={
-                            <div className="flex items-center gap-2 text-xs text-gray-400">
-                                <Newspaper className="w-3 h-3 text-blue-400 flex-shrink-0" />
-                                <span>Judô, treino, competições e vida de atleta</span>
-                            </div>
+                            latestPost ? (
+                                <div className="flex items-start gap-3">
+                                    {latestPost.og_image && (
+                                        <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0 border border-white/5">
+                                            <img
+                                                src={latestPost.og_image}
+                                                alt={latestPost.title}
+                                                className="w-full h-full object-cover"
+                                            />
+                                        </div>
+                                    )}
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-sm font-semibold text-white line-clamp-2 leading-tight mb-1">{latestPost.title}</p>
+                                        <div className="flex items-center gap-2 text-[10px] text-gray-500">
+                                            <span className="flex items-center gap-1">
+                                                <Calendar className="w-2.5 h-2.5" />
+                                                {new Date(latestPost.published_at || latestPost.created_at).toLocaleDateString('pt-BR')}
+                                            </span>
+                                            <span className="flex items-center gap-1">
+                                                <Clock className="w-2.5 h-2.5" />
+                                                {latestPost.reading_time || 5} min
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="flex items-center gap-2 text-xs text-gray-400">
+                                    <Newspaper className="w-3 h-3 text-blue-400 flex-shrink-0" />
+                                    <span>Judô, treino, competições e vida de atleta</span>
+                                </div>
+                            )
                         }
                     />
                 </div>
