@@ -38,6 +38,16 @@ interface BlogPost {
     reading_time: number;
 }
 
+interface HomeCard {
+    id: string;
+    title: string;
+    subtitle: string;
+    cta_text: string;
+    teaser_text: string;
+    display_order: number;
+    is_visible: boolean;
+}
+
 interface HubCardProps {
     to: string;
     icon: React.ReactNode;
@@ -87,9 +97,9 @@ function HubCard({ to, icon, accentColor, bgGradient, title, subtitle, teaser, d
                     {ctaText && (
                         <div className="mt-3 flex items-center gap-1.5">
                             <span className={`text-xs font-bold flex items-center gap-1 ${accentColor === 'text-green-400' ? 'text-green-400' :
-                                    accentColor === 'text-blue-400' ? 'text-blue-400' :
-                                        accentColor === 'text-amber-400' ? 'text-amber-400' :
-                                            'text-pink-400'
+                                accentColor === 'text-blue-400' ? 'text-blue-400' :
+                                    accentColor === 'text-amber-400' ? 'text-amber-400' :
+                                        'text-pink-400'
                                 }`}>
                                 {ctaText}
                                 <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
@@ -109,16 +119,33 @@ function HubCard({ to, icon, accentColor, bgGradient, title, subtitle, teaser, d
     );
 }
 
+// Default card data as fallback
+const DEFAULT_CARDS: Record<string, { title: string; subtitle: string; cta_text: string; teaser_text: string }> = {
+    numeros: { title: 'Números & Métricas', subtitle: 'O impacto digital do Henrique em números reais', cta_text: 'Ver mais', teaser_text: '' },
+    apoiar: { title: 'Apoie o Henrique', subtitle: 'Faça parte dessa jornada', cta_text: 'Entenda como apoiar', teaser_text: 'Parceiros de confiança que já apoiam o Henrique' },
+    conteudo: { title: 'Conheça o Henrique', subtitle: 'A história por trás do atleta', cta_text: 'Saiba mais', teaser_text: 'Judoca desde os 4 anos, competidor de alto rendimento e sonho olímpico' },
+    blog: { title: 'Blog & Notícias', subtitle: 'Artigos e novidades', cta_text: 'Veja outros posts', teaser_text: 'Judô, treino, competições e vida de atleta' },
+};
+
+// Card visual config (not editable from admin — visual concern only)
+const CARD_CONFIG: Record<string, { to: string; icon: React.ReactNode; accentColor: string; bgGradient: string }> = {
+    numeros: { to: '/numeros', icon: <BarChart3 className="w-6 h-6" />, accentColor: 'text-green-400', bgGradient: 'bg-gradient-to-br from-green-500/5 to-transparent' },
+    apoiar: { to: '/apoiar', icon: <Heart className="w-6 h-6" />, accentColor: 'text-pink-400', bgGradient: 'bg-gradient-to-br from-pink-500/5 to-transparent' },
+    conteudo: { to: '/conteudo', icon: <User className="w-6 h-6" />, accentColor: 'text-amber-400', bgGradient: 'bg-gradient-to-br from-amber-500/5 to-transparent' },
+    blog: { to: '/blog', icon: <Newspaper className="w-6 h-6" />, accentColor: 'text-blue-400', bgGradient: 'bg-gradient-to-br from-blue-500/5 to-transparent' },
+};
+
 export default function HomePage() {
     const [metrics, setMetrics] = useState<any>(null);
     const [partners, setPartners] = useState<Partner[]>([]);
     const [latestPost, setLatestPost] = useState<BlogPost | null>(null);
+    const [homeCards, setHomeCards] = useState<HomeCard[]>([]);
 
     useEffect(() => {
         trackPageView('/', 'Hub Principal');
 
         async function loadTeasers() {
-            const [metricsData, partnersRes, postsRes] = await Promise.all([
+            const [metricsData, partnersRes, postsRes, cardsRes] = await Promise.all([
                 getAggregatedMetrics(30),
                 supabase
                     .from('partners')
@@ -131,11 +158,17 @@ export default function HomePage() {
                     .eq('status', 'published')
                     .order('published_at', { ascending: false })
                     .limit(1),
+                supabase
+                    .from('home_cards')
+                    .select('*')
+                    .eq('is_visible', true)
+                    .order('display_order', { ascending: true }),
             ]);
 
             setMetrics(metricsData);
             setPartners(partnersRes.data || []);
             setLatestPost(postsRes.data?.[0] || null);
+            setHomeCards(cardsRes.data || []);
         }
 
         loadTeasers();
@@ -147,8 +180,144 @@ export default function HomePage() {
         return n.toString();
     };
 
+    // Helper to get card data with fallback
+    function getCard(id: string) {
+        const dbCard = homeCards.find(c => c.id === id);
+        const fallback = DEFAULT_CARDS[id];
+        return {
+            title: dbCard?.title || fallback?.title || '',
+            subtitle: dbCard?.subtitle || fallback?.subtitle || '',
+            cta_text: dbCard?.cta_text || fallback?.cta_text || '',
+            teaser_text: dbCard?.teaser_text || fallback?.teaser_text || '',
+        };
+    }
+
+    // Determine card order: use DB order if available, else default
+    const cardOrder = homeCards.length > 0
+        ? homeCards.map(c => c.id)
+        : ['numeros', 'apoiar', 'conteudo', 'blog'];
+
     // Duplicate partners array for marquee effect
     const marqueePartners = [...partners, ...partners];
+
+    // Build teaser renderers per card type
+    function renderTeaser(cardId: string, cardData: ReturnType<typeof getCard>) {
+        switch (cardId) {
+            case 'numeros':
+                return (
+                    <div className="flex items-center gap-4">
+                        {metrics ? (
+                            <>
+                                <div className="flex-1">
+                                    <div className="flex items-center gap-1.5 mb-1">
+                                        <Eye className="w-3 h-3 text-green-400" />
+                                        <span className="text-xs text-gray-400">Alcance 30d</span>
+                                    </div>
+                                    <span className="text-2xl font-black text-white">{formatNumber(metrics.total_reach)}</span>
+                                </div>
+                                <div className="flex-1">
+                                    <div className="flex items-center gap-1.5 mb-1">
+                                        <Users className="w-3 h-3 text-blue-400" />
+                                        <span className="text-xs text-gray-400">Interações</span>
+                                    </div>
+                                    <span className="text-2xl font-black text-white">{formatNumber(metrics.total_interactions)}</span>
+                                </div>
+                                {metrics.reach_growth !== 0 && (
+                                    <div className="flex items-center gap-1">
+                                        <TrendingUp className="w-4 h-4 text-green-400" />
+                                        <span className="text-sm font-bold text-green-400">
+                                            {metrics.reach_growth > 0 ? '+' : ''}{metrics.reach_growth}%
+                                        </span>
+                                    </div>
+                                )}
+                            </>
+                        ) : (
+                            <div className="flex items-center gap-2 text-gray-500 text-xs">
+                                <div className="w-3 h-3 rounded-full bg-green-500/30 animate-pulse" />
+                                Carregando métricas...
+                            </div>
+                        )}
+                    </div>
+                );
+
+            case 'apoiar':
+                return (
+                    <div className="space-y-3">
+                        {partners.length > 0 && (
+                            <div className="relative overflow-hidden rounded-lg h-10">
+                                <div className="absolute left-0 top-0 bottom-0 w-6 bg-gradient-to-r from-black/60 to-transparent z-10 pointer-events-none" />
+                                <div className="absolute right-0 top-0 bottom-0 w-6 bg-gradient-to-l from-black/60 to-transparent z-10 pointer-events-none" />
+                                <motion.div
+                                    className="flex gap-6 items-center w-max"
+                                    animate={{ x: ['0%', '-50%'] }}
+                                    transition={{ repeat: Infinity, duration: 12, ease: 'linear' }}
+                                >
+                                    {marqueePartners.map((p, i) => (
+                                        p.logo_url ? (
+                                            <img
+                                                key={`${p.id}-${i}`}
+                                                src={p.logo_url}
+                                                alt={p.name}
+                                                className="h-8 w-auto max-w-[100px] object-contain opacity-50 grayscale"
+                                            />
+                                        ) : (
+                                            <span key={`${p.id}-${i}`} className="text-xs font-bold text-gray-600 whitespace-nowrap">{p.name}</span>
+                                        )
+                                    ))}
+                                </motion.div>
+                            </div>
+                        )}
+                        <p className="text-[11px] text-gray-500">{cardData.teaser_text}</p>
+                    </div>
+                );
+
+            case 'conteudo':
+                return (
+                    <div className="space-y-2">
+                        <div className="flex items-center gap-3 text-xs text-gray-400">
+                            <span className="text-amber-400 text-lg">🥋</span>
+                            <span>{cardData.teaser_text}</span>
+                        </div>
+                    </div>
+                );
+
+            case 'blog':
+                return latestPost ? (
+                    <div className="flex items-start gap-3">
+                        {latestPost.og_image && (
+                            <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0 border border-white/5">
+                                <img
+                                    src={latestPost.og_image}
+                                    alt={latestPost.title}
+                                    className="w-full h-full object-cover"
+                                />
+                            </div>
+                        )}
+                        <div className="flex-1 min-w-0">
+                            <p className="text-sm font-semibold text-white line-clamp-2 leading-tight mb-1">{latestPost.title}</p>
+                            <div className="flex items-center gap-2 text-[10px] text-gray-500">
+                                <span className="flex items-center gap-1">
+                                    <Calendar className="w-2.5 h-2.5" />
+                                    {new Date(latestPost.published_at || latestPost.created_at).toLocaleDateString('pt-BR')}
+                                </span>
+                                <span className="flex items-center gap-1">
+                                    <Clock className="w-2.5 h-2.5" />
+                                    {latestPost.reading_time || 5} min
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                ) : (
+                    <div className="flex items-center gap-2 text-xs text-gray-400">
+                        <Newspaper className="w-3 h-3 text-blue-400 flex-shrink-0" />
+                        <span>{cardData.teaser_text}</span>
+                    </div>
+                );
+
+            default:
+                return <p className="text-xs text-gray-400">{cardData.teaser_text}</p>;
+        }
+    }
 
     return (
         <main className="relative min-h-screen w-full overflow-x-hidden">
@@ -171,160 +340,25 @@ export default function HomePage() {
 
                 {/* Hub Cards Grid */}
                 <div className="max-w-5xl mx-auto px-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-
-                    {/* ─── Card: Números & Métricas ─── */}
-                    <HubCard
-                        to="/numeros"
-                        icon={<BarChart3 className="w-6 h-6" />}
-                        accentColor="text-green-400"
-                        bgGradient="bg-gradient-to-br from-green-500/5 to-transparent"
-                        title="Números & Métricas"
-                        subtitle="O impacto digital do Henrique em números reais"
-                        ctaText="Ver mais"
-                        delay={0.05}
-                        teaser={
-                            <div className="flex items-center gap-4">
-                                {metrics ? (
-                                    <>
-                                        <div className="flex-1">
-                                            <div className="flex items-center gap-1.5 mb-1">
-                                                <Eye className="w-3 h-3 text-green-400" />
-                                                <span className="text-xs text-gray-400">Alcance 30d</span>
-                                            </div>
-                                            <span className="text-2xl font-black text-white">{formatNumber(metrics.total_reach)}</span>
-                                        </div>
-                                        <div className="flex-1">
-                                            <div className="flex items-center gap-1.5 mb-1">
-                                                <Users className="w-3 h-3 text-blue-400" />
-                                                <span className="text-xs text-gray-400">Interações</span>
-                                            </div>
-                                            <span className="text-2xl font-black text-white">{formatNumber(metrics.total_interactions)}</span>
-                                        </div>
-                                        {metrics.reach_growth !== 0 && (
-                                            <div className="flex items-center gap-1">
-                                                <TrendingUp className="w-4 h-4 text-green-400" />
-                                                <span className="text-sm font-bold text-green-400">
-                                                    {metrics.reach_growth > 0 ? '+' : ''}{metrics.reach_growth}%
-                                                </span>
-                                            </div>
-                                        )}
-                                    </>
-                                ) : (
-                                    <div className="flex items-center gap-2 text-gray-500 text-xs">
-                                        <div className="w-3 h-3 rounded-full bg-green-500/30 animate-pulse" />
-                                        Carregando métricas...
-                                    </div>
-                                )}
-                            </div>
-                        }
-                    />
-
-                    {/* ─── Card: Apoie o Henrique ─── */}
-                    <HubCard
-                        to="/apoiar"
-                        icon={<Heart className="w-6 h-6" />}
-                        accentColor="text-pink-400"
-                        bgGradient="bg-gradient-to-br from-pink-500/5 to-transparent"
-                        title="Apoie o Henrique"
-                        subtitle="Faça parte dessa jornada"
-                        ctaText="Entenda como apoiar"
-                        delay={0.1}
-                        teaser={
-                            <div className="space-y-3">
-                                {/* Rolling partner logos marquee */}
-                                {partners.length > 0 && (
-                                    <div className="relative overflow-hidden rounded-lg h-10">
-                                        <div className="absolute left-0 top-0 bottom-0 w-6 bg-gradient-to-r from-black/60 to-transparent z-10 pointer-events-none" />
-                                        <div className="absolute right-0 top-0 bottom-0 w-6 bg-gradient-to-l from-black/60 to-transparent z-10 pointer-events-none" />
-                                        <motion.div
-                                            className="flex gap-6 items-center w-max"
-                                            animate={{ x: ['0%', '-50%'] }}
-                                            transition={{ repeat: Infinity, duration: 12, ease: 'linear' }}
-                                        >
-                                            {marqueePartners.map((p, i) => (
-                                                p.logo_url ? (
-                                                    <img
-                                                        key={`${p.id}-${i}`}
-                                                        src={p.logo_url}
-                                                        alt={p.name}
-                                                        className="h-8 w-auto max-w-[100px] object-contain opacity-50 grayscale"
-                                                    />
-                                                ) : (
-                                                    <span key={`${p.id}-${i}`} className="text-xs font-bold text-gray-600 whitespace-nowrap">{p.name}</span>
-                                                )
-                                            ))}
-                                        </motion.div>
-                                    </div>
-                                )}
-                                <p className="text-[11px] text-gray-500">Parceiros de confiança que já apoiam o Henrique</p>
-                            </div>
-                        }
-                    />
-
-                    {/* ─── Card: Conheça o Henrique ─── */}
-                    <HubCard
-                        to="/conteudo"
-                        icon={<User className="w-6 h-6" />}
-                        accentColor="text-amber-400"
-                        bgGradient="bg-gradient-to-br from-amber-500/5 to-transparent"
-                        title="Conheça o Henrique"
-                        subtitle="A história por trás do atleta"
-                        ctaText="Saiba mais"
-                        delay={0.15}
-                        teaser={
-                            <div className="space-y-2">
-                                <div className="flex items-center gap-3 text-xs text-gray-400">
-                                    <span className="text-amber-400 text-lg">🥋</span>
-                                    <span>Judoca desde os 4 anos, competidor de alto rendimento e sonho olímpico</span>
-                                </div>
-                            </div>
-                        }
-                    />
-
-                    {/* ─── Card: Blog & Notícias ─── */}
-                    <HubCard
-                        to="/blog"
-                        icon={<Newspaper className="w-6 h-6" />}
-                        accentColor="text-blue-400"
-                        bgGradient="bg-gradient-to-br from-blue-500/5 to-transparent"
-                        title="Blog & Notícias"
-                        subtitle="Artigos e novidades"
-                        ctaText="Veja outros posts"
-                        delay={0.2}
-                        teaser={
-                            latestPost ? (
-                                <div className="flex items-start gap-3">
-                                    {latestPost.og_image && (
-                                        <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0 border border-white/5">
-                                            <img
-                                                src={latestPost.og_image}
-                                                alt={latestPost.title}
-                                                className="w-full h-full object-cover"
-                                            />
-                                        </div>
-                                    )}
-                                    <div className="flex-1 min-w-0">
-                                        <p className="text-sm font-semibold text-white line-clamp-2 leading-tight mb-1">{latestPost.title}</p>
-                                        <div className="flex items-center gap-2 text-[10px] text-gray-500">
-                                            <span className="flex items-center gap-1">
-                                                <Calendar className="w-2.5 h-2.5" />
-                                                {new Date(latestPost.published_at || latestPost.created_at).toLocaleDateString('pt-BR')}
-                                            </span>
-                                            <span className="flex items-center gap-1">
-                                                <Clock className="w-2.5 h-2.5" />
-                                                {latestPost.reading_time || 5} min
-                                            </span>
-                                        </div>
-                                    </div>
-                                </div>
-                            ) : (
-                                <div className="flex items-center gap-2 text-xs text-gray-400">
-                                    <Newspaper className="w-3 h-3 text-blue-400 flex-shrink-0" />
-                                    <span>Judô, treino, competições e vida de atleta</span>
-                                </div>
-                            )
-                        }
-                    />
+                    {cardOrder.map((cardId, index) => {
+                        const config = CARD_CONFIG[cardId];
+                        if (!config) return null;
+                        const cardData = getCard(cardId);
+                        return (
+                            <HubCard
+                                key={cardId}
+                                to={config.to}
+                                icon={config.icon}
+                                accentColor={config.accentColor}
+                                bgGradient={config.bgGradient}
+                                title={cardData.title}
+                                subtitle={cardData.subtitle}
+                                ctaText={cardData.cta_text}
+                                delay={0.05 + index * 0.05}
+                                teaser={renderTeaser(cardId, cardData)}
+                            />
+                        );
+                    })}
                 </div>
 
                 {/* Quick social links */}

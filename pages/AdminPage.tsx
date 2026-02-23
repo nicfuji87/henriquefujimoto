@@ -26,6 +26,7 @@ import { supabase, Post } from '../lib/supabase';
 import BlogTab from '../components/admin/BlogTab';
 import TrackingTab from '../components/admin/TrackingTab';
 import JourneyTab from '../components/admin/JourneyTab';
+import HomeCardsTab from '../components/admin/HomeCardsTab';
 
 // Mock posts for development
 const mockPosts: Post[] = [
@@ -55,7 +56,7 @@ const mockPosts: Post[] = [
     },
 ];
 
-type Tab = 'dashboard' | 'blog' | 'posts' | 'bio' | 'journey' | 'tracking' | 'settings';
+type Tab = 'dashboard' | 'blog' | 'posts' | 'bio' | 'home_cards' | 'journey' | 'tracking' | 'settings';
 
 function Sidebar({
     activeTab,
@@ -73,6 +74,7 @@ function Sidebar({
         { id: 'blog' as Tab, label: 'Blog', icon: Newspaper },
         { id: 'posts' as Tab, label: 'Posts IG', icon: FileText },
         { id: 'bio' as Tab, label: 'Bio / Home', icon: Home },
+        { id: 'home_cards' as Tab, label: 'Cards Home', icon: LayoutDashboard },
         { id: 'journey' as Tab, label: 'Jornada', icon: MapPin },
         { id: 'tracking' as Tab, label: 'Tracking & SEO', icon: Activity },
         { id: 'settings' as Tab, label: 'Configurações', icon: Settings },
@@ -640,9 +642,9 @@ function DashboardTab() {
                                 return (
                                     <div key={pv.page_path} className="flex items-center gap-3">
                                         <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 ${i === 0 ? 'bg-yellow-500/20 text-yellow-400'
-                                                : i === 1 ? 'bg-zinc-400/20 text-zinc-300'
-                                                    : i === 2 ? 'bg-amber-700/20 text-amber-600'
-                                                        : 'bg-zinc-800 text-zinc-500'
+                                            : i === 1 ? 'bg-zinc-400/20 text-zinc-300'
+                                                : i === 2 ? 'bg-amber-700/20 text-amber-600'
+                                                    : 'bg-zinc-800 text-zinc-500'
                                             }`}>{i + 1}</div>
                                         <div className="flex-1 min-w-0">
                                             <div className="flex items-center justify-between mb-1">
@@ -2115,6 +2117,7 @@ export default function AdminPage() {
                             {activeTab === 'blog' && <BlogTab />}
                             {activeTab === 'posts' && <PostsTab />}
                             {activeTab === 'bio' && <BioTab />}
+                            {activeTab === 'home_cards' && <HomeCardsTab />}
                             {activeTab === 'journey' && <JourneyTab />}
                             {activeTab === 'tracking' && <TrackingTab />}
                             {activeTab === 'settings' && <SettingsTab />}
