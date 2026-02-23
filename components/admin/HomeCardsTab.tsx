@@ -66,7 +66,7 @@ export default function HomeCardsTab() {
 
         try {
             for (const card of cards) {
-                const { error } = await supabase
+                const { error, data } = await supabase
                     .from('home_cards')
                     .update({
                         title: card.title,
@@ -77,14 +77,19 @@ export default function HomeCardsTab() {
                         is_visible: card.is_visible,
                         updated_at: new Date().toISOString(),
                     })
-                    .eq('id', card.id);
+                    .eq('id', card.id)
+                    .select();
 
-                if (error) throw error;
+                if (error) {
+                    console.error(`Supabase error for card ${card.id}:`, error);
+                    throw new Error(error.message || 'Erro desconhecido');
+                }
+                console.log(`Card ${card.id} saved:`, data);
             }
             setMessage({ type: 'success', text: 'Cards da home atualizados com sucesso!' });
-        } catch (err) {
+        } catch (err: any) {
             console.error('Error saving cards:', err);
-            setMessage({ type: 'error', text: 'Erro ao salvar. Tente novamente.' });
+            setMessage({ type: 'error', text: `Erro ao salvar: ${err?.message || 'Tente novamente.'}` });
         } finally {
             setSaving(false);
         }
