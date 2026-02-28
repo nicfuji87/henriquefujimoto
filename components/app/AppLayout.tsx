@@ -73,6 +73,38 @@ export default function AppLayout() {
 
     return (
         <TrainingWizardContext.Provider value={{ training, updateTraining, saveTraining, resetTraining, isSaving }}>
+            <style>{`
+                /* Global Range Slider Styling for App */
+                .app-slider {
+                    -webkit-appearance: none;
+                    width: 100%;
+                    background: transparent;
+                }
+                .app-slider::-webkit-slider-thumb {
+                    -webkit-appearance: none;
+                    height: 24px;
+                    width: 24px;
+                    border-radius: 50%;
+                    background: #1152d4;
+                    cursor: pointer;
+                    margin-top: -10px;
+                    box-shadow: 0 0 0 4px rgba(17, 82, 212, 0.2);
+                    transition: transform 0.1s ease-in-out;
+                }
+                .app-slider::-webkit-slider-thumb:active {
+                    transform: scale(1.1);
+                }
+                .app-slider::-webkit-slider-runnable-track {
+                    width: 100%;
+                    height: 6px;
+                    cursor: pointer;
+                    background: #e2e8f0;
+                    border-radius: 3px;
+                }
+                .dark .app-slider::-webkit-slider-runnable-track {
+                    background: #334155;
+                }
+            `}</style>
             <div className="bg-app-bg-light dark:bg-app-bg-dark min-h-screen text-slate-900 dark:text-slate-100 font-app-display antialiased">
                 <div className="relative flex h-full min-h-screen w-full flex-col max-w-md mx-auto bg-white dark:bg-slate-900 shadow-2xl overflow-x-hidden">
                     <Outlet />

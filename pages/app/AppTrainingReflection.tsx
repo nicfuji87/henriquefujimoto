@@ -30,19 +30,6 @@ export default function AppTrainingReflection() {
     return (
         <div className="bg-app-bg-light dark:bg-app-bg-dark font-app-display antialiased text-slate-900 dark:text-slate-100 min-h-screen flex flex-col overflow-x-hidden">
             <style>{`
-        input[type=range] {
-            -webkit-appearance: none; 
-            background: transparent; 
-        }
-
-        input[type=range]::-webkit-slider-thumb {
-            -webkit-appearance: none;
-        }
-
-        input[type=range]:focus {
-            outline: none;
-        }
-        
         .material-symbols-outlined {
           font-variation-settings:
           'FILL' 0,
@@ -94,17 +81,9 @@ export default function AppTrainingReflection() {
                             <span className="text-sm text-slate-500 dark:text-slate-400 font-medium">{getAppreciation()}</span>
                         </div>
 
-                        {/* Custom Slider */}
-                        <div className="w-full relative h-12 flex items-center">
-                            {/* Track */}
-                            <div className="absolute w-full h-3 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
-                                <div className="h-full bg-app-primary rounded-full" style={{ width: `${(rating / 10) * 100}%` }}></div>
-                            </div>
-                            {/* Thumb */}
-                            <div className="absolute -translate-x-1/2 w-8 h-8 bg-white dark:bg-slate-900 border-4 border-app-primary rounded-full shadow-lg z-10 pointer-events-none transition-all" style={{ left: `${(rating / 10) * 100}%` }}></div>
-                            {/* Input Range */}
+                        <div className="w-full relative py-4 flex items-center">
                             <input
-                                className="absolute w-full h-full opacity-0 cursor-pointer z-20"
+                                className="app-slider"
                                 max="10"
                                 min="0"
                                 step="1"

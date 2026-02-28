@@ -102,7 +102,7 @@ export default function AppEmotionalCheckin() {
                                 <input
                                     value={intensity}
                                     onChange={(e) => setIntensity(Number(e.target.value))}
-                                    className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700 accent-app-primary focus:outline-none focus:ring-2 focus:ring-app-primary/50"
+                                    className="app-slider"
                                     max="10"
                                     min="1"
                                     type="range"

@@ -38,33 +38,6 @@ export default function AppMentalFocus() {
     return (
         <div className="bg-app-bg-light dark:bg-app-bg-dark font-app-display text-slate-900 dark:text-slate-100 antialiased min-h-screen flex flex-col overflow-x-hidden">
             <style>{`
-        /* Custom range slider styling for better cross-browser consistency */
-        input[type=range] {
-            -webkit-appearance: none;
-            width: 100%;
-            background: transparent;
-        }
-        input[type=range]::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            height: 24px;
-            width: 24px;
-            border-radius: 50%;
-            background: #1152d4;
-            cursor: pointer;
-            margin-top: -10px;
-            box-shadow: 0 0 0 4px rgba(17, 82, 212, 0.2);
-        }
-        input[type=range]::-webkit-slider-runnable-track {
-            width: 100%;
-            height: 4px;
-            cursor: pointer;
-            background: #e2e8f0;
-            border-radius: 2px;
-        }
-        .dark input[type=range]::-webkit-slider-runnable-track {
-            background: #334155;
-        }
-        
         /* Checkbox hidden */
         .chip-checkbox:checked + label {
             background-color: #eff6ff;
@@ -100,8 +73,8 @@ export default function AppMentalFocus() {
                         <span className="text-sm font-medium text-slate-500 dark:text-slate-400">Nível de Foco</span>
                         <span className="text-3xl font-bold text-app-primary dark:text-blue-400">{focusLevel}<span className="text-lg text-slate-400 font-normal">/10</span></span>
                     </div>
-                    <div className="relative w-full h-8 flex items-center">
-                        <input value={focusLevel} onChange={(e) => setFocusLevel(Number(e.target.value))} className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer dark:bg-slate-700 accent-app-primary focus:outline-none focus:ring-2 focus:ring-app-primary/50" max="10" min="0" type="range" />
+                    <div className="relative w-full h-12 flex items-center">
+                        <input value={focusLevel} onChange={(e) => setFocusLevel(Number(e.target.value))} className="app-slider" max="10" min="0" type="range" />
                     </div>
                     <div className="flex justify-between mt-2 text-xs text-slate-400 font-medium">
                         <span>Disperso</span>

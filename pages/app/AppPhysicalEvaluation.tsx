@@ -59,8 +59,8 @@ export default function AppPhysicalEvaluation() {
                                 <label className="text-slate-900 dark:text-white text-base font-semibold">Cansaço</label>
                                 <span className="text-app-primary font-bold text-lg bg-app-primary/10 px-3 py-1 rounded-lg">{fatigueLevel}</span>
                             </div>
-                            <div className="relative w-full h-8 flex items-center">
-                                <input value={fatigueLevel} onChange={(e) => setFatigueLevel(Number(e.target.value))} className="w-full h-2 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-app-primary" max="10" min="0" type="range" />
+                            <div className="relative w-full h-12 flex items-center">
+                                <input value={fatigueLevel} onChange={(e) => setFatigueLevel(Number(e.target.value))} className="app-slider" max="10" min="0" type="range" />
                             </div>
                             <div className="flex justify-between text-xs text-slate-400 font-medium px-1">
                                 <span>Descansado</span>
@@ -74,8 +74,8 @@ export default function AppPhysicalEvaluation() {
                                 <label className="text-slate-900 dark:text-white text-base font-semibold">Energia</label>
                                 <span className="text-app-primary font-bold text-lg bg-app-primary/10 px-3 py-1 rounded-lg">{energyLevel}</span>
                             </div>
-                            <div className="relative w-full h-8 flex items-center">
-                                <input value={energyLevel} onChange={(e) => setEnergyLevel(Number(e.target.value))} className="w-full h-2 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-app-primary" max="10" min="0" type="range" />
+                            <div className="relative w-full h-12 flex items-center">
+                                <input value={energyLevel} onChange={(e) => setEnergyLevel(Number(e.target.value))} className="app-slider" max="10" min="0" type="range" />
                             </div>
                             <div className="flex justify-between text-xs text-slate-400 font-medium px-1">
                                 <span>Baixa</span>
@@ -89,8 +89,8 @@ export default function AppPhysicalEvaluation() {
                                 <label className="text-slate-900 dark:text-white text-base font-semibold">Dor</label>
                                 <span className="text-app-primary font-bold text-lg bg-app-primary/10 px-3 py-1 rounded-lg">{painLevel}</span>
                             </div>
-                            <div className="relative w-full h-8 flex items-center">
-                                <input value={painLevel} onChange={(e) => setPainLevel(Number(e.target.value))} className="w-full h-2 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-app-primary" max="10" min="0" type="range" />
+                            <div className="relative w-full h-12 flex items-center">
+                                <input value={painLevel} onChange={(e) => setPainLevel(Number(e.target.value))} className="app-slider" max="10" min="0" type="range" />
                             </div>
                             <div className="flex justify-between text-xs text-slate-400 font-medium px-1">
                                 <span>Sem dor</span>
