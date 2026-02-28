@@ -137,133 +137,153 @@ export default function PsicoDashboard() {
 
     // Export PDF
     const handleExportPDF = async () => {
-        const { default: jsPDF } = await import('jspdf');
-        const autoTable = (await import('jspdf-autotable')).default;
+        try {
+            const jsPDFModule = await import('jspdf');
+            const jsPDF = jsPDFModule.default || jsPDFModule.jsPDF;
+            const autoTableModule = await import('jspdf-autotable');
+            const autoTable = autoTableModule.default || autoTableModule.applyPlugin;
 
-        const doc = new jsPDF();
-        const pageWidth = doc.internal.pageSize.getWidth();
+            const doc = new jsPDF();
+            const pageWidth = doc.internal.pageSize.getWidth();
 
-        // Header
-        doc.setFillColor(20, 184, 166);
-        doc.rect(0, 0, pageWidth, 40, 'F');
-        doc.setTextColor(255, 255, 255);
-        doc.setFontSize(20);
-        doc.text('Relatório Psicológico - Henrique Fujimoto', 14, 18);
-        doc.setFontSize(10);
-        doc.text(`Gerado em ${new Date().toLocaleDateString('pt-BR')} | Período: ${dateFilter === 'all' ? 'Todos' : dateFilter}`, 14, 28);
-        doc.text(`Total de registros: ${filteredTrainings.length}`, 14, 35);
+            // If autoTable is a function (standalone usage), use it; otherwise it attached to prototype
+            const runAutoTable = (options: any) => {
+                if (typeof autoTable === 'function') {
+                    autoTable(doc, options);
+                } else if (typeof (doc as any).autoTable === 'function') {
+                    (doc as any).autoTable(options);
+                }
+            };
 
-        // Summary
-        doc.setTextColor(0, 0, 0);
-        doc.setFontSize(14);
-        doc.text('Resumo Geral', 14, 52);
+            const getLastY = (): number => {
+                return (doc as any).lastAutoTable?.finalY || (doc as any).previousAutoTable?.finalY || 80;
+            };
 
-        (doc as any).autoTable({
-            startY: 56,
-            head: [['Métrica', 'Valor Médio']],
-            body: [
-                ['Nota Geral', `${avgRating}/10`],
-                ['Nível de Foco', `${avgFocus}/10`],
-                ['Cansaço', `${avgFatigue}/10`],
-                ['Intensidade Emocional', `${avgEmotionIntensity}/10`],
-                ['Total Treinos', `${filteredTrainings.filter(t => !t.is_competition).length}`],
-                ['Total Competições', `${competitions.length}`],
-                ['Vitórias', `${totalWins}`],
-                ['Derrotas', `${totalLosses}`],
-            ],
-            theme: 'striped',
-            headStyles: { fillColor: [20, 184, 166] },
-        });
+            // Header
+            doc.setFillColor(20, 184, 166);
+            doc.rect(0, 0, pageWidth, 40, 'F');
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(20);
+            doc.text('Relatório Psicológico - Henrique Fujimoto', 14, 18);
+            doc.setFontSize(10);
+            doc.text(`Gerado em ${new Date().toLocaleDateString('pt-BR')} | Período: ${dateFilter === 'all' ? 'Todos' : dateFilter}`, 14, 28);
+            doc.text(`Total de registros: ${filteredTrainings.length}`, 14, 35);
 
-        // Emotions
-        let y = (doc as any).lastAutoTable.finalY + 12;
-        doc.setFontSize(14);
-        doc.text('Emoções Mais Frequentes', 14, y);
+            // Summary
+            doc.setTextColor(0, 0, 0);
+            doc.setFontSize(14);
+            doc.text('Resumo Geral', 14, 52);
 
-        (doc as any).autoTable({
-            startY: y + 4,
-            head: [['Emoção', 'Frequência']],
-            body: emotionPieData.map(e => [e.name, e.value.toString()]),
-            theme: 'striped',
-            headStyles: { fillColor: [20, 184, 166] },
-        });
+            runAutoTable({
+                startY: 56,
+                head: [['Métrica', 'Valor Médio']],
+                body: [
+                    ['Nota Geral', `${avgRating}/10`],
+                    ['Nível de Foco', `${avgFocus}/10`],
+                    ['Cansaço', `${avgFatigue}/10`],
+                    ['Intensidade Emocional', `${avgEmotionIntensity}/10`],
+                    ['Total Treinos', `${filteredTrainings.filter(t => !t.is_competition).length}`],
+                    ['Total Competições', `${competitions.length}`],
+                    ['Vitórias', `${totalWins}`],
+                    ['Derrotas', `${totalLosses}`],
+                ],
+                theme: 'striped',
+                headStyles: { fillColor: [20, 184, 166] },
+            });
 
-        // Distractions
-        y = (doc as any).lastAutoTable.finalY + 12;
-        if (y > 250) { doc.addPage(); y = 20; }
-        doc.setFontSize(14);
-        doc.text('Distrações Identificadas', 14, y);
+            // Emotions
+            let y = getLastY() + 12;
+            doc.setFontSize(14);
+            doc.text('Emoções Mais Frequentes', 14, y);
 
-        (doc as any).autoTable({
-            startY: y + 4,
-            head: [['Distração', 'Frequência']],
-            body: distractionData.map(d => [d.name, d.value.toString()]),
-            theme: 'striped',
-            headStyles: { fillColor: [20, 184, 166] },
-        });
+            runAutoTable({
+                startY: y + 4,
+                head: [['Emoção', 'Frequência']],
+                body: emotionPieData.map(e => [e.name, e.value.toString()]),
+                theme: 'striped',
+                headStyles: { fillColor: [20, 184, 166] },
+            });
 
-        // Pain Areas
-        y = (doc as any).lastAutoTable.finalY + 12;
-        if (y > 250) { doc.addPage(); y = 20; }
-        doc.setFontSize(14);
-        doc.text('Áreas de Dor Relatadas', 14, y);
+            // Distractions
+            y = getLastY() + 12;
+            if (y > 250) { doc.addPage(); y = 20; }
+            doc.setFontSize(14);
+            doc.text('Distrações Identificadas', 14, y);
 
-        (doc as any).autoTable({
-            startY: y + 4,
-            head: [['Área', 'Frequência']],
-            body: painData.map(p => [p.name, p.value.toString()]),
-            theme: 'striped',
-            headStyles: { fillColor: [20, 184, 166] },
-        });
+            runAutoTable({
+                startY: y + 4,
+                head: [['Distração', 'Frequência']],
+                body: distractionData.map(d => [d.name, d.value.toString()]),
+                theme: 'striped',
+                headStyles: { fillColor: [20, 184, 166] },
+            });
 
-        // All trainings
-        doc.addPage();
-        doc.setFontSize(14);
-        doc.text('Histórico Detalhado', 14, 20);
+            // Pain Areas
+            y = getLastY() + 12;
+            if (y > 250) { doc.addPage(); y = 20; }
+            doc.setFontSize(14);
+            doc.text('Áreas de Dor Relatadas', 14, y);
 
-        (doc as any).autoTable({
-            startY: 26,
-            head: [['Data', 'Modalidade', 'Tipo', 'Nota', 'Foco', 'Cansaço', 'Dor', 'Emoções']],
-            body: filteredTrainings.map(t => [
-                new Date(t.created_at || '').toLocaleDateString('pt-BR'),
-                t.modality,
-                t.training_type || '-',
-                t.rating?.toString() || '-',
-                t.focus_level?.toString() || '-',
-                t.fatigue_level?.toString() || '-',
-                t.pain_level?.toString() || '-',
-                (t.emotions || []).join(', ') || '-'
-            ]),
-            theme: 'striped',
-            headStyles: { fillColor: [20, 184, 166] },
-            styles: { fontSize: 8 },
-        });
+            runAutoTable({
+                startY: y + 4,
+                head: [['Área', 'Frequência']],
+                body: painData.map(p => [p.name, p.value.toString()]),
+                theme: 'striped',
+                headStyles: { fillColor: [20, 184, 166] },
+            });
 
-        // Reflections
-        doc.addPage();
-        doc.setFontSize(14);
-        doc.text('Reflexões e Aprendizados', 14, 20);
+            // All trainings
+            doc.addPage();
+            doc.setFontSize(14);
+            doc.text('Histórico Detalhado', 14, 20);
 
-        (doc as any).autoTable({
-            startY: 26,
-            head: [['Data', 'Reflexão', 'Aprendizado', 'Contexto Emocional']],
-            body: filteredTrainings.map(t => [
-                new Date(t.created_at || '').toLocaleDateString('pt-BR'),
-                t.reflection || '-',
-                t.learned_today || '-',
-                t.emotion_context || '-'
-            ]),
-            theme: 'striped',
-            headStyles: { fillColor: [20, 184, 166] },
-            styles: { fontSize: 8, cellWidth: 'wrap' },
-            columnStyles: {
-                1: { cellWidth: 50 },
-                2: { cellWidth: 50 },
-                3: { cellWidth: 50 },
-            }
-        });
+            runAutoTable({
+                startY: 26,
+                head: [['Data', 'Modalidade', 'Tipo', 'Nota', 'Foco', 'Cansaço', 'Dor', 'Emoções']],
+                body: filteredTrainings.map(t => [
+                    new Date(t.created_at || '').toLocaleDateString('pt-BR'),
+                    t.modality,
+                    t.training_type || '-',
+                    t.rating?.toString() || '-',
+                    t.focus_level?.toString() || '-',
+                    t.fatigue_level?.toString() || '-',
+                    t.pain_level?.toString() || '-',
+                    (t.emotions || []).join(', ') || '-'
+                ]),
+                theme: 'striped',
+                headStyles: { fillColor: [20, 184, 166] },
+                styles: { fontSize: 8 },
+            });
 
-        doc.save(`relatorio-psico-henrique-${new Date().toISOString().slice(0, 10)}.pdf`);
+            // Reflections
+            doc.addPage();
+            doc.setFontSize(14);
+            doc.text('Reflexões e Aprendizados', 14, 20);
+
+            runAutoTable({
+                startY: 26,
+                head: [['Data', 'Reflexão', 'Aprendizado', 'Contexto Emocional']],
+                body: filteredTrainings.map(t => [
+                    new Date(t.created_at || '').toLocaleDateString('pt-BR'),
+                    t.reflection || '-',
+                    t.learned_today || '-',
+                    t.emotion_context || '-'
+                ]),
+                theme: 'striped',
+                headStyles: { fillColor: [20, 184, 166] },
+                styles: { fontSize: 8, cellWidth: 'wrap' },
+                columnStyles: {
+                    1: { cellWidth: 50 },
+                    2: { cellWidth: 50 },
+                    3: { cellWidth: 50 },
+                }
+            });
+
+            doc.save(`relatorio-psico-henrique-${new Date().toISOString().slice(0, 10)}.pdf`);
+        } catch (err) {
+            console.error('Erro ao gerar PDF:', err);
+            alert('Erro ao gerar o PDF. Verifique o console para detalhes.');
+        }
     };
 
     const handleLogout = () => {
@@ -365,8 +385,8 @@ export default function PsicoDashboard() {
                                 key={f}
                                 onClick={() => setDateFilter(f)}
                                 className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${dateFilter === f
-                                        ? 'bg-teal-500 text-white shadow-sm'
-                                        : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600'
+                                    ? 'bg-teal-500 text-white shadow-sm'
+                                    : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600'
                                     }`}
                             >
                                 {f === '7d' ? '7 dias' : f === '30d' ? '30 dias' : f === '90d' ? '90 dias' : 'Tudo'}
@@ -381,8 +401,8 @@ export default function PsicoDashboard() {
                                 key={m}
                                 onClick={() => setModalityFilter(m)}
                                 className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${modalityFilter === m
-                                        ? 'bg-teal-500 text-white shadow-sm'
-                                        : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600'
+                                    ? 'bg-teal-500 text-white shadow-sm'
+                                    : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600'
                                     }`}
                             >
                                 {m}
@@ -401,8 +421,8 @@ export default function PsicoDashboard() {
                                 key={tab.id}
                                 onClick={() => setActiveTab(tab.id)}
                                 className={`flex items-center gap-2 px-4 py-3 text-sm font-semibold border-b-2 transition-all whitespace-nowrap ${activeTab === tab.id
-                                        ? 'border-teal-500 text-teal-600 dark:text-teal-400'
-                                        : 'border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
+                                    ? 'border-teal-500 text-teal-600 dark:text-teal-400'
+                                    : 'border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
                                     }`}
                             >
                                 <span className="material-symbols-outlined text-lg">{tab.icon}</span>
