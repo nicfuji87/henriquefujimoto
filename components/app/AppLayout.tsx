@@ -29,6 +29,14 @@ export default function AppLayout() {
     const location = useLocation();
     const navigate = useNavigate();
 
+    // Scroll to top on route change
+    useEffect(() => {
+        window.scrollTo(0, 0);
+        // Also try scrolling any internal scrollable container
+        const scrollableElements = document.querySelectorAll('.overflow-y-auto');
+        scrollableElements.forEach(el => el.scrollTo(0, 0));
+    }, [location.pathname]);
+
     // Wizard state
     const [training, setTraining] = useState<Partial<AppTraining>>({});
     const [isSaving, setIsSaving] = useState(false);
@@ -66,7 +74,9 @@ export default function AppLayout() {
         '/app/physical-evaluation',
         '/app/mental-focus',
         '/app/emotional-checkin',
-        '/app/daily-evolution'
+        '/app/daily-evolution',
+        '/app/competition-details',
+        '/app/competition-reflection'
     ];
 
     const showNav = !hideNavPaths.includes(location.pathname) && isAuth;

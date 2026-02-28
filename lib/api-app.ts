@@ -20,6 +20,15 @@ export interface AppTraining {
     learned_today?: string;
     needs_improvement?: string;
     sensei_feedback?: string;
+
+    // Competition Fields
+    is_competition?: boolean;
+    competition_name?: string;
+    competition_result?: string;
+    competition_weight?: string;
+    competition_matches?: number;
+    competition_wins?: number;
+    competition_losses?: number;
 }
 
 export const appApi = {

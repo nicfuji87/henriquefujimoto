@@ -6,6 +6,7 @@ export default function AppHistory() {
     const navigate = useNavigate();
     const [trainings, setTrainings] = useState<AppTraining[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [filter, setFilter] = useState('Todos');
 
     useEffect(() => {
         async function fetchDocs() {
@@ -26,6 +27,10 @@ export default function AppHistory() {
         const date = new Date(isoString);
         return date.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' });
     };
+
+    const filteredTrainings = filter === 'Todos'
+        ? trainings
+        : trainings.filter(t => t.modality === filter);
 
     return (
         <div className="text-slate-900 dark:text-slate-100 font-app-display antialiased flex-1 flex flex-col items-center">
@@ -58,17 +63,17 @@ export default function AppHistory() {
 
                     {/* Filters */}
                     <div className="flex gap-3 px-4 pb-4 overflow-x-auto no-scrollbar">
-                        <button className="flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-full bg-slate-900 dark:bg-white px-4 transition-transform active:scale-95">
-                            <span className="material-symbols-outlined text-[18px] text-white dark:text-slate-900">apps</span>
-                            <p className="text-white dark:text-slate-900 text-sm font-medium">Todos</p>
+                        <button onClick={() => setFilter('Todos')} className={`flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-full px-4 transition-transform active:scale-95 ${filter === 'Todos' ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-transparent hover:border-slate-200 dark:hover:border-slate-700'}`}>
+                            <span className="material-symbols-outlined text-[18px]">apps</span>
+                            <p className="text-sm font-medium">Todos</p>
                         </button>
-                        <button className="flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-full bg-slate-100 dark:bg-slate-800 px-4 transition-transform active:scale-95 border border-transparent hover:border-slate-200 dark:hover:border-slate-700">
-                            <span className="material-symbols-outlined text-[18px] text-slate-600 dark:text-slate-400">sports_martial_arts</span>
-                            <p className="text-slate-700 dark:text-slate-200 text-sm font-medium">Judô</p>
+                        <button onClick={() => setFilter('Judô')} className={`flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-full px-4 transition-transform active:scale-95 ${filter === 'Judô' ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-transparent hover:border-slate-200 dark:hover:border-slate-700'}`}>
+                            <span className="material-symbols-outlined text-[18px]">sports_martial_arts</span>
+                            <p className="text-sm font-medium">Judô</p>
                         </button>
-                        <button className="flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-full bg-slate-100 dark:bg-slate-800 px-4 transition-transform active:scale-95 border border-transparent hover:border-slate-200 dark:hover:border-slate-700">
-                            <span className="material-symbols-outlined text-[18px] text-slate-600 dark:text-slate-400">sports_kabaddi</span>
-                            <p className="text-slate-700 dark:text-slate-200 text-sm font-medium">Jiu-Jitsu</p>
+                        <button onClick={() => setFilter('Jiu-Jitsu')} className={`flex h-9 shrink-0 items-center justify-center gap-x-2 rounded-full px-4 transition-transform active:scale-95 ${filter === 'Jiu-Jitsu' ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-transparent hover:border-slate-200 dark:hover:border-slate-700'}`}>
+                            <span className="material-symbols-outlined text-[18px]">sports_kabaddi</span>
+                            <p className="text-sm font-medium">Jiu-Jitsu</p>
                         </button>
                     </div>
                 </div>
@@ -105,26 +110,28 @@ export default function AppHistory() {
                                 <div className="animate-pulse h-32 bg-slate-200 dark:bg-slate-800 rounded-xl"></div>
                                 <div className="animate-pulse h-32 bg-slate-200 dark:bg-slate-800 rounded-xl"></div>
                             </div>
-                        ) : trainings.length === 0 ? (
+                        ) : filteredTrainings.length === 0 ? (
                             <div className="text-center text-slate-500 py-10">
                                 Nenhum registro encontrado.
                             </div>
                         ) : (
                             <div className="flex flex-col gap-3">
-                                {trainings.map(t => (
+                                {filteredTrainings.map(t => (
                                     <div key={t.id} className="group flex flex-col gap-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800 p-4 shadow-sm hover:shadow-md transition-all">
                                         <div className="flex items-start justify-between gap-4">
                                             <div className="flex items-start gap-4">
-                                                <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-blue-100 dark:bg-blue-900/30 text-app-primary`}>
+                                                <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl text-app-primary ${t.is_competition ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-600' : 'bg-blue-100 dark:bg-blue-900/30'}`}>
                                                     <span className="material-symbols-outlined">
-                                                        {t.modality === 'Jiu-Jitsu' ? 'sports_kabaddi' : (t.modality === 'Judô' ? 'sports_martial_arts' : 'emoji_events')}
+                                                        {t.is_competition ? 'emoji_events' : (t.modality === 'Jiu-Jitsu' ? 'sports_kabaddi' : 'sports_martial_arts')}
                                                     </span>
                                                 </div>
                                                 <div>
-                                                    <h4 className="text-slate-900 dark:text-white font-bold leading-tight">Treino de {t.modality}</h4>
-                                                    <div className="flex items-center gap-2 mt-1">
-                                                        <span className="inline-flex items-center rounded-md bg-slate-100 dark:bg-slate-700 px-2 py-0.5 text-xs font-medium text-slate-600 dark:text-slate-300">
-                                                            {t.training_type || 'Geral'}
+                                                    <h4 className="text-slate-900 dark:text-white font-bold leading-tight">
+                                                        {t.is_competition ? t.competition_name || 'Competição' : `Treino de ${t.modality}`}
+                                                    </h4>
+                                                    <div className="flex items-center gap-2 mt-1 flex-wrap">
+                                                        <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium ${t.is_competition ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300'}`}>
+                                                            {t.is_competition ? t.competition_result || t.training_type : t.training_type || 'Geral'}
                                                         </span>
                                                         <span className="text-xs text-slate-400">•</span>
                                                         <span className="text-xs text-slate-500 dark:text-slate-400">{formatTime(t.created_at)}</span>
@@ -133,7 +140,7 @@ export default function AppHistory() {
                                             </div>
                                             <div className="flex flex-col items-end gap-1">
                                                 {t.rating !== undefined && (
-                                                    <span className="flex items-center justify-center w-8 h-8 rounded-full bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-xs font-bold">
+                                                    <span className={`flex items-center justify-center w-8 h-8 rounded-full text-xs font-bold ${t.is_competition ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400' : 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'}`}>
                                                         {t.rating}
                                                     </span>
                                                 )}

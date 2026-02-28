@@ -10,8 +10,17 @@ export default function AppNewTraining() {
     const [trainingType, setTrainingType] = useState('Técnica');
 
     const handleContinue = () => {
-        updateTraining({ modality, training_type: trainingType });
-        navigate('/app/training-reflection');
+        updateTraining({
+            modality,
+            training_type: trainingType,
+            is_competition: trainingType === 'Competição'
+        });
+
+        if (trainingType === 'Competição') {
+            navigate('/app/competition-details');
+        } else {
+            navigate('/app/training-reflection');
+        }
     };
 
     return (
@@ -103,6 +112,13 @@ export default function AppNewTraining() {
                         <div className="flex h-10 items-center justify-center gap-x-2 rounded-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-5 py-2 transition-all peer-checked:bg-app-primary peer-checked:text-white peer-checked:border-app-primary hover:bg-slate-50 dark:hover:bg-slate-700">
                             <span className="material-symbols-outlined text-[18px]">layers</span>
                             <p className="text-sm font-medium">Misto</p>
+                        </div>
+                    </label>
+                    <label className="cursor-pointer">
+                        <input checked={trainingType === 'Competição'} onChange={() => setTrainingType('Competição')} className="peer sr-only" name="type" type="radio" value="Competição" />
+                        <div className="flex h-10 items-center justify-center gap-x-2 rounded-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-5 py-2 transition-all peer-checked:bg-amber-500 peer-checked:text-white peer-checked:border-amber-500 hover:bg-slate-50 dark:hover:bg-slate-700">
+                            <span className="material-symbols-outlined text-[18px]">emoji_events</span>
+                            <p className="text-sm font-medium">Competição</p>
                         </div>
                     </label>
                 </div>

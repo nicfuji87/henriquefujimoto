@@ -20,6 +20,8 @@ import AppMentalFocus from './pages/app/AppMentalFocus';
 import AppEmotionalCheckin from './pages/app/AppEmotionalCheckin';
 import AppDailyEvolution from './pages/app/AppDailyEvolution';
 import AppHistory from './pages/app/AppHistory';
+import AppCompetitionDetails from './pages/app/AppCompetitionDetails';
+import AppCompetitionReflection from './pages/app/AppCompetitionReflection';
 
 function AppRoutes() {
   // Centralized tracking hook inside Router context
@@ -46,6 +48,8 @@ function AppRoutes() {
         <Route path="/app/emotional-checkin" element={<AppEmotionalCheckin />} />
         <Route path="/app/daily-evolution" element={<AppDailyEvolution />} />
         <Route path="/app/history" element={<AppHistory />} />
+        <Route path="/app/competition-details" element={<AppCompetitionDetails />} />
+        <Route path="/app/competition-reflection" element={<AppCompetitionReflection />} />
       </Route>
     </Routes>
   );
