@@ -11,11 +11,13 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link
-    href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;700&family=Space+Grotesk:wght@300;400;500;600;700&display=swap"
+    href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;700&family=Space+Grotesk:wght@300;400;500;600;700&family=Lexend:wght@100..900&display=swap"
     rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+    rel="stylesheet" />
 
   <!-- Tailwind CSS -->
-  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
   <script>
     tailwind.config = {
       darkMode: 'class',
@@ -24,10 +26,16 @@
           colors: {
             background: '#09090b',
             primary: '#22c55e',
+            "app-primary": "#1152d4",
+            "app-primary-dark": "#0a3aa0",
+            "app-primary-light": "#dce6fc",
+            "app-bg-light": "#f6f6f8",
+            "app-bg-dark": "#101622",
           },
           fontFamily: {
             sans: ['Space Grotesk', 'sans-serif'],
             display: ['Oswald', 'sans-serif'],
+            'app-display': ['Lexend', 'sans-serif'],
           }
         }
       }

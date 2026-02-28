@@ -9,6 +9,18 @@ import BlogPostPage from './pages/BlogPostPage';
 import AdminPage from './pages/AdminPage';
 import { useTracking } from './hooks/useTracking';
 
+// Diário do Atleta App
+import AppLayout from './components/app/AppLayout';
+import AppLogin from './pages/app/AppLogin';
+import AppHome from './pages/app/AppHome';
+import AppNewTraining from './pages/app/AppNewTraining';
+import AppTrainingReflection from './pages/app/AppTrainingReflection';
+import AppPhysicalEvaluation from './pages/app/AppPhysicalEvaluation';
+import AppMentalFocus from './pages/app/AppMentalFocus';
+import AppEmotionalCheckin from './pages/app/AppEmotionalCheckin';
+import AppDailyEvolution from './pages/app/AppDailyEvolution';
+import AppHistory from './pages/app/AppHistory';
+
 function AppRoutes() {
   // Centralized tracking hook inside Router context
   useTracking();
@@ -22,6 +34,19 @@ function AppRoutes() {
       <Route path="/blog" element={<BlogPage />} />
       <Route path="/blog/:slug" element={<BlogPostPage />} />
       <Route path="/admin" element={<AdminPage />} />
+
+      {/* Diário do Atleta App Routes */}
+      <Route element={<AppLayout />}>
+        <Route path="/app/login" element={<AppLogin />} />
+        <Route path="/app" element={<AppHome />} />
+        <Route path="/app/new-training" element={<AppNewTraining />} />
+        <Route path="/app/training-reflection" element={<AppTrainingReflection />} />
+        <Route path="/app/physical-evaluation" element={<AppPhysicalEvaluation />} />
+        <Route path="/app/mental-focus" element={<AppMentalFocus />} />
+        <Route path="/app/emotional-checkin" element={<AppEmotionalCheckin />} />
+        <Route path="/app/daily-evolution" element={<AppDailyEvolution />} />
+        <Route path="/app/history" element={<AppHistory />} />
+      </Route>
     </Routes>
   );
 }
