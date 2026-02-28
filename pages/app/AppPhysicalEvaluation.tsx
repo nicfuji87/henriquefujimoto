@@ -27,8 +27,47 @@ export default function AppPhysicalEvaluation() {
         navigate('/app/mental-focus');
     };
 
-    // Quick Select Buttons
-    const commonAreas = ['Pescoço', 'Ombro', 'Costas', 'Lombar', 'Joelho', 'Tornozelo'];
+    // Grouped pain areas
+    const painAreaGroups = [
+        {
+            label: 'Cabeça / Rosto',
+            areas: ['Cabeça', 'Olho', 'Orelha', 'Nariz'],
+        },
+        {
+            label: 'Tronco',
+            areas: ['Pescoço', 'Ombro (D)', 'Ombro (E)', 'Costas', 'Lombar', 'Quadril'],
+        },
+        {
+            label: 'Braços / Mãos',
+            areas: ['Cotovelo (D)', 'Cotovelo (E)', 'Punho (D)', 'Punho (E)', 'Dedo (mão D)', 'Dedo (mão E)'],
+        },
+        {
+            label: 'Pernas / Pés',
+            areas: ['Coxa (D)', 'Coxa (E)', 'Joelho (D)', 'Joelho (E)', 'Panturrilha (D)', 'Panturrilha (E)', 'Tornozelo (D)', 'Tornozelo (E)', 'Dedo (pé D)', 'Dedo (pé E)'],
+        },
+    ];
+
+    // Map pain areas to body SVG regions
+    const getBodyHighlights = () => {
+        const highlights: Record<string, boolean> = {};
+        painAreas.forEach(a => {
+            if (a.includes('Cabeça') || a.includes('Olho') || a.includes('Orelha') || a.includes('Nariz')) highlights['head'] = true;
+            if (a.includes('Pescoço')) highlights['neck'] = true;
+            if (a.includes('Ombro')) highlights['shoulder'] = true;
+            if (a.includes('Costas') || a.includes('Lombar')) highlights['back'] = true;
+            if (a.includes('Quadril')) highlights['hip'] = true;
+            if (a.includes('Cotovelo') || a.includes('Punho') || a.includes('mão')) highlights['arm'] = true;
+            if (a.includes('Coxa')) highlights['thigh'] = true;
+            if (a.includes('Joelho')) highlights['knee'] = true;
+            if (a.includes('Panturrilha')) highlights['calf'] = true;
+            if (a.includes('Tornozelo') || a.includes('pé')) highlights['foot'] = true;
+        });
+        return highlights;
+    };
+
+    const hl = getBodyHighlights();
+    const hlColor = '#ef4444';
+    const defaultColor = '#94a3b8';
 
     return (
         <div className="bg-app-bg-light dark:bg-app-bg-dark font-app-display text-slate-900 dark:text-slate-100 min-h-screen flex justify-center items-start pt-4 pb-8">
@@ -47,7 +86,7 @@ export default function AppPhysicalEvaluation() {
                 <div className="flex-1 overflow-y-auto pb-24">
                     {/* Header Text */}
                     <div className="px-6 py-4">
-                        <h3 className="text-slate-900 dark:text-white text-2xl font-bold leading-tight mb-2">Como você está se sentindo hoje?</h3>
+                        <h3 className="text-slate-900 dark:text-white text-2xl font-bold leading-tight mb-2">Como você está se sentindo após o treino?</h3>
                         <p className="text-slate-500 dark:text-slate-400 text-sm font-normal leading-relaxed">Avalie seus níveis de energia e corpo após o treino.</p>
                     </div>
 
@@ -102,34 +141,94 @@ export default function AppPhysicalEvaluation() {
                     {/* Body Map Section */}
                     {painLevel > 0 && (
                         <div className="px-6 py-8 transition-all">
-                            <h4 className="text-slate-900 dark:text-white text-lg font-bold mb-4">Onde doeu no treino?</h4>
-                            <div className="bg-app-bg-light dark:bg-app-bg-dark/50 rounded-xl p-4 flex flex-col items-center">
+                            <h4 className="text-slate-900 dark:text-white text-lg font-bold mb-2">Onde doeu no treino?</h4>
+                            <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">Toque no boneco ou selecione as áreas abaixo. (D) = Direito, (E) = Esquerdo.</p>
 
-                                {/* Quick Select Tags */}
-                                <div className="flex flex-wrap justify-center gap-2 w-full mt-2">
-                                    {commonAreas.map(area => {
-                                        const isSelected = painAreas.includes(area);
-                                        return (
-                                            <button
-                                                key={area}
-                                                onClick={() => togglePainArea(area)}
-                                                className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors shadow-sm
-                                                ${isSelected
-                                                        ? 'bg-app-primary text-white border-app-primary'
-                                                        : 'bg-white dark:bg-slate-700 border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:border-app-primary hover:text-app-primary'} 
-                                                border`}
-                                            >
-                                                {area}
-                                            </button>
-                                        );
-                                    })}
-                                </div>
-                                {painAreas.length > 0 && (
-                                    <p className="text-xs text-slate-500 mt-4 text-center">
-                                        Selecionados: {painAreas.join(', ')}
-                                    </p>
-                                )}
+                            {/* Body Silhouette SVG */}
+                            <div className="flex justify-center mb-6">
+                                <svg viewBox="0 0 200 400" width="160" height="320" className="drop-shadow-sm">
+                                    {/* Head */}
+                                    <circle cx="100" cy="35" r="25" fill={hl.head ? hlColor : defaultColor} opacity={hl.head ? 0.85 : 0.3}
+                                        className="cursor-pointer transition-all hover:opacity-60" onClick={() => togglePainArea('Cabeça')} />
+                                    {/* Neck */}
+                                    <rect x="90" y="58" width="20" height="18" rx="6" fill={hl.neck ? hlColor : defaultColor} opacity={hl.neck ? 0.85 : 0.3}
+                                        className="cursor-pointer transition-all hover:opacity-60" onClick={() => togglePainArea('Pescoço')} />
+                                    {/* Torso */}
+                                    <rect x="60" y="75" width="80" height="90" rx="18" fill={hl.back ? hlColor : defaultColor} opacity={hl.back ? 0.85 : 0.3}
+                                        className="cursor-pointer transition-all hover:opacity-60" onClick={() => togglePainArea('Costas')} />
+                                    {/* Shoulders */}
+                                    <ellipse cx="50" cy="90" rx="16" ry="12" fill={hl.shoulder ? hlColor : defaultColor} opacity={hl.shoulder ? 0.85 : 0.3}
+                                        className="cursor-pointer transition-all hover:opacity-60" onClick={() => togglePainArea('Ombro (E)')} />
+                                    <ellipse cx="150" cy="90" rx="16" ry="12" fill={hl.shoulder ? hlColor : defaultColor} opacity={hl.shoulder ? 0.85 : 0.3}
+                                        className="cursor-pointer transition-all hover:opacity-60" onClick={() => togglePainArea('Ombro (D)')} />
+                                    {/* Arms */}
+                                    <rect x="25" y="100" width="18" height="75" rx="8" fill={hl.arm ? hlColor : defaultColor} opacity={hl.arm ? 0.85 : 0.3}
+                                        className="cursor-pointer transition-all hover:opacity-60" onClick={() => togglePainArea('Cotovelo (E)')} />
+                                    <rect x="157" y="100" width="18" height="75" rx="8" fill={hl.arm ? hlColor : defaultColor} opacity={hl.arm ? 0.85 : 0.3}
+                                        className="cursor-pointer transition-all hover:opacity-60" onClick={() => togglePainArea('Cotovelo (D)')} />
+                                    {/* Hip */}
+                                    <ellipse cx="100" cy="175" rx="38" ry="16" fill={hl.hip ? hlColor : defaultColor} opacity={hl.hip ? 0.85 : 0.3}
+                                        className="cursor-pointer transition-all hover:opacity-60" onClick={() => togglePainArea('Quadril')} />
+                                    {/* Thighs */}
+                                    <rect x="65" y="190" width="25" height="65" rx="10" fill={hl.thigh ? hlColor : defaultColor} opacity={hl.thigh ? 0.85 : 0.3}
+                                        className="cursor-pointer transition-all hover:opacity-60" onClick={() => togglePainArea('Coxa (E)')} />
+                                    <rect x="110" y="190" width="25" height="65" rx="10" fill={hl.thigh ? hlColor : defaultColor} opacity={hl.thigh ? 0.85 : 0.3}
+                                        className="cursor-pointer transition-all hover:opacity-60" onClick={() => togglePainArea('Coxa (D)')} />
+                                    {/* Knees */}
+                                    <circle cx="77" cy="265" r="10" fill={hl.knee ? hlColor : defaultColor} opacity={hl.knee ? 0.85 : 0.3}
+                                        className="cursor-pointer transition-all hover:opacity-60" onClick={() => togglePainArea('Joelho (E)')} />
+                                    <circle cx="123" cy="265" r="10" fill={hl.knee ? hlColor : defaultColor} opacity={hl.knee ? 0.85 : 0.3}
+                                        className="cursor-pointer transition-all hover:opacity-60" onClick={() => togglePainArea('Joelho (D)')} />
+                                    {/* Calves */}
+                                    <rect x="67" y="278" width="20" height="55" rx="8" fill={hl.calf ? hlColor : defaultColor} opacity={hl.calf ? 0.85 : 0.3}
+                                        className="cursor-pointer transition-all hover:opacity-60" onClick={() => togglePainArea('Panturrilha (E)')} />
+                                    <rect x="113" y="278" width="20" height="55" rx="8" fill={hl.calf ? hlColor : defaultColor} opacity={hl.calf ? 0.85 : 0.3}
+                                        className="cursor-pointer transition-all hover:opacity-60" onClick={() => togglePainArea('Panturrilha (D)')} />
+                                    {/* Feet */}
+                                    <ellipse cx="77" cy="345" r="14" ry="9" fill={hl.foot ? hlColor : defaultColor} opacity={hl.foot ? 0.85 : 0.3}
+                                        className="cursor-pointer transition-all hover:opacity-60" onClick={() => togglePainArea('Tornozelo (E)')} />
+                                    <ellipse cx="123" cy="345" r="14" ry="9" fill={hl.foot ? hlColor : defaultColor} opacity={hl.foot ? 0.85 : 0.3}
+                                        className="cursor-pointer transition-all hover:opacity-60" onClick={() => togglePainArea('Tornozelo (D)')} />
+                                    {/* Labels */}
+                                    <text x="30" y="90" fontSize="8" fill="#64748b" textAnchor="middle">E</text>
+                                    <text x="170" y="90" fontSize="8" fill="#64748b" textAnchor="middle">D</text>
+                                </svg>
                             </div>
+
+                            {/* Grouped Quick Select Tags */}
+                            <div className="flex flex-col gap-4">
+                                {painAreaGroups.map(group => (
+                                    <div key={group.label}>
+                                        <p className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">{group.label}</p>
+                                        <div className="flex flex-wrap gap-2">
+                                            {group.areas.map(area => {
+                                                const isSelected = painAreas.includes(area);
+                                                return (
+                                                    <button
+                                                        key={area}
+                                                        onClick={() => togglePainArea(area)}
+                                                        className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors shadow-sm
+                                                        ${isSelected
+                                                                ? 'bg-red-500 text-white border-red-500'
+                                                                : 'bg-white dark:bg-slate-700 border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:border-red-300 hover:text-red-500'} 
+                                                        border`}
+                                                    >
+                                                        {area}
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+
+                            {painAreas.length > 0 && (
+                                <div className="mt-4 p-3 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-800/30">
+                                    <p className="text-xs text-red-600 dark:text-red-400 font-medium">
+                                        📍 Selecionados: {painAreas.join(', ')}
+                                    </p>
+                                </div>
+                            )}
                         </div>
                     )}
                 </div>

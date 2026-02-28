@@ -4,10 +4,10 @@ import { useTrainingWizard } from '../../components/app/AppLayout';
 
 export default function AppNewTraining() {
     const navigate = useNavigate();
-    const { updateTraining } = useTrainingWizard();
+    const { training, updateTraining } = useTrainingWizard();
 
-    const [modality, setModality] = useState('Judô');
-    const [trainingType, setTrainingType] = useState('Técnica');
+    const [modality, setModality] = useState(training.modality || 'Judô');
+    const [trainingType, setTrainingType] = useState(training.training_type || 'Técnica');
 
     const handleContinue = () => {
         updateTraining({

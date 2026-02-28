@@ -15,17 +15,30 @@ export default function AppTrainingReflection() {
     };
 
     const getEmoji = () => {
-        if (rating < 4) return 'sentiment_very_dissatisfied';
-        if (rating < 7) return 'sentiment_neutral';
+        if (rating <= 2) return 'sentiment_very_dissatisfied';
+        if (rating <= 4) return 'sentiment_dissatisfied';
+        if (rating <= 6) return 'sentiment_neutral';
+        if (rating <= 8) return 'sentiment_satisfied';
         return 'sentiment_very_satisfied';
     };
 
     const getAppreciation = () => {
-        if (rating < 4) return 'Pode melhorar!';
-        if (rating < 7) return 'Foi ok!';
-        if (rating < 9) return 'Muito bom!';
-        return 'Excelente!';
+        if (rating <= 2) return 'Precisa melhorar muito';
+        if (rating <= 4) return 'Pode melhorar!';
+        if (rating <= 6) return 'Foi ok!';
+        if (rating <= 8) return 'Muito bom!';
+        return 'Excelente! 🔥';
     };
+
+    const getRatingColor = () => {
+        if (rating <= 2) return { bg: 'bg-red-100 dark:bg-red-900/30', text: 'text-red-500', thumb: '#ef4444' };
+        if (rating <= 4) return { bg: 'bg-orange-100 dark:bg-orange-900/30', text: 'text-orange-500', thumb: '#f97316' };
+        if (rating <= 6) return { bg: 'bg-yellow-100 dark:bg-yellow-900/30', text: 'text-yellow-500', thumb: '#eab308' };
+        if (rating <= 8) return { bg: 'bg-emerald-100 dark:bg-emerald-900/30', text: 'text-emerald-500', thumb: '#10b981' };
+        return { bg: 'bg-green-100 dark:bg-green-900/30', text: 'text-green-500', thumb: '#22c55e' };
+    };
+
+    const colors = getRatingColor();
 
     return (
         <div className="bg-app-bg-light dark:bg-app-bg-dark font-app-display antialiased text-slate-900 dark:text-slate-100 min-h-screen flex flex-col overflow-x-hidden">
@@ -40,6 +53,33 @@ export default function AppTrainingReflection() {
         
         .active-icon {
             font-variation-settings: 'FILL' 1 !important;
+        }
+
+        .rating-slider {
+            -webkit-appearance: none;
+            width: 100%;
+            background: transparent;
+        }
+        .rating-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 28px;
+            width: 28px;
+            border-radius: 50%;
+            background: ${colors.thumb};
+            cursor: pointer;
+            margin-top: -12px;
+            box-shadow: 0 0 0 4px ${colors.thumb}33;
+            transition: background 0.3s, box-shadow 0.3s;
+        }
+        .rating-slider::-webkit-slider-thumb:active {
+            transform: scale(1.15);
+        }
+        .rating-slider::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 6px;
+            cursor: pointer;
+            background: linear-gradient(to right, #ef4444, #f97316, #eab308, #10b981, #22c55e);
+            border-radius: 3px;
         }
       `}</style>
 
@@ -74,16 +114,16 @@ export default function AppTrainingReflection() {
                     <div className="flex flex-col items-center gap-6">
                         {/* Dynamic Emoji Display */}
                         <div className="flex flex-col items-center justify-center">
-                            <div className="size-20 rounded-full bg-app-primary/10 flex items-center justify-center mb-2 text-app-primary">
+                            <div className={`size-20 rounded-full ${colors.bg} flex items-center justify-center mb-2 ${colors.text} transition-colors duration-300`}>
                                 <span className="material-symbols-outlined text-5xl active-icon">{getEmoji()}</span>
                             </div>
-                            <span className="text-3xl font-bold text-app-primary">{rating}</span>
+                            <span className={`text-3xl font-bold ${colors.text} transition-colors duration-300`}>{rating}</span>
                             <span className="text-sm text-slate-500 dark:text-slate-400 font-medium">{getAppreciation()}</span>
                         </div>
 
                         <div className="w-full relative py-4 flex items-center">
                             <input
-                                className="app-slider"
+                                className="rating-slider"
                                 max="10"
                                 min="0"
                                 step="1"
@@ -96,16 +136,16 @@ export default function AppTrainingReflection() {
                         {/* Legend */}
                         <div className="flex justify-between w-full px-1">
                             <div className="flex flex-col items-center gap-1">
-                                <span className="material-symbols-outlined text-slate-400 text-xl overflow-hidden">sentiment_very_dissatisfied</span>
+                                <span className="material-symbols-outlined text-red-400 text-xl overflow-hidden">sentiment_very_dissatisfied</span>
                                 <span className="text-xs font-medium text-slate-400">0</span>
                             </div>
                             <div className="flex flex-col items-center gap-1">
-                                <span className="material-symbols-outlined text-slate-400 text-xl overflow-hidden">sentiment_neutral</span>
+                                <span className="material-symbols-outlined text-yellow-400 text-xl overflow-hidden">sentiment_neutral</span>
                                 <span className="text-xs font-medium text-slate-400">5</span>
                             </div>
                             <div className="flex flex-col items-center gap-1">
-                                <span className="material-symbols-outlined text-app-primary text-xl active-icon">sentiment_very_satisfied</span>
-                                <span className="text-xs font-bold text-app-primary">10</span>
+                                <span className="material-symbols-outlined text-green-500 text-xl active-icon">sentiment_very_satisfied</span>
+                                <span className="text-xs font-bold text-green-500">10</span>
                             </div>
                         </div>
                     </div>

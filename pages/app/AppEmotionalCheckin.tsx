@@ -18,7 +18,13 @@ export default function AppEmotionalCheckin() {
         { id: 'Determinado', emoji: '🥋', colorClass: 'bg-white dark:bg-white/10' },
         { id: 'Frustrado', emoji: '😣', colorClass: 'bg-orange-100 dark:bg-orange-900/30' },
         { id: 'Solto', emoji: '🤸', colorClass: 'bg-purple-100 dark:bg-purple-900/30' },
-        { id: 'Confuso', emoji: '😵‍💫', colorClass: 'bg-gray-200 dark:bg-gray-700' }
+        { id: 'Confuso', emoji: '😵‍💫', colorClass: 'bg-gray-200 dark:bg-gray-700' },
+        { id: 'Orgulhoso', emoji: '💪', colorClass: 'bg-indigo-100 dark:bg-indigo-900/30' },
+        { id: 'Triste', emoji: '😢', colorClass: 'bg-blue-50 dark:bg-blue-900/20' },
+        { id: 'Motivado', emoji: '🙌', colorClass: 'bg-amber-100 dark:bg-amber-900/30' },
+        { id: 'Tenso', emoji: '😬', colorClass: 'bg-rose-100 dark:bg-rose-900/30' },
+        { id: 'Aliviado', emoji: '😮‍💨', colorClass: 'bg-teal-100 dark:bg-teal-900/30' },
+        { id: 'Envergonhado', emoji: '😳', colorClass: 'bg-pink-100 dark:bg-pink-900/30' },
     ];
 
     const toggleEmotion = (id: string) => {
@@ -55,35 +61,35 @@ export default function AppEmotionalCheckin() {
                 <div className="flex-1 overflow-y-auto pb-24">
                     <div className="px-6 pt-6 pb-2">
                         <h1 className="text-slate-900 dark:text-slate-100 tracking-tight text-[28px] font-bold leading-tight text-left">
-                            Como você está se sentindo hoje, <span className="text-app-primary">Henrique</span>?
+                            Como estão as emoções hoje, <span className="text-app-primary">Henrique</span>?
                         </h1>
                         <p className="text-slate-500 dark:text-slate-400 text-sm font-normal leading-normal pt-2">
-                            Selecione até 3 emoções que melhor descrevem seu estado atual no tatame ou fora dele.
+                            Selecione até 3 emoções que melhor descrevem como você se sente após o treino.
                         </p>
                     </div>
 
                     {/* Emotions Grid */}
-                    <div className="grid grid-cols-2 gap-4 p-6">
+                    <div className="grid grid-cols-3 gap-3 p-6">
                         {emotionOptions.map((emo) => {
                             const isSelected = selectedEmotions.includes(emo.id);
                             return (
                                 <button
                                     key={emo.id}
                                     onClick={() => toggleEmotion(emo.id)}
-                                    className={`group relative flex flex-col items-center justify-center gap-3 p-4 rounded-xl border-2 transition-all shadow-sm
+                                    className={`group relative flex flex-col items-center justify-center gap-2 p-3 rounded-xl border-2 transition-all shadow-sm
                                         ${isSelected
                                             ? 'border-app-primary bg-app-primary/10'
                                             : 'border-transparent bg-gray-50 dark:bg-gray-800 hover:border-app-primary/50'}`}
                                 >
-                                    <div className={`size-16 rounded-full flex items-center justify-center text-3xl shadow-sm ${emo.colorClass} ${isSelected && emo.id === 'Determinado' ? 'border border-app-primary/20' : ''}`}>
+                                    <div className={`size-12 rounded-full flex items-center justify-center text-2xl shadow-sm ${emo.colorClass} ${isSelected && emo.id === 'Determinado' ? 'border border-app-primary/20' : ''}`}>
                                         {emo.emoji}
                                     </div>
-                                    <span className={`${isSelected ? 'text-app-primary dark:text-app-primary-light font-bold' : 'text-slate-900 dark:text-slate-100 font-semibold'} text-sm`}>
+                                    <span className={`${isSelected ? 'text-app-primary dark:text-app-primary-light font-bold' : 'text-slate-900 dark:text-slate-100 font-semibold'} text-[11px] leading-tight text-center`}>
                                         {emo.id}
                                     </span>
                                     {isSelected && (
-                                        <div className="absolute top-3 right-3 text-app-primary">
-                                            <span className="material-symbols-outlined text-[20px]" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
+                                        <div className="absolute top-2 right-2 text-app-primary">
+                                            <span className="material-symbols-outlined text-[16px]" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
                                         </div>
                                     )}
                                 </button>

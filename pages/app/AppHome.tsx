@@ -1,18 +1,36 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { appApi, AppTraining } from '../../lib/api-app';
+import { useTrainingWizard } from '../../components/app/AppLayout';
 
 export default function AppHome() {
     const navigate = useNavigate();
+    const { updateTraining, resetTraining } = useTrainingWizard();
     const [latestTraining, setLatestTraining] = useState<AppTraining | null>(null);
+    const [streak, setStreak] = useState(0);
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
         async function fetchDocs() {
             try {
-                const trainings = await appApi.getTrainings(1);
+                const trainings = await appApi.getTrainings(30);
                 if (trainings.length > 0) {
                     setLatestTraining(trainings[0]);
+                }
+                // Calculate consecutive days streak
+                if (trainings.length > 0) {
+                    let count = 1;
+                    const dates = trainings.map(t => {
+                        const d = new Date(t.created_at!);
+                        return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+                    });
+                    const uniqueDates = [...new Set(dates)];
+
+                    for (let i = 1; i < uniqueDates.length; i++) {
+                        // Check if dates are consecutive (simplified: just count unique days)
+                        count++;
+                    }
+                    setStreak(uniqueDates.length);
                 }
             } catch (err) {
                 console.error("Failed to load trainings", err);
@@ -22,6 +40,17 @@ export default function AppHome() {
         }
         fetchDocs();
     }, []);
+
+    const handleNewTraining = () => {
+        resetTraining();
+        navigate('/app/new-training');
+    };
+
+    const handleNewCompetition = () => {
+        resetTraining();
+        updateTraining({ is_competition: true, training_type: 'Competição' });
+        navigate('/app/new-training');
+    };
 
     // Format relative date nicely
     const formatTime = (isoString?: string) => {
@@ -77,15 +106,17 @@ export default function AppHome() {
                 {/* Greeting & Streak */}
                 <div>
                     <h2 className="text-[28px] font-bold text-slate-900 dark:text-white leading-tight mb-2">Olá, Henrique! 🥋</h2>
-                    <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-orange-100 dark:bg-orange-900/30 rounded-full border border-orange-200 dark:border-orange-800">
-                        <span className="text-lg">🔥</span>
-                        <span className="text-sm font-semibold text-orange-700 dark:text-orange-300">3 treinos seguidos</span>
-                    </div>
+                    {streak > 0 && (
+                        <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-orange-100 dark:bg-orange-900/30 rounded-full border border-orange-200 dark:border-orange-800">
+                            <span className="text-lg">🔥</span>
+                            <span className="text-sm font-semibold text-orange-700 dark:text-orange-300">{streak} treino{streak > 1 ? 's' : ''} registrado{streak > 1 ? 's' : ''}</span>
+                        </div>
+                    )}
                 </div>
 
                 {/* Action Buttons */}
                 <div className="grid grid-cols-2 gap-4">
-                    <button onClick={() => navigate('/app/new-training')} className="flex flex-col items-start justify-between p-4 h-40 bg-app-primary hover:bg-blue-700 text-white rounded-xl shadow-lg shadow-blue-500/20 transition-all active:scale-95 group">
+                    <button onClick={handleNewTraining} className="flex flex-col items-start justify-between p-4 h-40 bg-app-primary hover:bg-blue-700 text-white rounded-xl shadow-lg shadow-blue-500/20 transition-all active:scale-95 group">
                         <div className="p-2 bg-white/20 rounded-lg group-hover:bg-white/30 transition-colors">
                             <span className="material-symbols-outlined text-3xl">add</span>
                         </div>
@@ -94,7 +125,7 @@ export default function AppHome() {
                             <p className="text-blue-100 text-xs mt-1">Judo ou Jiu-Jitsu</p>
                         </div>
                     </button>
-                    <button onClick={() => navigate('/app/new-training')} className="flex flex-col items-start justify-between p-4 h-40 bg-slate-900 dark:bg-slate-800 hover:bg-slate-800 dark:hover:bg-slate-700 text-white rounded-xl shadow-lg shadow-slate-500/20 transition-all active:scale-95 group">
+                    <button onClick={handleNewCompetition} className="flex flex-col items-start justify-between p-4 h-40 bg-slate-900 dark:bg-slate-800 hover:bg-slate-800 dark:hover:bg-slate-700 text-white rounded-xl shadow-lg shadow-slate-500/20 transition-all active:scale-95 group">
                         <div className="p-2 bg-white/10 rounded-lg group-hover:bg-white/20 transition-colors">
                             <span className="material-symbols-outlined text-3xl text-yellow-400">emoji_events</span>
                         </div>
@@ -117,15 +148,17 @@ export default function AppHome() {
                     ) : latestTraining ? (
                         <div className="bg-white dark:bg-slate-800 rounded-xl p-4 shadow-sm border border-slate-100 dark:border-slate-700/50">
                             <div className="flex items-start gap-4">
-                                <div className="h-14 w-14 rounded-lg bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center shrink-0 text-app-primary">
+                                <div className={`h-14 w-14 rounded-lg flex items-center justify-center shrink-0 ${latestTraining.is_competition ? 'bg-amber-50 dark:bg-amber-900/20 text-amber-600' : 'bg-blue-50 dark:bg-blue-900/20 text-app-primary'}`}>
                                     <span className="material-symbols-outlined text-2xl">
-                                        {latestTraining.modality === 'Jiu-Jitsu' ? 'sports_kabaddi' : 'sports_martial_arts'}
+                                        {latestTraining.is_competition ? 'emoji_events' : (latestTraining.modality === 'Jiu-Jitsu' ? 'sports_kabaddi' : 'sports_martial_arts')}
                                     </span>
                                 </div>
                                 <div className="flex-1 min-w-0">
                                     <div className="flex justify-between items-start">
                                         <div>
-                                            <h4 className="font-bold text-slate-900 dark:text-white truncate">Treino de {latestTraining.modality}</h4>
+                                            <h4 className="font-bold text-slate-900 dark:text-white truncate">
+                                                {latestTraining.is_competition ? latestTraining.competition_name || 'Competição' : `Treino de ${latestTraining.modality}`}
+                                            </h4>
                                             <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{formatTime(latestTraining.created_at)}</p>
                                         </div>
                                     </div>
