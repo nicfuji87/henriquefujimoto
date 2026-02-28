@@ -117,7 +117,11 @@ export default function AppHistory() {
                         ) : (
                             <div className="flex flex-col gap-3">
                                 {filteredTrainings.map(t => (
-                                    <div key={t.id} className="group flex flex-col gap-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800 p-4 shadow-sm hover:shadow-md transition-all">
+                                    <div
+                                        key={t.id}
+                                        className="group flex flex-col gap-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800 p-4 shadow-sm hover:shadow-md hover:border-app-primary/50 transition-all cursor-pointer"
+                                        onClick={() => navigate(`/app/training/${t.id}`)}
+                                    >
                                         <div className="flex items-start justify-between gap-4">
                                             <div className="flex items-start gap-4">
                                                 <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl text-app-primary ${t.is_competition ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-600' : 'bg-blue-100 dark:bg-blue-900/30'}`}>

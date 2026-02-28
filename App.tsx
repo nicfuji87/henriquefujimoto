@@ -22,6 +22,9 @@ import AppDailyEvolution from './pages/app/AppDailyEvolution';
 import AppHistory from './pages/app/AppHistory';
 import AppCompetitionDetails from './pages/app/AppCompetitionDetails';
 import AppCompetitionReflection from './pages/app/AppCompetitionReflection';
+import AppTrainingDetails from './pages/app/AppTrainingDetails';
+import PsicoLogin from './pages/app/PsicoLogin';
+import PsicoDashboard from './pages/app/PsicoDashboard';
 
 function AppRoutes() {
   // Centralized tracking hook inside Router context
@@ -50,7 +53,12 @@ function AppRoutes() {
         <Route path="/app/history" element={<AppHistory />} />
         <Route path="/app/competition-details" element={<AppCompetitionDetails />} />
         <Route path="/app/competition-reflection" element={<AppCompetitionReflection />} />
+        <Route path="/app/training/:id" element={<AppTrainingDetails />} />
       </Route>
+
+      {/* Psico Routes (outside AppLayout - no wizard context needed) */}
+      <Route path="/app/psico/login" element={<PsicoLogin />} />
+      <Route path="/app/psico" element={<PsicoDashboard />} />
     </Routes>
   );
 }

@@ -44,6 +44,16 @@ export const appApi = {
         return data as AppTraining[];
     },
 
+    getTrainingById: async (id: string) => {
+        const { data, error } = await supabase
+            .from('app_trainings')
+            .select('*')
+            .eq('id', id)
+            .single();
+        if (error) throw error;
+        return data as AppTraining;
+    },
+
     // Save or update a training session (since it's a multi-step form, we pass the ID if updating)
     saveTraining: async (training: Partial<AppTraining>) => {
         if (training.id) {

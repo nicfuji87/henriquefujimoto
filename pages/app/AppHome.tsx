@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { appApi, AppTraining } from '../../lib/api-app';
 import { useTrainingWizard } from '../../components/app/AppLayout';
@@ -6,32 +6,14 @@ import { useTrainingWizard } from '../../components/app/AppLayout';
 export default function AppHome() {
     const navigate = useNavigate();
     const { updateTraining, resetTraining } = useTrainingWizard();
-    const [latestTraining, setLatestTraining] = useState<AppTraining | null>(null);
-    const [streak, setStreak] = useState(0);
+    const [allTrainings, setAllTrainings] = useState<AppTraining[]>([]);
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
         async function fetchDocs() {
             try {
-                const trainings = await appApi.getTrainings(30);
-                if (trainings.length > 0) {
-                    setLatestTraining(trainings[0]);
-                }
-                // Calculate consecutive days streak
-                if (trainings.length > 0) {
-                    let count = 1;
-                    const dates = trainings.map(t => {
-                        const d = new Date(t.created_at!);
-                        return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
-                    });
-                    const uniqueDates = [...new Set(dates)];
-
-                    for (let i = 1; i < uniqueDates.length; i++) {
-                        // Check if dates are consecutive (simplified: just count unique days)
-                        count++;
-                    }
-                    setStreak(uniqueDates.length);
-                }
+                const trainings = await appApi.getTrainings(100);
+                setAllTrainings(trainings);
             } catch (err) {
                 console.error("Failed to load trainings", err);
             } finally {
@@ -40,6 +22,102 @@ export default function AppHome() {
         }
         fetchDocs();
     }, []);
+
+    const latestTraining = allTrainings.length > 0 ? allTrainings[0] : null;
+
+    // Calculate real consecutive days streak
+    const streak = useMemo(() => {
+        if (allTrainings.length === 0) return 0;
+
+        const toDateStr = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        const uniqueDates = [...new Set(allTrainings.map(t => toDateStr(new Date(t.created_at!))))].sort().reverse();
+
+        if (uniqueDates.length === 0) return 0;
+
+        let count = 1;
+        for (let i = 1; i < uniqueDates.length; i++) {
+            const prev = new Date(uniqueDates[i - 1]);
+            const curr = new Date(uniqueDates[i]);
+            const diffDays = Math.round((prev.getTime() - curr.getTime()) / (1000 * 60 * 60 * 24));
+            if (diffDays === 1) {
+                count++;
+            } else {
+                break;
+            }
+        }
+        return count;
+    }, [allTrainings]);
+
+    // Weekly summary computed from actual data
+    const weeklySummary = useMemo(() => {
+        const now = new Date();
+        const weekAgo = new Date(now);
+        weekAgo.setDate(weekAgo.getDate() - 7);
+
+        const weekTrainings = allTrainings.filter(t => new Date(t.created_at || '') >= weekAgo);
+
+        if (weekTrainings.length === 0) {
+            return {
+                count: 0,
+                avgRating: 0,
+                avgFocus: 0,
+                avgFatigue: 0,
+                topEmotion: null as string | null,
+                topPainArea: null as string | null,
+                modalityCounts: {} as Record<string, number>,
+                insight: 'Nenhum treino registrado nesta semana. Que tal começar agora?',
+                emoji: '💪'
+            };
+        }
+
+        const count = weekTrainings.length;
+        const avgRating = +(weekTrainings.reduce((s, t) => s + (t.rating || 0), 0) / count).toFixed(1);
+        const focusTr = weekTrainings.filter(t => t.focus_level != null);
+        const avgFocus = focusTr.length > 0 ? +(focusTr.reduce((s, t) => s + (t.focus_level || 0), 0) / focusTr.length).toFixed(1) : 0;
+        const fatigueTr = weekTrainings.filter(t => t.fatigue_level != null);
+        const avgFatigue = fatigueTr.length > 0 ? +(fatigueTr.reduce((s, t) => s + (t.fatigue_level || 0), 0) / fatigueTr.length).toFixed(1) : 0;
+
+        // Most common emotion
+        const emoFreq: Record<string, number> = {};
+        weekTrainings.forEach(t => (t.emotions || []).forEach(e => { emoFreq[e] = (emoFreq[e] || 0) + 1; }));
+        const topEmotion = Object.entries(emoFreq).sort((a, b) => b[1] - a[1])[0]?.[0] || null;
+
+        // Most common pain area
+        const painFreq: Record<string, number> = {};
+        weekTrainings.forEach(t => (t.pain_areas || []).forEach(p => { painFreq[p] = (painFreq[p] || 0) + 1; }));
+        const topPainArea = Object.entries(painFreq).sort((a, b) => b[1] - a[1])[0]?.[0] || null;
+
+        // Modality counts
+        const modalityCounts: Record<string, number> = {};
+        weekTrainings.forEach(t => { modalityCounts[t.modality] = (modalityCounts[t.modality] || 0) + 1; });
+
+        // Generate dynamic insight
+        let insight = '';
+        let emoji = '📊';
+
+        if (avgRating >= 8) {
+            insight = `Semana excelente! Sua nota média foi ${avgRating}/10. Continue assim!`;
+            emoji = '🔥';
+        } else if (avgRating >= 6) {
+            insight = `Boa semana! Nota média de ${avgRating}/10. Sempre evoluindo.`;
+            emoji = '💪';
+        } else if (avgRating >= 4) {
+            insight = `Semana com desafios. Nota média ${avgRating}/10. Cada treino conta!`;
+            emoji = '🧠';
+        } else {
+            insight = `Semana difícil, nota média ${avgRating}/10. Descanse e volte mais forte!`;
+            emoji = '🫂';
+        }
+
+        if (topEmotion) {
+            insight += ` Emoção predominante: ${topEmotion}.`;
+        }
+        if (avgFatigue >= 8) {
+            insight += ' Cansaço alto — cuide da recuperação!';
+        }
+
+        return { count, avgRating, avgFocus, avgFatigue, topEmotion, topPainArea, modalityCounts, insight, emoji };
+    }, [allTrainings]);
 
     const handleNewTraining = () => {
         resetTraining();
@@ -52,11 +130,17 @@ export default function AppHome() {
         navigate('/app/new-training');
     };
 
-    // Format relative date nicely
     const formatTime = (isoString?: string) => {
         if (!isoString) return '';
         const date = new Date(isoString);
         return date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+    };
+
+    const getRatingColor = (r: number) => {
+        if (r <= 3) return 'text-red-500 bg-red-50 dark:bg-red-900/20';
+        if (r <= 5) return 'text-orange-500 bg-orange-50 dark:bg-orange-900/20';
+        if (r <= 7) return 'text-yellow-600 bg-yellow-50 dark:bg-yellow-900/20';
+        return 'text-green-600 bg-green-50 dark:bg-green-900/20';
     };
 
     return (
@@ -109,7 +193,9 @@ export default function AppHome() {
                     {streak > 0 && (
                         <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-orange-100 dark:bg-orange-900/30 rounded-full border border-orange-200 dark:border-orange-800">
                             <span className="text-lg">🔥</span>
-                            <span className="text-sm font-semibold text-orange-700 dark:text-orange-300">{streak} treino{streak > 1 ? 's' : ''} registrado{streak > 1 ? 's' : ''}</span>
+                            <span className="text-sm font-semibold text-orange-700 dark:text-orange-300">
+                                {streak} dia{streak > 1 ? 's' : ''} consecutivo{streak > 1 ? 's' : ''} treinando
+                            </span>
                         </div>
                     )}
                 </div>
@@ -146,7 +232,10 @@ export default function AppHome() {
                     {isLoading ? (
                         <div className="bg-white dark:bg-slate-800 rounded-xl p-4 shadow-sm border border-slate-100 dark:border-slate-700/50 animate-pulse h-24"></div>
                     ) : latestTraining ? (
-                        <div className="bg-white dark:bg-slate-800 rounded-xl p-4 shadow-sm border border-slate-100 dark:border-slate-700/50">
+                        <div
+                            className="bg-white dark:bg-slate-800 rounded-xl p-4 shadow-sm border border-slate-100 dark:border-slate-700/50 cursor-pointer hover:border-app-primary/50 transition-colors"
+                            onClick={() => navigate(`/app/training/${latestTraining.id}`)}
+                        >
                             <div className="flex items-start gap-4">
                                 <div className={`h-14 w-14 rounded-lg flex items-center justify-center shrink-0 ${latestTraining.is_competition ? 'bg-amber-50 dark:bg-amber-900/20 text-amber-600' : 'bg-blue-50 dark:bg-blue-900/20 text-app-primary'}`}>
                                     <span className="material-symbols-outlined text-2xl">
@@ -182,21 +271,74 @@ export default function AppHome() {
                     )}
                 </section>
 
-                {/* Weekly Summary / Insight */}
+                {/* Weekly Summary - REAL DATA */}
                 <section>
                     <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-3 px-1">Resumo da Semana</h3>
-                    <div className="flex items-stretch justify-between gap-4 rounded-xl bg-gradient-to-br from-app-primary/10 to-transparent p-4 border border-app-primary/10">
-                        <div className="flex flex-col justify-center gap-1 flex-[2_2_0px]">
-                            <p className="text-slate-900 dark:text-white text-base font-bold leading-tight">Foco na Defesa</p>
-                            <p className="text-slate-600 dark:text-slate-400 text-sm font-normal leading-normal">Você mencionou "guarda" em 80% dos seus registros esta semana.</p>
+
+                    {isLoading ? (
+                        <div className="bg-white dark:bg-slate-800 rounded-xl p-5 shadow-sm border border-slate-100 dark:border-slate-700/50 animate-pulse h-40"></div>
+                    ) : (
+                        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700/50 overflow-hidden">
+                            {/* Insight Header */}
+                            <div className="bg-gradient-to-r from-app-primary/10 via-blue-50 to-purple-50 dark:from-app-primary/10 dark:via-slate-800 dark:to-slate-800 p-4 border-b border-slate-100 dark:border-slate-700/50">
+                                <div className="flex items-start gap-3">
+                                    <span className="text-2xl">{weeklySummary.emoji}</span>
+                                    <div>
+                                        <p className="text-sm font-bold text-slate-900 dark:text-white leading-snug">{weeklySummary.insight}</p>
+                                        <p className="text-xs text-slate-500 mt-1">{weeklySummary.count} treino{weeklySummary.count !== 1 ? 's' : ''} nos últimos 7 dias</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {weeklySummary.count > 0 && (
+                                <div className="p-4">
+                                    {/* Stats Grid */}
+                                    <div className="grid grid-cols-3 gap-3 mb-4">
+                                        <div className="text-center">
+                                            <div className={`inline-flex items-center justify-center w-10 h-10 rounded-lg mb-1 ${getRatingColor(weeklySummary.avgRating)}`}>
+                                                <span className="font-bold text-sm">{weeklySummary.avgRating}</span>
+                                            </div>
+                                            <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Nota</p>
+                                        </div>
+                                        <div className="text-center">
+                                            <div className="inline-flex items-center justify-center w-10 h-10 rounded-lg mb-1 text-blue-500 bg-blue-50 dark:bg-blue-900/20">
+                                                <span className="font-bold text-sm">{weeklySummary.avgFocus}</span>
+                                            </div>
+                                            <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Foco</p>
+                                        </div>
+                                        <div className="text-center">
+                                            <div className={`inline-flex items-center justify-center w-10 h-10 rounded-lg mb-1 ${weeklySummary.avgFatigue >= 7 ? 'text-red-500 bg-red-50 dark:bg-red-900/20' : 'text-orange-500 bg-orange-50 dark:bg-orange-900/20'}`}>
+                                                <span className="font-bold text-sm">{weeklySummary.avgFatigue}</span>
+                                            </div>
+                                            <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Cansaço</p>
+                                        </div>
+                                    </div>
+
+                                    {/* Tags */}
+                                    <div className="flex flex-wrap gap-2">
+                                        {Object.entries(weeklySummary.modalityCounts).map(([mod, cnt]) => (
+                                            <span key={mod} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-slate-100 dark:bg-slate-700 text-xs font-semibold text-slate-600 dark:text-slate-300">
+                                                <span className="material-symbols-outlined text-[14px]">{mod === 'Jiu-Jitsu' ? 'sports_kabaddi' : 'sports_martial_arts'}</span>
+                                                {mod}: {cnt}x
+                                            </span>
+                                        ))}
+                                        {weeklySummary.topEmotion && (
+                                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-purple-50 dark:bg-purple-900/20 text-xs font-semibold text-purple-600 dark:text-purple-400">
+                                                <span className="material-symbols-outlined text-[14px]">mood</span>
+                                                {weeklySummary.topEmotion}
+                                            </span>
+                                        )}
+                                        {weeklySummary.topPainArea && (
+                                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-red-50 dark:bg-red-900/20 text-xs font-semibold text-red-500 dark:text-red-400">
+                                                <span className="material-symbols-outlined text-[14px]">healing</span>
+                                                {weeklySummary.topPainArea}
+                                            </span>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
                         </div>
-                        <div
-                            className="w-24 bg-center bg-no-repeat bg-cover rounded-lg flex-1 shadow-sm opacity-90"
-                            data-alt="Abstract training chart graphic"
-                            style={{ backgroundImage: 'url("https://lh3.googleusercontent.com/aida-public/AB6AXuAdR0f_RMtnZura9AuM7W3CA_nnKEmrZkdSea9fakt6HXmlfarCrfCTEBBy7g2-l3qca-527Sm03fSXOyLPyD3hpk5KzILuVWOqib0cOt5W4JdspvJDpwdPbj_1_FRkZXpveVEoRDhUaE9vbr1WPZSASmvf195T2gFQ7STplecGnu1MuYTsy2ANvLxh3Zre8eP2JGBlSJ0jDK3o1ye2OAy6dCnH6nf7CcvQet_-D4DNE_byy4-ibqi_bekipiXZvT2fniPEmlmBAKTG")' }}
-                        >
-                        </div>
-                    </div>
+                    )}
                 </section>
             </main>
         </div>

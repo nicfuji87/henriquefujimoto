@@ -33,8 +33,46 @@ export default function AppCompetitionReflection() {
         }
     };
 
+    const getRatingColor = () => {
+        if (rating <= 2) return { bg: 'bg-red-100 dark:bg-red-900/30', text: 'text-red-500', thumb: '#ef4444', label: 'Precisa melhorar muito' };
+        if (rating <= 4) return { bg: 'bg-orange-100 dark:bg-orange-900/30', text: 'text-orange-500', thumb: '#f97316', label: 'Pode melhorar!' };
+        if (rating <= 6) return { bg: 'bg-yellow-100 dark:bg-yellow-900/30', text: 'text-yellow-500', thumb: '#eab308', label: 'Foi ok!' };
+        if (rating <= 8) return { bg: 'bg-emerald-100 dark:bg-emerald-900/30', text: 'text-emerald-500', thumb: '#10b981', label: 'Muito bom!' };
+        return { bg: 'bg-green-100 dark:bg-green-900/30', text: 'text-green-500', thumb: '#22c55e', label: 'Excelente! 🔥' };
+    };
+
+    const colors = getRatingColor();
+
     return (
         <div className="bg-app-bg-light dark:bg-app-bg-dark font-app-display antialiased text-slate-900 dark:text-slate-100 min-h-screen flex flex-col overflow-x-hidden">
+            <style>{`
+                .comp-slider {
+                    -webkit-appearance: none;
+                    width: 100%;
+                    background: transparent;
+                }
+                .comp-slider::-webkit-slider-thumb {
+                    -webkit-appearance: none;
+                    height: 28px;
+                    width: 28px;
+                    border-radius: 50%;
+                    background: ${colors.thumb};
+                    cursor: pointer;
+                    margin-top: -12px;
+                    box-shadow: 0 0 0 4px ${colors.thumb}33;
+                    transition: background 0.3s, box-shadow 0.3s;
+                }
+                .comp-slider::-webkit-slider-thumb:active {
+                    transform: scale(1.15);
+                }
+                .comp-slider::-webkit-slider-runnable-track {
+                    width: 100%;
+                    height: 6px;
+                    cursor: pointer;
+                    background: linear-gradient(to right, #ef4444, #f97316, #eab308, #10b981, #22c55e);
+                    border-radius: 3px;
+                }
+            `}</style>
             {/* Header */}
             <div className="flex items-center p-4 justify-between bg-white dark:bg-slate-900 sticky top-0 z-10 border-b border-slate-200 dark:border-slate-800">
                 <button onClick={() => navigate(-1)} className="text-slate-900 dark:text-white flex size-12 shrink-0 items-center justify-center rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
@@ -52,26 +90,37 @@ export default function AppCompetitionReflection() {
                 <div className="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm">
                     <div className="flex flex-col items-center gap-4">
                         <label className="font-bold text-base text-center w-full">Que nota você dá pra sua atuação hoje?</label>
-                        <span className="text-4xl font-bold text-amber-500 bg-amber-50 dark:bg-amber-900/20 px-4 py-2 rounded-xl border border-amber-100 dark:border-amber-800/30">
-                            {rating}
-                        </span>
+                        <div className="flex flex-col items-center gap-2">
+                            <span className={`text-4xl font-bold transition-colors ${colors.text} ${colors.bg} px-4 py-2 rounded-xl`}>
+                                {rating}
+                            </span>
+                            <span className={`text-sm font-bold ${colors.text}`}>
+                                {colors.label}
+                            </span>
+                        </div>
                         <div className="w-full relative py-2">
                             <input
-                                className="app-slider accent-amber-500"
+                                className="comp-slider"
                                 type="range"
                                 min="0"
                                 max="10"
                                 value={rating}
                                 onChange={(e) => setRating(Number(e.target.value))}
-                                style={{
-                                    /* Inline override for competition slider */
-                                    boxShadow: 'none'
-                                }}
                             />
                         </div>
-                        <div className="flex justify-between w-full text-xs font-medium text-slate-500 px-1">
-                            <span>Fui muito mal</span>
-                            <span>Dei o meu melhor</span>
+                        <div className="flex justify-between w-full text-xs font-medium text-slate-500 px-1 mt-2">
+                            <div className="flex flex-col items-center gap-1">
+                                <span className="material-symbols-outlined text-red-400 text-xl overflow-hidden">sentiment_very_dissatisfied</span>
+                                <span className="text-xs font-medium text-slate-400">0</span>
+                            </div>
+                            <div className="flex flex-col items-center gap-1">
+                                <span className="material-symbols-outlined text-yellow-500 text-xl overflow-hidden">sentiment_neutral</span>
+                                <span className="text-xs font-medium text-slate-400">5</span>
+                            </div>
+                            <div className="flex flex-col items-center gap-1">
+                                <span className="material-symbols-outlined text-green-500 text-xl">sentiment_very_satisfied</span>
+                                <span className="text-xs font-bold text-green-500">10</span>
+                            </div>
                         </div>
                     </div>
                 </div>

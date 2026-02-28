@@ -11,6 +11,8 @@ export default function AppEmotionalCheckin() {
     const [context, setContext] = useState(training.emotion_context || '');
 
     const emotionOptions = [
+        { id: 'Feliz', emoji: '😁', colorClass: 'bg-yellow-50 dark:bg-yellow-900/30' },
+        { id: 'Normal', emoji: '🙂', colorClass: 'bg-slate-100 dark:bg-slate-800' },
         { id: 'Confiante', emoji: '🦁', colorClass: 'bg-blue-100 dark:bg-blue-900/30' },
         { id: 'Ansioso', emoji: '😰', colorClass: 'bg-yellow-100 dark:bg-yellow-900/30' },
         { id: 'Irritado', emoji: '😤', colorClass: 'bg-red-100 dark:bg-red-900/30' },
@@ -44,8 +46,49 @@ export default function AppEmotionalCheckin() {
         navigate('/app/daily-evolution');
     };
 
+    const getIntensityConfig = (v: number) => {
+        if (v <= 3) return { text: 'text-green-500', bg: 'bg-green-100 dark:bg-green-900/30', hex: '#22c55e', label: 'Leve' };
+        if (v <= 6) return { text: 'text-yellow-500', bg: 'bg-yellow-100 dark:bg-yellow-900/30', hex: '#eab308', label: 'Moderada' };
+        if (v <= 8) return { text: 'text-orange-500', bg: 'bg-orange-100 dark:bg-orange-900/30', hex: '#f97316', label: 'Alta' };
+        return { text: 'text-red-500', bg: 'bg-red-100 dark:bg-red-900/30', hex: '#ef4444', label: 'Extrema' };
+    };
+
+    const intensityConfig = getIntensityConfig(intensity);
+
     return (
         <div className="bg-app-bg-light dark:bg-app-bg-dark text-slate-900 dark:text-slate-100 font-app-display min-h-screen flex flex-col items-center justify-center">
+            <style>{`
+                .colored-slider {
+                    -webkit-appearance: none;
+                    width: 100%;
+                    background: transparent;
+                }
+                .colored-slider::-webkit-slider-thumb {
+                    -webkit-appearance: none;
+                    height: 24px;
+                    width: 24px;
+                    border-radius: 50%;
+                    background: var(--slider-color, #1152d4);
+                    cursor: pointer;
+                    margin-top: -10px;
+                    box-shadow: 0 0 0 4px var(--slider-color);
+                    opacity: 0.9;
+                    transition: transform 0.1s ease-in-out, background 0.2s;
+                }
+                .colored-slider::-webkit-slider-thumb:active {
+                    transform: scale(1.1);
+                }
+                .colored-slider::-webkit-slider-runnable-track {
+                    width: 100%;
+                    height: 6px;
+                    cursor: pointer;
+                    background: var(--slider-track, #e2e8f0);
+                    border-radius: 3px;
+                }
+                .dark .colored-slider::-webkit-slider-runnable-track {
+                    background: var(--slider-track, #334155);
+                }
+            `}</style>
             {/* Mobile Container */}
             <div className="relative flex h-full min-h-screen w-full max-w-md flex-col bg-white dark:bg-slate-900 overflow-x-hidden shadow-2xl mx-auto">
 
@@ -102,21 +145,23 @@ export default function AppEmotionalCheckin() {
                         <div className="space-y-4">
                             <div className="flex justify-between items-center">
                                 <label className="text-slate-900 dark:text-slate-100 font-bold text-base">Intensidade das Emoções</label>
-                                <span className="text-app-primary text-sm font-bold bg-app-primary/10 px-2 py-1 rounded-md">{intensity}/10</span>
+                                <div className="flex items-center gap-2">
+                                    <span className={`text-xs font-bold ${intensityConfig.text}`}>{intensityConfig.label}</span>
+                                    <span className={`font-bold text-base ${intensityConfig.bg} ${intensityConfig.text} px-2 py-1 rounded-md`}>{intensity}/10</span>
+                                </div>
                             </div>
-                            <div className="relative w-full h-12 flex items-center">
+                            <div className="relative w-full h-12 flex items-center" style={{ '--slider-color': intensityConfig.hex } as React.CSSProperties}>
                                 <input
                                     value={intensity}
                                     onChange={(e) => setIntensity(Number(e.target.value))}
-                                    className="app-slider"
+                                    className="colored-slider"
                                     max="10"
                                     min="1"
                                     type="range"
                                 />
                                 <div className="absolute flex justify-between w-full px-1 top-8">
                                     <span className="text-[10px] text-gray-400 font-medium">Baixa</span>
-                                    <span className="text-[10px] text-gray-400 font-medium">Média</span>
-                                    <span className="text-[10px] text-gray-400 font-medium">Alta</span>
+                                    <span className="text-[10px] text-gray-400 font-medium">Extrema</span>
                                 </div>
                             </div>
                         </div>

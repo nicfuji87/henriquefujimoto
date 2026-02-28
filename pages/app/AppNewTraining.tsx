@@ -97,7 +97,7 @@ export default function AppNewTraining() {
                         <input checked={trainingType === 'Randori'} onChange={() => setTrainingType('Randori')} className="peer sr-only" name="type" type="radio" value="Randori" />
                         <div className="flex h-10 items-center justify-center gap-x-2 rounded-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-5 py-2 transition-all peer-checked:bg-app-primary peer-checked:text-white peer-checked:border-app-primary hover:bg-slate-50 dark:hover:bg-slate-700">
                             <span className="material-symbols-outlined text-[18px]">sports_martial_arts</span>
-                            <p className="text-sm font-medium">Randori / Rolo</p>
+                            <p className="text-sm font-medium">Randori / Rola</p>
                         </div>
                     </label>
                     <label className="cursor-pointer">

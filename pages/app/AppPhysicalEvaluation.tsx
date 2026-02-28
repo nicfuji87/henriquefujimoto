@@ -35,11 +35,11 @@ export default function AppPhysicalEvaluation() {
         },
         {
             label: 'Tronco',
-            areas: ['Pescoço', 'Ombro (D)', 'Ombro (E)', 'Costas', 'Lombar', 'Quadril'],
+            areas: ['Pescoço', 'Ombro (D)', 'Ombro (E)', 'Peitoral (D)', 'Peitoral (E)', 'Costela (D)', 'Costela (E)', 'Costas', 'Lombar', 'Quadril'],
         },
         {
             label: 'Braços / Mãos',
-            areas: ['Cotovelo (D)', 'Cotovelo (E)', 'Punho (D)', 'Punho (E)', 'Dedo (mão D)', 'Dedo (mão E)'],
+            areas: ['Bíceps (D)', 'Bíceps (E)', 'Antebraço (D)', 'Antebraço (E)', 'Cotovelo (D)', 'Cotovelo (E)', 'Punho (D)', 'Punho (E)', 'Dedo (mão D)', 'Dedo (mão E)'],
         },
         {
             label: 'Pernas / Pés',
@@ -54,9 +54,10 @@ export default function AppPhysicalEvaluation() {
             if (a.includes('Cabeça') || a.includes('Olho') || a.includes('Orelha') || a.includes('Nariz')) highlights['head'] = true;
             if (a.includes('Pescoço')) highlights['neck'] = true;
             if (a.includes('Ombro')) highlights['shoulder'] = true;
+            if (a.includes('Peitoral') || a.includes('Costela')) highlights['chest'] = true;
             if (a.includes('Costas') || a.includes('Lombar')) highlights['back'] = true;
             if (a.includes('Quadril')) highlights['hip'] = true;
-            if (a.includes('Cotovelo') || a.includes('Punho') || a.includes('mão')) highlights['arm'] = true;
+            if (a.includes('Bíceps') || a.includes('Antebraço') || a.includes('Cotovelo') || a.includes('Punho') || a.includes('mão')) highlights['arm'] = true;
             if (a.includes('Coxa')) highlights['thigh'] = true;
             if (a.includes('Joelho')) highlights['knee'] = true;
             if (a.includes('Panturrilha')) highlights['calf'] = true;
@@ -69,8 +70,68 @@ export default function AppPhysicalEvaluation() {
     const hlColor = '#ef4444';
     const defaultColor = '#94a3b8';
 
+    const getFatigueConfig = (v: number) => {
+        if (v <= 2) return { text: 'text-green-500', bg: 'bg-green-100 dark:bg-green-900/30', hex: '#22c55e', label: 'Descansado' };
+        if (v <= 4) return { text: 'text-emerald-500', bg: 'bg-emerald-100 dark:bg-emerald-900/30', hex: '#10b981', label: 'Leve' };
+        if (v <= 6) return { text: 'text-yellow-500', bg: 'bg-yellow-100 dark:bg-yellow-900/30', hex: '#eab308', label: 'Moderado' };
+        if (v <= 8) return { text: 'text-orange-500', bg: 'bg-orange-100 dark:bg-orange-900/30', hex: '#f97316', label: 'Alto' };
+        return { text: 'text-red-500', bg: 'bg-red-100 dark:bg-red-900/30', hex: '#ef4444', label: 'Exausto' };
+    };
+
+    const getEnergyConfig = (v: number) => {
+        if (v <= 2) return { text: 'text-red-500', bg: 'bg-red-100 dark:bg-red-900/30', hex: '#ef4444', label: 'Esgotada' };
+        if (v <= 4) return { text: 'text-orange-500', bg: 'bg-orange-100 dark:bg-orange-900/30', hex: '#f97316', label: 'Baixa' };
+        if (v <= 6) return { text: 'text-yellow-500', bg: 'bg-yellow-100 dark:bg-yellow-900/30', hex: '#eab308', label: 'Média' };
+        if (v <= 8) return { text: 'text-emerald-500', bg: 'bg-emerald-100 dark:bg-emerald-900/30', hex: '#10b981', label: 'Boa' };
+        return { text: 'text-green-500', bg: 'bg-green-100 dark:bg-green-900/30', hex: '#22c55e', label: 'Máxima' };
+    };
+
+    const getPainConfig = (v: number) => {
+        if (v === 0) return { text: 'text-green-500', bg: 'bg-green-100 dark:bg-green-900/30', hex: '#22c55e', label: 'Sem Dor' };
+        if (v <= 3) return { text: 'text-yellow-500', bg: 'bg-yellow-100 dark:bg-yellow-900/30', hex: '#eab308', label: 'Leve' };
+        if (v <= 6) return { text: 'text-orange-500', bg: 'bg-orange-100 dark:bg-orange-900/30', hex: '#f97316', label: 'Moderada' };
+        if (v <= 8) return { text: 'text-red-500', bg: 'bg-red-100 dark:bg-red-900/30', hex: '#ef4444', label: 'Forte' };
+        return { text: 'text-rose-600', bg: 'bg-rose-100 dark:bg-rose-900/30', hex: '#e11d48', label: 'Intensa' };
+    };
+
+    const fatigueConfig = getFatigueConfig(fatigueLevel);
+    const energyConfig = getEnergyConfig(energyLevel);
+    const painConfig = getPainConfig(painLevel);
+
     return (
         <div className="bg-app-bg-light dark:bg-app-bg-dark font-app-display text-slate-900 dark:text-slate-100 min-h-screen flex justify-center items-start pt-4 pb-8">
+            <style>{`
+                .colored-slider {
+                    -webkit-appearance: none;
+                    width: 100%;
+                    background: transparent;
+                }
+                .colored-slider::-webkit-slider-thumb {
+                    -webkit-appearance: none;
+                    height: 24px;
+                    width: 24px;
+                    border-radius: 50%;
+                    background: var(--slider-color, #1152d4);
+                    cursor: pointer;
+                    margin-top: -10px;
+                    box-shadow: 0 0 0 4px var(--slider-color);
+                    opacity: 0.9;
+                    transition: transform 0.1s ease-in-out, background 0.2s;
+                }
+                .colored-slider::-webkit-slider-thumb:active {
+                    transform: scale(1.1);
+                }
+                .colored-slider::-webkit-slider-runnable-track {
+                    width: 100%;
+                    height: 6px;
+                    cursor: pointer;
+                    background: var(--slider-track, #e2e8f0);
+                    border-radius: 3px;
+                }
+                .dark .colored-slider::-webkit-slider-runnable-track {
+                    background: var(--slider-track, #334155);
+                }
+            `}</style>
             <div className="w-full max-w-md bg-white dark:bg-[#1e2736] min-h-[95vh] rounded-[2rem] shadow-2xl overflow-hidden relative flex flex-col">
                 {/* Top App Bar */}
                 <div className="flex items-center p-4 pb-2 justify-between sticky top-0 bg-white/90 dark:bg-[#1e2736]/90 backdrop-blur-sm z-10">
@@ -96,10 +157,13 @@ export default function AppPhysicalEvaluation() {
                         <div className="flex flex-col gap-3">
                             <div className="flex justify-between items-end">
                                 <label className="text-slate-900 dark:text-white text-base font-semibold">Cansaço</label>
-                                <span className="text-app-primary font-bold text-lg bg-app-primary/10 px-3 py-1 rounded-lg">{fatigueLevel}</span>
+                                <div className="flex items-center gap-2">
+                                    <span className={`text-xs font-bold ${fatigueConfig.text}`}>{fatigueConfig.label}</span>
+                                    <span className={`font-bold text-lg ${fatigueConfig.bg} ${fatigueConfig.text} px-3 py-1 rounded-lg`}>{fatigueLevel}</span>
+                                </div>
                             </div>
-                            <div className="relative w-full h-12 flex items-center">
-                                <input value={fatigueLevel} onChange={(e) => setFatigueLevel(Number(e.target.value))} className="app-slider" max="10" min="0" type="range" />
+                            <div className="relative w-full h-12 flex items-center" style={{ '--slider-color': fatigueConfig.hex } as React.CSSProperties}>
+                                <input value={fatigueLevel} onChange={(e) => setFatigueLevel(Number(e.target.value))} className="colored-slider" max="10" min="0" type="range" />
                             </div>
                             <div className="flex justify-between text-xs text-slate-400 font-medium px-1">
                                 <span>Descansado</span>
@@ -111,10 +175,13 @@ export default function AppPhysicalEvaluation() {
                         <div className="flex flex-col gap-3">
                             <div className="flex justify-between items-end">
                                 <label className="text-slate-900 dark:text-white text-base font-semibold">Energia</label>
-                                <span className="text-app-primary font-bold text-lg bg-app-primary/10 px-3 py-1 rounded-lg">{energyLevel}</span>
+                                <div className="flex items-center gap-2">
+                                    <span className={`text-xs font-bold ${energyConfig.text}`}>{energyConfig.label}</span>
+                                    <span className={`font-bold text-lg ${energyConfig.bg} ${energyConfig.text} px-3 py-1 rounded-lg`}>{energyLevel}</span>
+                                </div>
                             </div>
-                            <div className="relative w-full h-12 flex items-center">
-                                <input value={energyLevel} onChange={(e) => setEnergyLevel(Number(e.target.value))} className="app-slider" max="10" min="0" type="range" />
+                            <div className="relative w-full h-12 flex items-center" style={{ '--slider-color': energyConfig.hex } as React.CSSProperties}>
+                                <input value={energyLevel} onChange={(e) => setEnergyLevel(Number(e.target.value))} className="colored-slider" max="10" min="0" type="range" />
                             </div>
                             <div className="flex justify-between text-xs text-slate-400 font-medium px-1">
                                 <span>Baixa</span>
@@ -126,10 +193,13 @@ export default function AppPhysicalEvaluation() {
                         <div className="flex flex-col gap-3">
                             <div className="flex justify-between items-end">
                                 <label className="text-slate-900 dark:text-white text-base font-semibold">Dor</label>
-                                <span className="text-app-primary font-bold text-lg bg-app-primary/10 px-3 py-1 rounded-lg">{painLevel}</span>
+                                <div className="flex items-center gap-2">
+                                    <span className={`text-xs font-bold ${painConfig.text}`}>{painConfig.label}</span>
+                                    <span className={`font-bold text-lg ${painConfig.bg} ${painConfig.text} px-3 py-1 rounded-lg`}>{painLevel}</span>
+                                </div>
                             </div>
-                            <div className="relative w-full h-12 flex items-center">
-                                <input value={painLevel} onChange={(e) => setPainLevel(Number(e.target.value))} className="app-slider" max="10" min="0" type="range" />
+                            <div className="relative w-full h-12 flex items-center" style={{ '--slider-color': painConfig.hex } as React.CSSProperties}>
+                                <input value={painLevel} onChange={(e) => setPainLevel(Number(e.target.value))} className="colored-slider" max="10" min="0" type="range" />
                             </div>
                             <div className="flex justify-between text-xs text-slate-400 font-medium px-1">
                                 <span>Sem dor</span>

@@ -10,6 +10,7 @@ const useAuth = () => {
 // Wizard Context
 interface TrainingWizardContextType {
     training: Partial<AppTraining>;
+    setTraining: (data: Partial<AppTraining>) => void;
     updateTraining: (data: Partial<AppTraining>) => void;
     saveTraining: () => Promise<void>;
     resetTraining: () => void;
@@ -79,10 +80,10 @@ export default function AppLayout() {
         '/app/competition-reflection'
     ];
 
-    const showNav = !hideNavPaths.includes(location.pathname) && isAuth;
+    const showNav = !hideNavPaths.includes(location.pathname) && !location.pathname.startsWith('/app/training/') && isAuth;
 
     return (
-        <TrainingWizardContext.Provider value={{ training, updateTraining, saveTraining, resetTraining, isSaving }}>
+        <TrainingWizardContext.Provider value={{ training, setTraining, updateTraining, saveTraining, resetTraining, isSaving }}>
             <style>{`
                 /* Global Range Slider Styling for App */
                 .app-slider {
