@@ -313,8 +313,8 @@ export default function PsicoDashboard() {
     );
 
     const ChartCard = ({ title, children, className = '' }: { title: string; children: React.ReactNode; className?: string }) => (
-        <div className={`bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-100 dark:border-slate-700 shadow-sm ${className}`}>
-            <h3 className="text-base font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+        <div className={`bg-white dark:bg-slate-800 rounded-2xl p-4 sm:p-6 border border-slate-100 dark:border-slate-700 shadow-sm overflow-hidden ${className}`}>
+            <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
                 <span className="material-symbols-outlined text-teal-500 text-lg">analytics</span>
                 {title}
             </h3>
@@ -330,7 +330,7 @@ export default function PsicoDashboard() {
     ];
 
     return (
-        <div className="min-h-screen bg-slate-50 dark:bg-slate-900 font-sans" ref={dashRef}>
+        <div className="min-h-screen bg-slate-50 dark:bg-slate-900 font-sans overflow-x-hidden" ref={dashRef}>
             <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
             <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet" />
 
@@ -414,22 +414,24 @@ export default function PsicoDashboard() {
 
             {/* Tabs */}
             <div className="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="flex gap-1 overflow-x-auto no-scrollbar">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
+                    <div className="flex gap-0 overflow-x-auto psico-tabs-scroll">
                         {tabs.map(tab => (
                             <button
                                 key={tab.id}
                                 onClick={() => setActiveTab(tab.id)}
-                                className={`flex items-center gap-2 px-4 py-3 text-sm font-semibold border-b-2 transition-all whitespace-nowrap ${activeTab === tab.id
-                                    ? 'border-teal-500 text-teal-600 dark:text-teal-400'
+                                className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-3 text-xs sm:text-sm font-semibold border-b-2 transition-all whitespace-nowrap shrink-0 ${activeTab === tab.id
+                                    ? 'border-teal-500 text-teal-600 dark:text-teal-400 bg-teal-50/50 dark:bg-teal-900/20'
                                     : 'border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
                                     }`}
                             >
-                                <span className="material-symbols-outlined text-lg">{tab.icon}</span>
+                                <span className="material-symbols-outlined text-base sm:text-lg">{tab.icon}</span>
                                 {tab.label}
                             </button>
                         ))}
                     </div>
+                    {/* Scroll fade indicator */}
+                    <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-white dark:from-slate-800 to-transparent pointer-events-none sm:hidden" />
                 </div>
             </div>
 
@@ -491,14 +493,22 @@ export default function PsicoDashboard() {
                                     </ChartCard>
 
                                     <ChartCard title="Distribuição por Tipo de Treino">
-                                        <ResponsiveContainer width="100%" height={280}>
+                                        <ResponsiveContainer width="100%" height={240}>
                                             <PieChart>
-                                                <Pie data={typeData} cx="50%" cy="50%" innerRadius={60} outerRadius={100} paddingAngle={4} dataKey="value" label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}>
+                                                <Pie data={typeData} cx="50%" cy="50%" innerRadius={50} outerRadius={85} paddingAngle={4} dataKey="value">
                                                     {typeData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
                                                 </Pie>
-                                                <Tooltip />
+                                                <Tooltip formatter={(value: number, name: string) => [`${value}x`, name]} />
                                             </PieChart>
                                         </ResponsiveContainer>
+                                        <div className="flex flex-wrap gap-x-3 gap-y-1.5 mt-2 justify-center">
+                                            {typeData.map((entry, i) => (
+                                                <div key={entry.name} className="flex items-center gap-1">
+                                                    <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: COLORS[i % COLORS.length] }} />
+                                                    <span className="text-[11px] text-slate-600 dark:text-slate-400 font-medium">{entry.name} ({entry.value})</span>
+                                                </div>
+                                            ))}
+                                        </div>
                                     </ChartCard>
                                 </div>
 
@@ -544,15 +554,23 @@ export default function PsicoDashboard() {
                             <div className="space-y-6">
                                 <div className="grid md:grid-cols-2 gap-6">
                                     <ChartCard title="Emoções Mais Frequentes">
-                                        <ResponsiveContainer width="100%" height={300}>
+                                        <ResponsiveContainer width="100%" height={260}>
                                             <PieChart>
-                                                <Pie data={emotionPieData} cx="50%" cy="50%" innerRadius={50} outerRadius={100} paddingAngle={3} dataKey="value" label={({ name, value }) => `${name} (${value})`}>
+                                                <Pie data={emotionPieData} cx="50%" cy="45%" innerRadius={40} outerRadius={80} paddingAngle={3} dataKey="value">
                                                     {emotionPieData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
                                                 </Pie>
-                                                <Tooltip />
-                                                <Legend />
+                                                <Tooltip formatter={(value: number, name: string) => [`${value}x`, name]} />
                                             </PieChart>
                                         </ResponsiveContainer>
+                                        {/* Custom legend below the chart */}
+                                        <div className="flex flex-wrap gap-x-3 gap-y-1.5 mt-2 justify-center">
+                                            {emotionPieData.map((entry, i) => (
+                                                <div key={entry.name} className="flex items-center gap-1">
+                                                    <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: COLORS[i % COLORS.length] }} />
+                                                    <span className="text-[11px] text-slate-600 dark:text-slate-400 font-medium">{entry.name} ({entry.value})</span>
+                                                </div>
+                                            ))}
+                                        </div>
                                     </ChartCard>
 
                                     <ChartCard title="Intensidade Emocional ao Longo do Tempo">
@@ -569,19 +587,19 @@ export default function PsicoDashboard() {
                                 </div>
 
                                 <ChartCard title="Reflexões Emocionais do Atleta">
-                                    <div className="space-y-3 max-h-96 overflow-y-auto">
+                                    <div className="space-y-3 max-h-96 overflow-y-auto overflow-x-hidden">
                                         {filteredTrainings.filter(t => t.emotion_context).map(t => (
-                                            <div key={t.id} className="p-4 bg-slate-50 dark:bg-slate-700/50 rounded-xl border-l-4 border-purple-400">
-                                                <div className="flex items-center gap-2 mb-2">
-                                                    <span className="text-xs font-bold text-slate-500">{new Date(t.created_at || '').toLocaleDateString('pt-BR')}</span>
-                                                    <span className="text-xs bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 px-2 py-0.5 rounded font-bold">
-                                                        Intensidade: {t.emotion_intensity}/10
+                                            <div key={t.id} className="p-3 sm:p-4 bg-slate-50 dark:bg-slate-700/50 rounded-xl border-l-4 border-purple-400 overflow-hidden">
+                                                <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 mb-2">
+                                                    <span className="text-[11px] sm:text-xs font-bold text-slate-500">{new Date(t.created_at || '').toLocaleDateString('pt-BR')}</span>
+                                                    <span className="text-[11px] sm:text-xs bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 px-1.5 sm:px-2 py-0.5 rounded font-bold">
+                                                        Int: {t.emotion_intensity}/10
                                                     </span>
                                                     {(t.emotions || []).map(e => (
-                                                        <span key={e} className="text-xs bg-teal-100 dark:bg-teal-900/30 text-teal-600 px-2 py-0.5 rounded font-semibold">{e}</span>
+                                                        <span key={e} className="text-[11px] sm:text-xs bg-teal-100 dark:bg-teal-900/30 text-teal-600 px-1.5 sm:px-2 py-0.5 rounded font-semibold">{e}</span>
                                                     ))}
                                                 </div>
-                                                <p className="text-sm text-slate-700 dark:text-slate-300 italic leading-relaxed">"{t.emotion_context}"</p>
+                                                <p className="text-xs sm:text-sm text-slate-700 dark:text-slate-300 italic leading-relaxed break-words">"{t.emotion_context}"</p>
                                             </div>
                                         ))}
                                     </div>
@@ -678,14 +696,14 @@ export default function PsicoDashboard() {
                                     </ChartCard>
 
                                     <ChartCard title="Reflexões Mentais do Atleta">
-                                        <div className="space-y-3 max-h-72 overflow-y-auto">
+                                        <div className="space-y-3 max-h-72 overflow-y-auto overflow-x-hidden">
                                             {filteredTrainings.filter(t => t.mental_reflection).map(t => (
-                                                <div key={t.id} className="p-3 bg-slate-50 dark:bg-slate-700/50 rounded-xl border-l-4 border-blue-400">
-                                                    <div className="flex items-center gap-2 mb-1">
-                                                        <span className="text-xs font-bold text-slate-500">{new Date(t.created_at || '').toLocaleDateString('pt-BR')}</span>
-                                                        <span className="text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-600 px-2 py-0.5 rounded font-bold">Foco: {t.focus_level}/10</span>
+                                                <div key={t.id} className="p-3 bg-slate-50 dark:bg-slate-700/50 rounded-xl border-l-4 border-blue-400 overflow-hidden">
+                                                    <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 mb-1">
+                                                        <span className="text-[11px] sm:text-xs font-bold text-slate-500">{new Date(t.created_at || '').toLocaleDateString('pt-BR')}</span>
+                                                        <span className="text-[11px] sm:text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-600 px-1.5 sm:px-2 py-0.5 rounded font-bold">Foco: {t.focus_level}/10</span>
                                                     </div>
-                                                    <p className="text-sm text-slate-700 dark:text-slate-300 italic">"{t.mental_reflection}"</p>
+                                                    <p className="text-xs sm:text-sm text-slate-700 dark:text-slate-300 italic break-words">"{t.mental_reflection}"</p>
                                                 </div>
                                             ))}
                                         </div>
@@ -714,6 +732,20 @@ export default function PsicoDashboard() {
             <style>{`
                 .no-scrollbar::-webkit-scrollbar { display: none; }
                 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+                .psico-tabs-scroll {
+                    scrollbar-width: thin;
+                    scrollbar-color: rgba(148,163,184,0.3) transparent;
+                }
+                .psico-tabs-scroll::-webkit-scrollbar {
+                    height: 3px;
+                }
+                .psico-tabs-scroll::-webkit-scrollbar-track {
+                    background: transparent;
+                }
+                .psico-tabs-scroll::-webkit-scrollbar-thumb {
+                    background-color: rgba(148,163,184,0.3);
+                    border-radius: 4px;
+                }
             `}</style>
         </div>
     );
