@@ -275,7 +275,7 @@ serve(async (req) => {
                 const uniqueSlugs = [...new Set(topPages.map((p: any) => p.slug))];
 
                 const { data: posts, error: dbError } = await supabase
-                    .from('posts')
+                    .from('blog_posts')
                     .select('slug, title, image_url')
                     .in('slug', uniqueSlugs);
 

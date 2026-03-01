@@ -558,67 +558,66 @@ function DashboardTab() {
             </div >
 
             {/* Row 3: Followers Chart */}
-            {
-                followersHistory.length > 1 && (
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.7 }}
-                        className="bg-zinc-900/60 backdrop-blur-sm border border-zinc-800/50 rounded-2xl p-6 overflow-hidden"
-                    >
-                        <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-lg font-semibold text-white">📈 Evolução de Seguidores</h3>
-                            <span className="text-xs text-zinc-500">{followersHistory.length} registros</span>
-                        </div>
-                        <div className={`w-full ${chartNeedsScroll ? 'overflow-x-auto' : ''}`} style={{ WebkitOverflowScrolling: 'touch' }}>
-                            <svg
-                                viewBox={`0 0 ${chartWidth} ${chartHeight}`}
-                                className={chartNeedsScroll ? 'h-auto' : 'w-full h-auto'}
-                                preserveAspectRatio="xMidYMid meet"
-                                style={chartNeedsScroll ? { width: `${chartWidth}px`, minWidth: `${chartWidth}px` } : undefined}
-                            >
-                                <defs>
-                                    <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="0%" stopColor="#22c55e" stopOpacity="0.3" />
-                                        <stop offset="100%" stopColor="#22c55e" stopOpacity="0" />
-                                    </linearGradient>
-                                </defs>
-                                {/* Grid lines */}
-                                {[0, 0.25, 0.5, 0.75, 1].map(pct => (
-                                    <line key={pct}
-                                        x1={chartPadding.left} y1={chartPadding.top + innerH * (1 - pct)}
-                                        x2={chartPadding.left + innerW} y2={chartPadding.top + innerH * (1 - pct)}
-                                        stroke="#27272a" strokeWidth="0.5"
-                                    />
-                                ))}
-                                {/* Area fill */}
-                                <path d={chartAreaPath} fill="url(#areaGrad)" />
-                                {/* Line */}
-                                <path d={chartPath} fill="none" stroke="#22c55e" strokeWidth="2" strokeLinejoin="round" />
-                                {/* Dots + value labels */}
-                                {chartDots.map((d, i) => (
-                                    <g key={i}>
-                                        <circle cx={d.x} cy={d.y} r="3" fill="#22c55e" stroke="#09090b" strokeWidth="1.5" />
-                                        {d.showLabel && (
-                                            <text x={d.x} y={d.y - 10} textAnchor="middle" fill="#a1a1aa" fontSize="9" fontWeight="bold">
-                                                {d.count}
-                                            </text>
-                                        )}
-                                    </g>
-                                ))}
-                                {/* Date labels */}
-                                {chartDots.map((d, i) => (
-                                    d.showLabel ? (
-                                        <text key={i} x={d.x} y={chartPadding.top + innerH + 18} textAnchor="middle" fill="#71717a" fontSize="8">
-                                            {new Date(d.date + 'T12:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })}
+            {followersHistory.length > 1 && (
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.7 }}
+                    className="bg-zinc-900/60 backdrop-blur-sm border border-zinc-800/50 rounded-2xl p-6 max-w-full overflow-hidden"
+                >
+                    <div className="flex items-center justify-between mb-4">
+                        <h3 className="text-lg font-semibold text-white">📈 Evolução de Seguidores</h3>
+                        <span className="text-xs text-zinc-500">{followersHistory.length} registros</span>
+                    </div>
+                    <div className="w-full max-w-full overflow-x-auto pb-4" style={{ WebkitOverflowScrolling: 'touch' }}>
+                        <svg
+                            viewBox={`0 0 ${chartWidth} ${chartHeight}`}
+                            className={chartNeedsScroll ? 'h-auto' : 'w-full h-auto'}
+                            preserveAspectRatio="xMidYMid meet"
+                            style={chartNeedsScroll ? { width: `${chartWidth}px`, minWidth: `${chartWidth}px` } : undefined}
+                        >
+                            <defs>
+                                <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="0%" stopColor="#22c55e" stopOpacity="0.3" />
+                                    <stop offset="100%" stopColor="#22c55e" stopOpacity="0" />
+                                </linearGradient>
+                            </defs>
+                            {/* Grid lines */}
+                            {[0, 0.25, 0.5, 0.75, 1].map(pct => (
+                                <line key={pct}
+                                    x1={chartPadding.left} y1={chartPadding.top + innerH * (1 - pct)}
+                                    x2={chartPadding.left + innerW} y2={chartPadding.top + innerH * (1 - pct)}
+                                    stroke="#27272a" strokeWidth="0.5"
+                                />
+                            ))}
+                            {/* Area fill */}
+                            <path d={chartAreaPath} fill="url(#areaGrad)" />
+                            {/* Line */}
+                            <path d={chartPath} fill="none" stroke="#22c55e" strokeWidth="2" strokeLinejoin="round" />
+                            {/* Dots + value labels */}
+                            {chartDots.map((d, i) => (
+                                <g key={i}>
+                                    <circle cx={d.x} cy={d.y} r="3" fill="#22c55e" stroke="#09090b" strokeWidth="1.5" />
+                                    {d.showLabel && (
+                                        <text x={d.x} y={d.y - 10} textAnchor="middle" fill="#a1a1aa" fontSize="9" fontWeight="bold">
+                                            {d.count}
                                         </text>
-                                    ) : null
-                                ))}
-                            </svg>
-                        </div>
-                        {chartNeedsScroll && (
-                            <p className="text-[10px] text-zinc-600 mt-2 text-center">← Deslize para ver todos os dados →</p>
-                        )}
-                    </motion.div>
-                )
+                                    )}
+                                </g>
+                            ))}
+                            {/* Date labels */}
+                            {chartDots.map((d, i) => (
+                                d.showLabel ? (
+                                    <text key={i} x={d.x} y={chartPadding.top + innerH + 18} textAnchor="middle" fill="#71717a" fontSize="8">
+                                        {new Date(d.date + 'T12:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })}
+                                    </text>
+                                ) : null
+                            ))}
+                        </svg>
+                    </div>
+                    {chartNeedsScroll && (
+                        <p className="text-[10px] text-zinc-600 mt-2 text-center">← Deslize para ver todos os dados →</p>
+                    )}
+                </motion.div>
+            )
             }
 
             {/* Row 4: Page Views Tracking */}
