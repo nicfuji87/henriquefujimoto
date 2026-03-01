@@ -18,6 +18,7 @@ import Hero from '../components/Hero';
 import Footer from '../components/Footer';
 import StickyCTA from '../components/StickyCTA';
 import CompetitionsSection from '../components/CompetitionsSection';
+import AffiliateProducts from '../components/AffiliateProducts';
 import { trackPageView } from '../lib/pageTracking';
 import { getAggregatedMetrics } from '../lib/metrics';
 import { supabase } from '../lib/supabase';
@@ -361,6 +362,9 @@ export default function HomePage() {
                         );
                     })}
                 </div>
+
+                {/* Produtos Afiliados */}
+                <AffiliateProducts />
 
                 {/* Histórico Competitivo */}
                 <CompetitionsSection />

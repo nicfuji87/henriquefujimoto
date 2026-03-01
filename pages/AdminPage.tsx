@@ -19,7 +19,7 @@ import {
     ExternalLink,
     Newspaper,
     Activity,
-    Clock, MapPin
+    Clock, MapPin, ShoppingBag
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { supabase, Post } from '../lib/supabase';
@@ -27,6 +27,7 @@ import BlogTab from '../components/admin/BlogTab';
 import TrackingTab from '../components/admin/TrackingTab';
 import JourneyTab from '../components/admin/JourneyTab';
 import HomeCardsTab from '../components/admin/HomeCardsTab';
+import AffiliateProductsTab from '../components/admin/AffiliateProductsTab';
 
 // Mock posts for development
 const mockPosts: Post[] = [
@@ -56,7 +57,7 @@ const mockPosts: Post[] = [
     },
 ];
 
-type Tab = 'dashboard' | 'blog' | 'posts' | 'bio' | 'home_cards' | 'journey' | 'tracking' | 'settings';
+type Tab = 'dashboard' | 'blog' | 'posts' | 'bio' | 'home_cards' | 'products' | 'journey' | 'tracking' | 'settings';
 
 function Sidebar({
     activeTab,
@@ -75,6 +76,7 @@ function Sidebar({
         { id: 'posts' as Tab, label: 'Posts IG', icon: FileText },
         { id: 'bio' as Tab, label: 'Bio / Home', icon: Home },
         { id: 'home_cards' as Tab, label: 'Cards Home', icon: LayoutDashboard },
+        { id: 'products' as Tab, label: 'Produtos', icon: ShoppingBag },
         { id: 'journey' as Tab, label: 'Jornada', icon: MapPin },
         { id: 'tracking' as Tab, label: 'Tracking & SEO', icon: Activity },
         { id: 'settings' as Tab, label: 'Configurações', icon: Settings },
@@ -2118,6 +2120,7 @@ export default function AdminPage() {
                             {activeTab === 'posts' && <PostsTab />}
                             {activeTab === 'bio' && <BioTab />}
                             {activeTab === 'home_cards' && <HomeCardsTab />}
+                            {activeTab === 'products' && <AffiliateProductsTab />}
                             {activeTab === 'journey' && <JourneyTab />}
                             {activeTab === 'tracking' && <TrackingTab />}
                             {activeTab === 'settings' && <SettingsTab />}
