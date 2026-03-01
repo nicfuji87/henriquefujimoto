@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     Plus,
@@ -11,6 +11,10 @@ import {
     GripVertical,
     ShoppingBag,
     Star,
+    Upload,
+    MousePointerClick,
+    Edit,
+    TrendingUp,
 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 
@@ -23,6 +27,7 @@ interface AffiliateProduct {
     badge: string | null;
     display_order: number;
     is_active: boolean;
+    click_count: number;
 }
 
 export default function AffiliateProductsTab() {
@@ -30,8 +35,10 @@ export default function AffiliateProductsTab() {
     const [loading, setLoading] = useState(true);
     const [editing, setEditing] = useState<string | null>(null);
     const [saving, setSaving] = useState(false);
+    const [uploading, setUploading] = useState(false);
+    const [totalClicks, setTotalClicks] = useState(0);
 
-    // Form state for new/editing product
+    // Form state
     const [formName, setFormName] = useState('');
     const [formDescription, setFormDescription] = useState('');
     const [formImageUrl, setFormImageUrl] = useState('');
@@ -39,6 +46,9 @@ export default function AffiliateProductsTab() {
     const [formBadge, setFormBadge] = useState('');
     const [formOrder, setFormOrder] = useState(0);
     const [showAddForm, setShowAddForm] = useState(false);
+
+    const fileInputRef = useRef<HTMLInputElement>(null);
+    const editFileInputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
         fetchProducts();
@@ -50,7 +60,9 @@ export default function AffiliateProductsTab() {
             .from('affiliate_products')
             .select('*')
             .order('display_order', { ascending: true });
-        setProducts(data || []);
+        const prods = data || [];
+        setProducts(prods);
+        setTotalClicks(prods.reduce((sum: number, p: AffiliateProduct) => sum + (p.click_count || 0), 0));
         setLoading(false);
     }
 
@@ -74,6 +86,47 @@ export default function AffiliateProductsTab() {
         setFormBadge(product.badge || '');
         setFormOrder(product.display_order);
         setShowAddForm(false);
+    }
+
+    async function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>, productId?: string) {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        setUploading(true);
+        try {
+            const fileExt = file.name.split('.').pop();
+            const fileName = `product-${Date.now()}.${fileExt}`;
+            const filePath = `products/${fileName}`;
+
+            const { error: uploadError } = await supabase.storage
+                .from('site-images')
+                .upload(filePath, file, { upsert: true });
+
+            if (uploadError) throw uploadError;
+
+            const { data } = supabase.storage
+                .from('site-images')
+                .getPublicUrl(filePath);
+
+            const publicUrl = data.publicUrl;
+
+            if (productId) {
+                // Update existing product
+                await supabase
+                    .from('affiliate_products')
+                    .update({ image_url: publicUrl })
+                    .eq('id', productId);
+                await fetchProducts();
+            }
+            // Always set the form URL (for new product or editing)
+            setFormImageUrl(publicUrl);
+        } catch (err) {
+            console.error('Error uploading image:', err);
+            alert('Erro ao fazer upload da imagem');
+        } finally {
+            setUploading(false);
+            e.target.value = '';
+        }
     }
 
     async function handleAdd() {
@@ -132,7 +185,50 @@ export default function AffiliateProductsTab() {
         );
     }
 
-    const formFields = (
+    const imageUploadField = (inputRef: React.RefObject<HTMLInputElement | null>, productId?: string) => (
+        <div className="md:col-span-2">
+            <label className="block text-xs font-medium text-zinc-400 mb-1">Imagem do Produto</label>
+            <div className="flex items-center gap-3">
+                {/* Preview */}
+                <div className="w-20 h-20 rounded-lg bg-zinc-800 overflow-hidden border border-zinc-700 flex-shrink-0 flex items-center justify-center">
+                    {formImageUrl ? (
+                        <img src={formImageUrl} alt="Preview" className="w-full h-full object-cover" onError={e => { (e.target as HTMLImageElement).style.display = 'none' }} />
+                    ) : (
+                        <ShoppingBag className="w-6 h-6 text-zinc-600" />
+                    )}
+                </div>
+                <div className="flex-1 space-y-2">
+                    {/* Upload Button */}
+                    <button
+                        type="button"
+                        onClick={() => inputRef.current?.click()}
+                        disabled={uploading}
+                        className="flex items-center gap-2 px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-sm text-white hover:bg-zinc-700 transition-colors disabled:opacity-50"
+                    >
+                        <Upload className="w-4 h-4" />
+                        {uploading ? 'Enviando...' : 'Fazer upload'}
+                    </button>
+                    <input
+                        ref={inputRef}
+                        type="file"
+                        accept="image/*"
+                        onChange={e => handleImageUpload(e, productId)}
+                        className="hidden"
+                    />
+                    {/* OR paste URL */}
+                    <input
+                        type="url"
+                        value={formImageUrl}
+                        onChange={e => setFormImageUrl(e.target.value)}
+                        className="w-full bg-zinc-800/50 border border-zinc-700 rounded-lg px-3 py-1.5 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-emerald-500/50"
+                        placeholder="ou cole a URL da imagem"
+                    />
+                </div>
+            </div>
+        </div>
+    );
+
+    const formFields = (isEdit: boolean = false) => (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
                 <label className="block text-xs font-medium text-zinc-400 mb-1">Nome *</label>
@@ -164,16 +260,10 @@ export default function AffiliateProductsTab() {
                     placeholder="Breve descrição do produto"
                 />
             </div>
-            <div>
-                <label className="block text-xs font-medium text-zinc-400 mb-1">URL da Imagem</label>
-                <input
-                    type="url"
-                    value={formImageUrl}
-                    onChange={e => setFormImageUrl(e.target.value)}
-                    className="w-full bg-zinc-800/50 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-emerald-500/50"
-                    placeholder="https://..."
-                />
-            </div>
+
+            {/* Image Upload */}
+            {imageUploadField(isEdit ? editFileInputRef : fileInputRef, isEdit ? editing || undefined : undefined)}
+
             <div className="flex gap-3">
                 <div className="flex-1">
                     <label className="block text-xs font-medium text-zinc-400 mb-1">Badge / Selo</label>
@@ -195,16 +285,6 @@ export default function AffiliateProductsTab() {
                     />
                 </div>
             </div>
-
-            {/* Image Preview */}
-            {formImageUrl && (
-                <div className="md:col-span-2">
-                    <label className="block text-xs font-medium text-zinc-400 mb-1">Preview</label>
-                    <div className="w-20 h-20 rounded-lg bg-zinc-800 overflow-hidden border border-zinc-700">
-                        <img src={formImageUrl} alt="Preview" className="w-full h-full object-cover" onError={e => { (e.target as HTMLImageElement).style.display = 'none' }} />
-                    </div>
-                </div>
-            )}
         </div>
     );
 
@@ -227,6 +307,42 @@ export default function AffiliateProductsTab() {
                 </button>
             </div>
 
+            {/* Click Stats Summary */}
+            {!loading && products.length > 0 && (
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    <div className="bg-zinc-900/60 border border-zinc-800/50 rounded-xl p-4">
+                        <div className="flex items-center gap-2 mb-1">
+                            <ShoppingBag className="w-4 h-4 text-emerald-400" />
+                            <span className="text-xs text-zinc-400">Total Produtos</span>
+                        </div>
+                        <p className="text-xl font-bold text-white">{products.length}</p>
+                    </div>
+                    <div className="bg-zinc-900/60 border border-zinc-800/50 rounded-xl p-4">
+                        <div className="flex items-center gap-2 mb-1">
+                            <Eye className="w-4 h-4 text-blue-400" />
+                            <span className="text-xs text-zinc-400">Ativos</span>
+                        </div>
+                        <p className="text-xl font-bold text-white">{products.filter(p => p.is_active).length}</p>
+                    </div>
+                    <div className="bg-zinc-900/60 border border-zinc-800/50 rounded-xl p-4">
+                        <div className="flex items-center gap-2 mb-1">
+                            <MousePointerClick className="w-4 h-4 text-amber-400" />
+                            <span className="text-xs text-zinc-400">Cliques Totais</span>
+                        </div>
+                        <p className="text-xl font-bold text-white">{totalClicks}</p>
+                    </div>
+                    <div className="bg-zinc-900/60 border border-zinc-800/50 rounded-xl p-4">
+                        <div className="flex items-center gap-2 mb-1">
+                            <TrendingUp className="w-4 h-4 text-purple-400" />
+                            <span className="text-xs text-zinc-400">Média / Produto</span>
+                        </div>
+                        <p className="text-xl font-bold text-white">
+                            {products.length > 0 ? Math.round(totalClicks / products.length) : 0}
+                        </p>
+                    </div>
+                </div>
+            )}
+
             {/* Add Form */}
             <AnimatePresence>
                 {showAddForm && (
@@ -245,7 +361,7 @@ export default function AffiliateProductsTab() {
                                 <X className="w-4 h-4" />
                             </button>
                         </div>
-                        {formFields}
+                        {formFields(false)}
                         <div className="mt-4 flex justify-end">
                             <button
                                 onClick={handleAdd}
@@ -323,6 +439,12 @@ export default function AffiliateProductsTab() {
                                     <p className="text-[10px] text-zinc-600 truncate mt-0.5">{product.affiliate_url}</p>
                                 </div>
 
+                                {/* Click count */}
+                                <div className="flex items-center gap-1 flex-shrink-0 bg-zinc-800/50 rounded-lg px-2 py-1" title="Cliques">
+                                    <MousePointerClick className="w-3 h-3 text-amber-400" />
+                                    <span className="text-xs font-bold text-white">{product.click_count || 0}</span>
+                                </div>
+
                                 {/* Order */}
                                 <span className="text-xs text-zinc-600 font-mono flex-shrink-0">#{product.display_order}</span>
 
@@ -352,7 +474,7 @@ export default function AffiliateProductsTab() {
                                             }`}
                                         title="Editar"
                                     >
-                                        <Save className="w-4 h-4" />
+                                        <Edit className="w-4 h-4" />
                                     </button>
                                     <button
                                         onClick={() => handleDelete(product.id)}
@@ -373,7 +495,7 @@ export default function AffiliateProductsTab() {
                                         exit={{ opacity: 0, height: 0 }}
                                         className="border-t border-zinc-800/50 p-4 bg-zinc-900/40"
                                     >
-                                        {formFields}
+                                        {formFields(true)}
                                         <div className="mt-4 flex justify-end gap-2">
                                             <button
                                                 onClick={resetForm}

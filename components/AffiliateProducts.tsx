@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { ShoppingBag, ExternalLink, Star } from 'lucide-react';
+import { ShoppingBag, ExternalLink, Star, Heart } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
 interface AffiliateProduct {
@@ -11,6 +11,18 @@ interface AffiliateProduct {
     affiliate_url: string;
     badge: string | null;
     display_order: number;
+}
+
+function trackClick(productId: string) {
+    try {
+        supabase.rpc('track_affiliate_click', {
+            p_product_id: productId,
+            p_referrer: document.referrer || null,
+            p_user_agent: navigator.userAgent || null,
+        }).then(() => { });
+    } catch (_) {
+        // fire-and-forget, don't block the user
+    }
 }
 
 export default function AffiliateProducts() {
@@ -49,14 +61,18 @@ export default function AffiliateProducts() {
                 >
                     <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-bold uppercase tracking-wider mb-4">
                         <ShoppingBag className="w-3 h-3" />
-                        Produtos que eu uso
+                        Produtos que eu uso e recomendo
                     </div>
                     <h3 className="text-2xl md:text-3xl font-bold text-white">
                         Meus Produtos Favoritos
                     </h3>
-                    <p className="text-sm text-gray-400 mt-2 max-w-lg mx-auto">
-                        Produtos que faço uso no dia a dia e recomendo. Ao comprar por aqui, você apoia minha jornada!
+                    <p className="text-sm text-gray-400 mt-2 max-w-xl mx-auto">
+                        Esses são os produtos que uso no meu dia a dia de treino e competição. Ao comprar pelos links abaixo, além de garantir qualidade, você me ajuda diretamente na minha carreira — eu recebo uma comissão por cada compra!
                     </p>
+                    <div className="inline-flex items-center gap-1.5 mt-3 px-3 py-1.5 rounded-lg bg-white/[0.03] border border-white/[0.06] text-[11px] text-gray-500">
+                        <Heart className="w-3 h-3 text-pink-400" />
+                        Cada compra é um apoio direto ao meu sonho olímpico
+                    </div>
                 </motion.div>
 
                 {/* Products Grid */}
@@ -67,6 +83,7 @@ export default function AffiliateProducts() {
                             href={product.affiliate_url}
                             target="_blank"
                             rel="noopener noreferrer"
+                            onClick={() => trackClick(product.id)}
                             initial={{ opacity: 0, y: 20 }}
                             whileInView={{ opacity: 1, y: 0 }}
                             viewport={{ once: true }}
