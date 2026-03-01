@@ -141,7 +141,10 @@ export default function AffiliateProductsTab() {
             display_order: formOrder,
             is_active: true,
         });
-        if (!error) {
+        if (error) {
+            console.error('Error saving product:', error);
+            alert('Erro ao salvar produto: ' + error.message);
+        } else {
             resetForm();
             await fetchProducts();
         }
@@ -404,8 +407,8 @@ export default function AffiliateProductsTab() {
                             key={product.id}
                             layout
                             className={`bg-zinc-900/60 border rounded-2xl overflow-hidden transition-colors ${editing === product.id
-                                    ? 'border-emerald-500/30'
-                                    : 'border-zinc-800/50 hover:border-zinc-700/50'
+                                ? 'border-emerald-500/30'
+                                : 'border-zinc-800/50 hover:border-zinc-700/50'
                                 } ${!product.is_active ? 'opacity-50' : ''}`}
                         >
                             <div className="flex items-center gap-4 p-4">
@@ -469,8 +472,8 @@ export default function AffiliateProductsTab() {
                                     <button
                                         onClick={() => editing === product.id ? resetForm() : startEdit(product)}
                                         className={`p-2 rounded-lg transition-colors ${editing === product.id
-                                                ? 'text-emerald-400 bg-emerald-500/10'
-                                                : 'text-zinc-500 hover:text-white hover:bg-zinc-800'
+                                            ? 'text-emerald-400 bg-emerald-500/10'
+                                            : 'text-zinc-500 hover:text-white hover:bg-zinc-800'
                                             }`}
                                         title="Editar"
                                     >
