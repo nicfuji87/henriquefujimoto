@@ -3,6 +3,7 @@ import SectionNav from '../components/SectionNav';
 import WhySupport from '../components/WhySupport';
 import HowToSupport from '../components/HowToSupport';
 import TrustWall from '../components/TrustWall';
+import AffiliateProducts from '../components/AffiliateProducts';
 import Footer from '../components/Footer';
 import StickyCTA from '../components/StickyCTA';
 import { trackPageView } from '../lib/pageTracking';
@@ -19,6 +20,7 @@ export default function ApoiarPage() {
             <div className="pt-4 pb-10 flex flex-col gap-10">
                 <WhySupport />
                 <HowToSupport />
+                <AffiliateProducts />
                 <TrustWall />
             </div>
             <Footer />

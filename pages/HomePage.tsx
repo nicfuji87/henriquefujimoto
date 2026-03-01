@@ -12,7 +12,8 @@ import {
     ChevronRight,
     ArrowRight,
     Calendar,
-    Clock
+    Clock,
+    ShoppingBag
 } from 'lucide-react';
 import Hero from '../components/Hero';
 import Footer from '../components/Footer';
@@ -27,6 +28,13 @@ interface Partner {
     id: string;
     name: string;
     logo_url: string | null;
+}
+
+interface AffiliateProductTeaser {
+    id: string;
+    name: string;
+    image_url: string | null;
+    affiliate_url: string;
 }
 
 interface BlogPost {
@@ -142,12 +150,13 @@ export default function HomePage() {
     const [partners, setPartners] = useState<Partner[]>([]);
     const [latestPost, setLatestPost] = useState<BlogPost | null>(null);
     const [homeCards, setHomeCards] = useState<HomeCard[]>([]);
+    const [affiliateProducts, setAffiliateProducts] = useState<AffiliateProductTeaser[]>([]);
 
     useEffect(() => {
         trackPageView('/', 'Hub Principal');
 
         async function loadTeasers() {
-            const [metricsData, partnersRes, postsRes, cardsRes] = await Promise.all([
+            const [metricsData, partnersRes, postsRes, cardsRes, productsRes] = await Promise.all([
                 getAggregatedMetrics(30),
                 supabase
                     .from('partners')
@@ -165,12 +174,19 @@ export default function HomePage() {
                     .select('*')
                     .eq('is_visible', true)
                     .order('display_order', { ascending: true }),
+                supabase
+                    .from('affiliate_products')
+                    .select('id, name, image_url, affiliate_url')
+                    .eq('is_active', true)
+                    .order('display_order', { ascending: true })
+                    .limit(4),
             ]);
 
             setMetrics(metricsData);
             setPartners(partnersRes.data || []);
             setLatestPost(postsRes.data?.[0] || null);
             setHomeCards(cardsRes.data || []);
+            setAffiliateProducts(productsRes.data || []);
         }
 
         loadTeasers();
@@ -267,6 +283,31 @@ export default function HomePage() {
                                         )
                                     ))}
                                 </motion.div>
+                            </div>
+                        )}
+                        {affiliateProducts.length > 0 && (
+                            <div className="flex items-center gap-2">
+                                <ShoppingBag className="w-3 h-3 text-emerald-400 flex-shrink-0" />
+                                <div className="flex items-center gap-1.5">
+                                    {affiliateProducts.slice(0, 3).map(p => (
+                                        p.image_url ? (
+                                            <img
+                                                key={p.id}
+                                                src={p.image_url}
+                                                alt={p.name}
+                                                className="w-6 h-6 rounded object-cover border border-white/10"
+                                            />
+                                        ) : (
+                                            <div key={p.id} className="w-6 h-6 rounded bg-zinc-800 border border-white/10 flex items-center justify-center">
+                                                <ShoppingBag className="w-3 h-3 text-zinc-600" />
+                                            </div>
+                                        )
+                                    ))}
+                                    {affiliateProducts.length > 3 && (
+                                        <span className="text-[10px] text-gray-500">+{affiliateProducts.length - 3}</span>
+                                    )}
+                                </div>
+                                <span className="text-[10px] text-emerald-400/60">Compre e apoie!</span>
                             </div>
                         )}
                         <p className="text-[11px] text-gray-500">{cardData.teaser_text}</p>
