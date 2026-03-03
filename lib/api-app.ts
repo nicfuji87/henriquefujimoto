@@ -1,5 +1,13 @@
 import { supabase } from './supabase';
 
+export interface AppGym {
+    id: string;
+    name: string;
+    is_active: boolean;
+    display_order: number;
+    created_at?: string;
+}
+
 export interface AppTraining {
     id?: string;
     created_at?: string;
@@ -21,6 +29,11 @@ export interface AppTraining {
     needs_improvement?: string;
     sensei_feedback?: string;
 
+    // Gym / Academy
+    gym_id?: string;
+    gym_name?: string; // Virtual field from join
+    training_date?: string; // Date the training actually occurred (YYYY-MM-DD)
+
     // Competition Fields
     is_competition?: boolean;
     competition_name?: string;
@@ -32,35 +45,61 @@ export interface AppTraining {
 }
 
 export const appApi = {
-    // Fetch recent trainings
+    // Fetch gyms/academies
+    getGyms: async () => {
+        const { data, error } = await supabase
+            .from('app_gyms')
+            .select('*')
+            .eq('is_active', true)
+            .order('display_order', { ascending: true });
+
+        if (error) throw error;
+        return data as AppGym[];
+    },
+
+    // Fetch recent trainings with gym name
     getTrainings: async (limit = 10) => {
         const { data, error } = await supabase
             .from('app_trainings')
-            .select('*')
+            .select('*, app_gyms(name)')
             .order('created_at', { ascending: false })
             .limit(limit);
 
         if (error) throw error;
-        return data as AppTraining[];
+
+        // Flatten gym name from join
+        return (data || []).map((t: any) => ({
+            ...t,
+            gym_name: t.app_gyms?.name || null,
+            app_gyms: undefined,
+        })) as AppTraining[];
     },
 
     getTrainingById: async (id: string) => {
         const { data, error } = await supabase
             .from('app_trainings')
-            .select('*')
+            .select('*, app_gyms(name)')
             .eq('id', id)
             .single();
         if (error) throw error;
-        return data as AppTraining;
+
+        return {
+            ...data,
+            gym_name: (data as any).app_gyms?.name || null,
+            app_gyms: undefined,
+        } as AppTraining;
     },
 
-    // Save or update a training session (since it's a multi-step form, we pass the ID if updating)
+    // Save or update a training session
     saveTraining: async (training: Partial<AppTraining>) => {
-        if (training.id) {
+        // Remove virtual fields before saving
+        const { gym_name, ...toSave } = training;
+
+        if (toSave.id) {
             const { data, error } = await supabase
                 .from('app_trainings')
-                .update(training)
-                .eq('id', training.id)
+                .update(toSave)
+                .eq('id', toSave.id)
                 .select()
                 .single();
             if (error) throw error;
@@ -68,7 +107,7 @@ export const appApi = {
         } else {
             const { data, error } = await supabase
                 .from('app_trainings')
-                .insert([training])
+                .insert([toSave])
                 .select()
                 .single();
             if (error) throw error;

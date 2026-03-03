@@ -22,10 +22,11 @@ export default function AppHistory() {
         fetchDocs();
     }, []);
 
-    const formatTime = (isoString?: string) => {
-        if (!isoString) return '';
-        const date = new Date(isoString);
-        return date.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' });
+    const formatTime = (training: AppTraining) => {
+        const displayDate = training.training_date || training.created_at;
+        if (!displayDate) return '';
+        const d = new Date(displayDate + (training.training_date ? 'T12:00:00' : ''));
+        return d.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' });
     };
 
     const filteredTrainings = filter === 'Todos'
@@ -137,8 +138,17 @@ export default function AppHistory() {
                                                         <span className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium ${t.is_competition ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300'}`}>
                                                             {t.is_competition ? t.competition_result || t.training_type : t.training_type || 'Geral'}
                                                         </span>
+                                                        {t.gym_name && (
+                                                            <>
+                                                                <span className="text-xs text-slate-400">•</span>
+                                                                <span className="inline-flex items-center gap-0.5 text-xs text-emerald-600 dark:text-emerald-400 font-medium">
+                                                                    <span className="material-symbols-outlined text-[12px]">location_on</span>
+                                                                    {t.gym_name}
+                                                                </span>
+                                                            </>
+                                                        )}
                                                         <span className="text-xs text-slate-400">•</span>
-                                                        <span className="text-xs text-slate-500 dark:text-slate-400">{formatTime(t.created_at)}</span>
+                                                        <span className="text-xs text-slate-500 dark:text-slate-400">{formatTime(t)}</span>
                                                     </div>
                                                 </div>
                                             </div>

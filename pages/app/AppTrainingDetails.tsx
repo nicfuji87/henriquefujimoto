@@ -55,7 +55,8 @@ export default function AppTrainingDetails() {
     }
 
     const isComp = trainingData.is_competition;
-    const dateStr = new Date(trainingData.created_at || '').toLocaleDateString('pt-BR');
+    const displayDate = trainingData.training_date || trainingData.created_at;
+    const dateStr = displayDate ? new Date(displayDate + (trainingData.training_date ? 'T12:00:00' : '')).toLocaleDateString('pt-BR') : '';
 
     // Rendering dynamic rating colors for the header
     const getRatingColor = (r: number) => {
@@ -96,10 +97,16 @@ export default function AppTrainingDetails() {
                     <h1 className="text-2xl font-bold text-slate-900 dark:text-white mb-2 text-center">
                         {isComp ? trainingData.competition_name : `Treino de ${trainingData.modality}`}
                     </h1>
-                    <div className="flex gap-2 mb-6">
+                    <div className="flex flex-wrap gap-2 mb-6 justify-center">
                         <span className="px-3 py-1 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-full text-xs font-bold">
                             {isComp ? `${trainingData.competition_matches} lutas` : trainingData.training_type}
                         </span>
+                        {trainingData.gym_name && (
+                            <span className="px-3 py-1 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 rounded-full text-xs font-bold flex items-center gap-1">
+                                <span className="material-symbols-outlined text-[14px]">location_on</span>
+                                {trainingData.gym_name}
+                            </span>
+                        )}
                     </div>
 
                     <div className="w-full flex justify-between items-center py-4 border-t border-slate-100 dark:border-slate-700">

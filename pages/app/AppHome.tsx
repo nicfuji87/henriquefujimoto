@@ -29,8 +29,9 @@ export default function AppHome() {
     const streak = useMemo(() => {
         if (allTrainings.length === 0) return 0;
 
+        const getTrainingDate = (t: AppTraining) => t.training_date || (t.created_at ? t.created_at.slice(0, 10) : '');
         const toDateStr = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-        const uniqueDates = [...new Set(allTrainings.map(t => toDateStr(new Date(t.created_at!))))].sort().reverse();
+        const uniqueDates = [...new Set(allTrainings.map(t => getTrainingDate(t) || toDateStr(new Date(t.created_at!))))].sort().reverse();
 
         if (uniqueDates.length === 0) return 0;
 
@@ -54,7 +55,10 @@ export default function AppHome() {
         const weekAgo = new Date(now);
         weekAgo.setDate(weekAgo.getDate() - 7);
 
-        const weekTrainings = allTrainings.filter(t => new Date(t.created_at || '') >= weekAgo);
+        const weekTrainings = allTrainings.filter(t => {
+            const dateStr = t.training_date || (t.created_at ? t.created_at.slice(0, 10) : '');
+            return dateStr ? new Date(dateStr + 'T12:00:00') >= weekAgo : false;
+        });
 
         if (weekTrainings.length === 0) {
             return {

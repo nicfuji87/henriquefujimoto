@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { appApi, AppTraining } from '../../lib/api-app';
+import { appApi, AppTraining, AppGym } from '../../lib/api-app';
 import {
     LineChart, Line, BarChart, Bar, RadarChart, Radar, PolarGrid, PolarAngleAxis,
     PolarRadiusAxis, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip,
@@ -18,6 +18,8 @@ export default function PsicoDashboard() {
     const [dateFilter, setDateFilter] = useState<DateFilter>('all');
     const [modalityFilter, setModalityFilter] = useState<string>('Todos');
     const [activeTab, setActiveTab] = useState<'overview' | 'emotional' | 'physical' | 'mental'>('overview');
+    const [gymFilter, setGymFilter] = useState<string>('Todas');
+    const [gyms, setGyms] = useState<AppGym[]>([]);
     const dashRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -29,8 +31,12 @@ export default function PsicoDashboard() {
 
         async function load() {
             try {
-                const data = await appApi.getTrainings(100);
+                const [data, gymsList] = await Promise.all([
+                    appApi.getTrainings(100),
+                    appApi.getGyms()
+                ]);
                 setTrainings(data);
+                setGyms(gymsList);
             } catch (e) {
                 console.error(e);
             } finally {
@@ -43,12 +49,15 @@ export default function PsicoDashboard() {
     const filteredTrainings = useMemo(() => {
         let data = [...trainings];
 
-        // Date filter
+        // Date filter (use training_date if available)
         if (dateFilter !== 'all') {
             const days = dateFilter === '7d' ? 7 : dateFilter === '30d' ? 30 : 90;
             const cutoff = new Date();
             cutoff.setDate(cutoff.getDate() - days);
-            data = data.filter(t => new Date(t.created_at || '') >= cutoff);
+            data = data.filter(t => {
+                const dateStr = t.training_date || (t.created_at ? t.created_at.slice(0, 10) : '');
+                return dateStr ? new Date(dateStr + 'T12:00:00') >= cutoff : false;
+            });
         }
 
         // Modality filter
@@ -56,8 +65,17 @@ export default function PsicoDashboard() {
             data = data.filter(t => t.modality === modalityFilter);
         }
 
-        return data.sort((a, b) => new Date(a.created_at || '').getTime() - new Date(b.created_at || '').getTime());
-    }, [trainings, dateFilter, modalityFilter]);
+        // Gym filter
+        if (gymFilter !== 'Todas') {
+            data = data.filter(t => t.gym_name === gymFilter);
+        }
+
+        return data.sort((a, b) => {
+            const dateA = a.training_date || (a.created_at ? a.created_at.slice(0, 10) : '');
+            const dateB = b.training_date || (b.created_at ? b.created_at.slice(0, 10) : '');
+            return new Date(dateA + 'T12:00:00').getTime() - new Date(dateB + 'T12:00:00').getTime();
+        });
+    }, [trainings, dateFilter, modalityFilter, gymFilter]);
 
     // === Computed Metrics ===
     const avgRating = filteredTrainings.length > 0
@@ -69,16 +87,19 @@ export default function PsicoDashboard() {
     const avgEmotionIntensity = filteredTrainings.filter(t => t.emotion_intensity != null).length > 0
         ? (filteredTrainings.filter(t => t.emotion_intensity != null).reduce((s, t) => s + (t.emotion_intensity || 0), 0) / filteredTrainings.filter(t => t.emotion_intensity != null).length).toFixed(1) : '0';
 
-    // Timeline data
-    const timelineData = filteredTrainings.map(t => ({
-        date: new Date(t.created_at || '').toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }),
-        Nota: t.rating || 0,
-        Foco: t.focus_level || 0,
-        Cansaco: t.fatigue_level || 0,
-        Energia: t.energy_level || 0,
-        Dor: t.pain_level || 0,
-        'Int. Emocional': t.emotion_intensity || 0
-    }));
+    // Timeline data (use training_date)
+    const timelineData = filteredTrainings.map(t => {
+        const displayDate = t.training_date || (t.created_at ? t.created_at.slice(0, 10) : '');
+        return {
+            date: displayDate ? new Date(displayDate + 'T12:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }) : '',
+            Nota: t.rating || 0,
+            Foco: t.focus_level || 0,
+            Cansaco: t.fatigue_level || 0,
+            Energia: t.energy_level || 0,
+            Dor: t.pain_level || 0,
+            'Int. Emocional': t.emotion_intensity || 0
+        };
+    });
 
     // Emotion frequency
     const emotionFreq: Record<string, number> = {};
@@ -134,6 +155,26 @@ export default function PsicoDashboard() {
     const competitions = filteredTrainings.filter(t => t.is_competition);
     const totalWins = competitions.reduce((s, t) => s + (t.competition_wins || 0), 0);
     const totalLosses = competitions.reduce((s, t) => s + (t.competition_losses || 0), 0);
+
+    // Gym intensity data
+    const gymStatsData = useMemo(() => {
+        const gymMap: Record<string, { count: number; totalFatigue: number; totalRating: number; totalPain: number }> = {};
+        filteredTrainings.forEach(t => {
+            const gym = t.gym_name || 'Sem academia';
+            if (!gymMap[gym]) gymMap[gym] = { count: 0, totalFatigue: 0, totalRating: 0, totalPain: 0 };
+            gymMap[gym].count++;
+            gymMap[gym].totalFatigue += t.fatigue_level || 0;
+            gymMap[gym].totalRating += t.rating || 0;
+            gymMap[gym].totalPain += t.pain_level || 0;
+        });
+        return Object.entries(gymMap).map(([name, stats]) => ({
+            name,
+            Cansaco: +(stats.totalFatigue / stats.count).toFixed(1),
+            Nota: +(stats.totalRating / stats.count).toFixed(1),
+            Dor: +(stats.totalPain / stats.count).toFixed(1),
+            treinos: stats.count,
+        }));
+    }, [filteredTrainings]);
 
     // Export PDF
     const handleExportPDF = async () => {
@@ -239,20 +280,24 @@ export default function PsicoDashboard() {
 
             runAutoTable({
                 startY: 26,
-                head: [['Data', 'Modalidade', 'Tipo', 'Nota', 'Foco', 'Cansaço', 'Dor', 'Emoções']],
-                body: filteredTrainings.map(t => [
-                    new Date(t.created_at || '').toLocaleDateString('pt-BR'),
-                    t.modality,
-                    t.training_type || '-',
-                    t.rating?.toString() || '-',
-                    t.focus_level?.toString() || '-',
-                    t.fatigue_level?.toString() || '-',
-                    t.pain_level?.toString() || '-',
-                    (t.emotions || []).join(', ') || '-'
-                ]),
+                head: [['Data', 'Academia', 'Modalidade', 'Tipo', 'Nota', 'Foco', 'Cansaço', 'Dor', 'Emoções']],
+                body: filteredTrainings.map(t => {
+                    const displayDate = t.training_date || (t.created_at ? t.created_at.slice(0, 10) : '');
+                    return [
+                        displayDate ? new Date(displayDate + 'T12:00:00').toLocaleDateString('pt-BR') : '-',
+                        t.gym_name || '-',
+                        t.modality,
+                        t.training_type || '-',
+                        t.rating?.toString() || '-',
+                        t.focus_level?.toString() || '-',
+                        t.fatigue_level?.toString() || '-',
+                        t.pain_level?.toString() || '-',
+                        (t.emotions || []).join(', ') || '-'
+                    ];
+                }),
                 theme: 'striped',
                 headStyles: { fillColor: [20, 184, 166] },
-                styles: { fontSize: 8 },
+                styles: { fontSize: 7 },
             });
 
             // Reflections
@@ -408,6 +453,24 @@ export default function PsicoDashboard() {
                                 {m}
                             </button>
                         ))}
+                        {gyms.length > 0 && (
+                            <>
+                                <div className="h-6 w-px bg-slate-200 dark:bg-slate-700 mx-1"></div>
+                                <div className="flex items-center gap-2">
+                                    <span className="material-symbols-outlined text-slate-400 text-lg">location_on</span>
+                                </div>
+                                <select
+                                    value={gymFilter}
+                                    onChange={e => setGymFilter(e.target.value)}
+                                    className="px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 border-0 focus:ring-2 focus:ring-teal-500 cursor-pointer"
+                                >
+                                    <option value="Todas">Todas Academias</option>
+                                    {gyms.map(g => (
+                                        <option key={g.id} value={g.name}>{g.name}</option>
+                                    ))}
+                                </select>
+                            </>
+                        )}
                     </div>
                 </div>
             </div>
@@ -511,6 +574,31 @@ export default function PsicoDashboard() {
                                         </div>
                                     </ChartCard>
                                 </div>
+
+                                {/* Gym Stats Chart */}
+                                {gymStatsData.length > 1 && (
+                                    <ChartCard title="Intensidade por Academia">
+                                        <ResponsiveContainer width="100%" height={280}>
+                                            <BarChart data={gymStatsData}>
+                                                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                                                <XAxis dataKey="name" tick={{ fontSize: 11 }} />
+                                                <YAxis domain={[0, 10]} tick={{ fontSize: 11 }} />
+                                                <Tooltip formatter={(value: number) => [`${value}/10`]} />
+                                                <Bar dataKey="Cansaco" name="Cansaço" fill="#f59e0b" radius={[4, 4, 0, 0]} />
+                                                <Bar dataKey="Nota" name="Nota" fill="#14b8a6" radius={[4, 4, 0, 0]} />
+                                                <Bar dataKey="Dor" name="Dor" fill="#ef4444" radius={[4, 4, 0, 0]} />
+                                                <Legend />
+                                            </BarChart>
+                                        </ResponsiveContainer>
+                                        <div className="flex flex-wrap gap-x-3 gap-y-1 mt-2 justify-center">
+                                            {gymStatsData.map(g => (
+                                                <span key={g.name} className="text-[11px] text-slate-500 dark:text-slate-400">
+                                                    {g.name}: {g.treinos} treino{g.treinos > 1 ? 's' : ''}
+                                                </span>
+                                            ))}
+                                        </div>
+                                    </ChartCard>
+                                )}
 
                                 {competitions.length > 0 && (
                                     <ChartCard title="Competições">

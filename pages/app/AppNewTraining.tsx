@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTrainingWizard } from '../../components/app/AppLayout';
+import { appApi, AppGym } from '../../lib/api-app';
 
 export default function AppNewTraining() {
     const navigate = useNavigate();
@@ -8,12 +9,23 @@ export default function AppNewTraining() {
 
     const [modality, setModality] = useState(training.modality || 'Judô');
     const [trainingType, setTrainingType] = useState(training.training_type || 'Técnica');
+    const [gymId, setGymId] = useState(training.gym_id || '');
+    const [trainingDate, setTrainingDate] = useState(
+        training.training_date || new Date().toISOString().slice(0, 10)
+    );
+    const [gyms, setGyms] = useState<AppGym[]>([]);
+
+    useEffect(() => {
+        appApi.getGyms().then(setGyms).catch(console.error);
+    }, []);
 
     const handleContinue = () => {
         updateTraining({
             modality,
             training_type: trainingType,
-            is_competition: trainingType === 'Competição'
+            is_competition: trainingType === 'Competição',
+            gym_id: gymId || undefined,
+            training_date: trainingDate,
         });
 
         if (trainingType === 'Competição') {
@@ -85,7 +97,7 @@ export default function AppNewTraining() {
                 <h3 className="tracking-tight text-xl font-bold leading-tight text-left pb-4 pt-2">Tipo de Treino</h3>
 
                 {/* Training Type Chips */}
-                <div className="flex flex-wrap gap-3">
+                <div className="flex flex-wrap gap-3 mb-8">
                     <label className="cursor-pointer">
                         <input checked={trainingType === 'Técnica'} onChange={() => setTrainingType('Técnica')} className="peer sr-only" name="type" type="radio" value="Técnica" />
                         <div className="flex h-10 items-center justify-center gap-x-2 rounded-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-5 py-2 transition-all peer-checked:bg-app-primary peer-checked:text-white peer-checked:border-app-primary hover:bg-slate-50 dark:hover:bg-slate-700">
@@ -121,6 +133,60 @@ export default function AppNewTraining() {
                             <p className="text-sm font-medium">Competição</p>
                         </div>
                     </label>
+                </div>
+
+                {/* Academia / Gym Selection */}
+                <h3 className="tracking-tight text-xl font-bold leading-tight text-left pb-4 pt-2">
+                    <span className="material-symbols-outlined text-[22px] mr-1 align-middle text-app-primary">location_on</span>
+                    Onde treinou?
+                </h3>
+
+                {gyms.length === 0 ? (
+                    <div className="flex items-center gap-2 text-slate-400 text-sm pb-6">
+                        <span className="material-symbols-outlined animate-spin text-lg">progress_activity</span>
+                        Carregando academias...
+                    </div>
+                ) : (
+                    <div className="flex flex-wrap gap-2.5 mb-8">
+                        {gyms.map(gym => (
+                            <label key={gym.id} className="cursor-pointer">
+                                <input
+                                    checked={gymId === gym.id}
+                                    onChange={() => setGymId(gym.id)}
+                                    className="peer sr-only"
+                                    name="gym"
+                                    type="radio"
+                                    value={gym.id}
+                                />
+                                <div className="flex h-10 items-center justify-center gap-x-2 rounded-full border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-4 py-2 transition-all peer-checked:bg-emerald-500 peer-checked:text-white peer-checked:border-emerald-500 hover:bg-slate-50 dark:hover:bg-slate-700">
+                                    <span className="material-symbols-outlined text-[16px]">home_work</span>
+                                    <p className="text-sm font-medium">{gym.name}</p>
+                                </div>
+                            </label>
+                        ))}
+                    </div>
+                )}
+
+                {/* Training Date Picker */}
+                <h3 className="tracking-tight text-xl font-bold leading-tight text-left pb-4 pt-2">
+                    <span className="material-symbols-outlined text-[22px] mr-1 align-middle text-app-primary">calendar_today</span>
+                    Quando foi o treino?
+                </h3>
+
+                <div className="mb-8">
+                    <input
+                        type="date"
+                        value={trainingDate}
+                        max={new Date().toISOString().slice(0, 10)}
+                        onChange={(e) => setTrainingDate(e.target.value)}
+                        className="w-full h-12 px-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm font-medium focus:outline-none focus:ring-2 focus:ring-app-primary focus:border-app-primary transition-all"
+                    />
+                    {trainingDate !== new Date().toISOString().slice(0, 10) && (
+                        <p className="text-xs text-amber-500 mt-2 flex items-center gap-1">
+                            <span className="material-symbols-outlined text-[14px]">info</span>
+                            Registrando treino de {new Date(trainingDate + 'T12:00:00').toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' })}
+                        </p>
+                    )}
                 </div>
             </main>
 
