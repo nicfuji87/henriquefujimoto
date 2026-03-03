@@ -9,7 +9,7 @@ import {
 
 const COLORS = ['#14b8a6', '#f59e0b', '#ef4444', '#8b5cf6', '#3b82f6', '#ec4899', '#10b981', '#f97316'];
 
-type DateFilter = '7d' | '30d' | '90d' | 'all';
+type DateFilter = 'mes_atual' | 'mes_anterior' | 'custom' | 'all';
 
 export default function PsicoDashboard() {
     const navigate = useNavigate();
@@ -17,9 +17,11 @@ export default function PsicoDashboard() {
     const [loading, setLoading] = useState(true);
     const [dateFilter, setDateFilter] = useState<DateFilter>('all');
     const [modalityFilter, setModalityFilter] = useState<string>('Todos');
-    const [activeTab, setActiveTab] = useState<'overview' | 'emotional' | 'physical' | 'mental'>('overview');
+    const [activeTab, setActiveTab] = useState<'overview' | 'emotional' | 'physical' | 'mental' | 'registros'>('overview');
     const [gymFilter, setGymFilter] = useState<string>('Todas');
     const [gyms, setGyms] = useState<AppGym[]>([]);
+    const [customDateStart, setCustomDateStart] = useState('');
+    const [customDateEnd, setCustomDateEnd] = useState('');
     const dashRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -51,12 +53,29 @@ export default function PsicoDashboard() {
 
         // Date filter (use training_date if available)
         if (dateFilter !== 'all') {
-            const days = dateFilter === '7d' ? 7 : dateFilter === '30d' ? 30 : 90;
-            const cutoff = new Date();
-            cutoff.setDate(cutoff.getDate() - days);
+            const now = new Date();
+            let startDate: Date;
+            let endDate: Date;
+
+            if (dateFilter === 'mes_atual') {
+                startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+                endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+            } else if (dateFilter === 'mes_anterior') {
+                startDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+                endDate = new Date(now.getFullYear(), now.getMonth(), 0);
+            } else if (dateFilter === 'custom' && customDateStart && customDateEnd) {
+                startDate = new Date(customDateStart + 'T00:00:00');
+                endDate = new Date(customDateEnd + 'T23:59:59');
+            } else {
+                startDate = new Date(0);
+                endDate = new Date();
+            }
+
             data = data.filter(t => {
                 const dateStr = t.training_date || (t.created_at ? t.created_at.slice(0, 10) : '');
-                return dateStr ? new Date(dateStr + 'T12:00:00') >= cutoff : false;
+                if (!dateStr) return false;
+                const d = new Date(dateStr + 'T12:00:00');
+                return d >= startDate && d <= endDate;
             });
         }
 
@@ -75,7 +94,7 @@ export default function PsicoDashboard() {
             const dateB = b.training_date || (b.created_at ? b.created_at.slice(0, 10) : '');
             return new Date(dateA + 'T12:00:00').getTime() - new Date(dateB + 'T12:00:00').getTime();
         });
-    }, [trainings, dateFilter, modalityFilter, gymFilter]);
+    }, [trainings, dateFilter, modalityFilter, gymFilter, customDateStart, customDateEnd]);
 
     // === Computed Metrics ===
     const avgRating = filteredTrainings.length > 0
@@ -207,7 +226,8 @@ export default function PsicoDashboard() {
             doc.setFontSize(20);
             doc.text('Relatório Psicológico - Henrique Fujimoto', 14, 18);
             doc.setFontSize(10);
-            doc.text(`Gerado em ${new Date().toLocaleDateString('pt-BR')} | Período: ${dateFilter === 'all' ? 'Todos' : dateFilter}`, 14, 28);
+            const periodLabel = dateFilter === 'all' ? 'Todos' : dateFilter === 'mes_atual' ? 'Mês Atual' : dateFilter === 'mes_anterior' ? 'Mês Anterior' : `${customDateStart} a ${customDateEnd}`;
+            doc.text(`Gerado em ${new Date().toLocaleDateString('pt-BR')} | Período: ${periodLabel}`, 14, 28);
             doc.text(`Total de registros: ${filteredTrainings.length}`, 14, 35);
 
             // Summary
@@ -372,6 +392,7 @@ export default function PsicoDashboard() {
         { id: 'emotional' as const, label: 'Emocional', icon: 'mood' },
         { id: 'physical' as const, label: 'Físico', icon: 'fitness_center' },
         { id: 'mental' as const, label: 'Mental', icon: 'psychology' },
+        { id: 'registros' as const, label: 'Registros', icon: 'format_list_bulleted' },
     ];
 
     return (
@@ -425,7 +446,7 @@ export default function PsicoDashboard() {
                             <span className="material-symbols-outlined text-slate-400 text-lg">calendar_today</span>
                             <span className="text-sm font-semibold text-slate-500">Período:</span>
                         </div>
-                        {(['7d', '30d', '90d', 'all'] as DateFilter[]).map(f => (
+                        {(['mes_atual', 'mes_anterior', 'custom', 'all'] as DateFilter[]).map(f => (
                             <button
                                 key={f}
                                 onClick={() => setDateFilter(f)}
@@ -434,9 +455,28 @@ export default function PsicoDashboard() {
                                     : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600'
                                     }`}
                             >
-                                {f === '7d' ? '7 dias' : f === '30d' ? '30 dias' : f === '90d' ? '90 dias' : 'Tudo'}
+                                {f === 'mes_atual' ? 'Mês Atual' : f === 'mes_anterior' ? 'Mês Anterior' : f === 'custom' ? 'Personalizado' : 'Tudo'}
                             </button>
                         ))}
+
+                        {dateFilter === 'custom' && (
+                            <div className="flex items-center gap-2">
+                                <input
+                                    type="date"
+                                    value={customDateStart}
+                                    onChange={e => setCustomDateStart(e.target.value)}
+                                    className="px-2 py-1 rounded-lg text-xs font-medium bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-600 focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                                />
+                                <span className="text-xs text-slate-400">até</span>
+                                <input
+                                    type="date"
+                                    value={customDateEnd}
+                                    onChange={e => setCustomDateEnd(e.target.value)}
+                                    className="px-2 py-1 rounded-lg text-xs font-medium bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-600 focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                                />
+                            </div>
+                        )}
+
                         <div className="h-6 w-px bg-slate-200 dark:bg-slate-700 mx-1"></div>
                         <div className="flex items-center gap-2">
                             <span className="material-symbols-outlined text-slate-400 text-lg">sports_martial_arts</span>
@@ -811,6 +851,119 @@ export default function PsicoDashboard() {
                                         </LineChart>
                                     </ResponsiveContainer>
                                 </ChartCard>
+                            </div>
+                        )}
+
+                        {/* REGISTROS TAB */}
+                        {activeTab === 'registros' && (
+                            <div className="space-y-3">
+                                <div className="flex items-center justify-between mb-2">
+                                    <h3 className="text-sm font-bold text-slate-500 dark:text-slate-400">
+                                        {filteredTrainings.length} registro{filteredTrainings.length !== 1 ? 's' : ''} encontrado{filteredTrainings.length !== 1 ? 's' : ''}
+                                    </h3>
+                                </div>
+                                {[...filteredTrainings].reverse().map(t => {
+                                    const displayDate = t.training_date || (t.created_at ? t.created_at.slice(0, 10) : '');
+                                    const dateStr = displayDate ? new Date(displayDate + 'T12:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' }) : '';
+                                    const getRatingColor = (r: number) => {
+                                        if (r <= 3) return 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400';
+                                        if (r <= 5) return 'bg-orange-100 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400';
+                                        if (r <= 7) return 'bg-yellow-100 text-yellow-600 dark:bg-yellow-900/30 dark:text-yellow-400';
+                                        return 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400';
+                                    };
+
+                                    return (
+                                        <div
+                                            key={t.id}
+                                            onClick={() => navigate(`/app/training/${t.id}`)}
+                                            className="group bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 p-4 shadow-sm hover:shadow-md hover:border-teal-400/50 transition-all cursor-pointer"
+                                        >
+                                            <div className="flex items-start justify-between gap-3 mb-3">
+                                                <div className="flex items-start gap-3 min-w-0">
+                                                    <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${t.is_competition ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-600' : 'bg-teal-100 dark:bg-teal-900/30 text-teal-600'}`}>
+                                                        <span className="material-symbols-outlined">
+                                                            {t.is_competition ? 'emoji_events' : (t.modality === 'Jiu-Jitsu' ? 'sports_kabaddi' : 'sports_martial_arts')}
+                                                        </span>
+                                                    </div>
+                                                    <div className="min-w-0">
+                                                        <h4 className="text-sm font-bold text-slate-900 dark:text-white leading-tight truncate">
+                                                            {t.is_competition ? t.competition_name || 'Competição' : `Treino de ${t.modality}`}
+                                                        </h4>
+                                                        <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+                                                            <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">{dateStr}</span>
+                                                            <span className="text-[11px] text-slate-300">•</span>
+                                                            <span className="text-[11px] font-medium text-slate-500">{t.training_type || 'Geral'}</span>
+                                                            {t.gym_name && (
+                                                                <>
+                                                                    <span className="text-[11px] text-slate-300">•</span>
+                                                                    <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium flex items-center gap-0.5">
+                                                                        <span className="material-symbols-outlined text-[11px]">location_on</span>
+                                                                        {t.gym_name}
+                                                                    </span>
+                                                                </>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                {t.rating != null && (
+                                                    <span className={`shrink-0 flex items-center justify-center w-9 h-9 rounded-lg text-sm font-bold ${getRatingColor(t.rating)}`}>
+                                                        {t.rating}
+                                                    </span>
+                                                )}
+                                            </div>
+
+                                            {/* Quick metrics row */}
+                                            <div className="flex flex-wrap gap-2 mb-2">
+                                                {t.fatigue_level != null && (
+                                                    <span className="text-[11px] font-semibold px-2 py-0.5 rounded-md bg-orange-50 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400">
+                                                        Cansaço: {t.fatigue_level}/10
+                                                    </span>
+                                                )}
+                                                {t.energy_level != null && (
+                                                    <span className="text-[11px] font-semibold px-2 py-0.5 rounded-md bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400">
+                                                        Energia: {t.energy_level}/10
+                                                    </span>
+                                                )}
+                                                {t.focus_level != null && (
+                                                    <span className="text-[11px] font-semibold px-2 py-0.5 rounded-md bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400">
+                                                        Foco: {t.focus_level}/10
+                                                    </span>
+                                                )}
+                                                {t.pain_level != null && t.pain_level > 0 && (
+                                                    <span className="text-[11px] font-semibold px-2 py-0.5 rounded-md bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400">
+                                                        Dor: {t.pain_level}/10
+                                                    </span>
+                                                )}
+                                            </div>
+
+                                            {/* Emotions */}
+                                            {t.emotions && t.emotions.length > 0 && (
+                                                <div className="flex flex-wrap gap-1.5 mb-2">
+                                                    {t.emotions.map(emo => (
+                                                        <span key={emo} className="text-[10px] bg-teal-50 dark:bg-teal-900/20 text-teal-700 dark:text-teal-400 font-semibold px-2 py-0.5 rounded-full">
+                                                            {emo}
+                                                        </span>
+                                                    ))}
+                                                </div>
+                                            )}
+
+                                            {/* Reflection preview */}
+                                            {(t.reflection || t.learned_today) && (
+                                                <div className="mt-2 p-2.5 bg-slate-50 dark:bg-slate-700/50 rounded-lg">
+                                                    <p className="text-[11px] text-slate-600 dark:text-slate-400 line-clamp-2 italic">
+                                                        "{t.reflection || t.learned_today}"
+                                                    </p>
+                                                </div>
+                                            )}
+
+                                            {/* Click hint */}
+                                            <div className="flex items-center gap-1 mt-2 text-[10px] text-slate-400 group-hover:text-teal-500 transition-colors">
+                                                <span className="material-symbols-outlined text-[12px]">open_in_new</span>
+                                                Clique para ver detalhes completos
+                                            </div>
+                                        </div>
+                                    );
+                                })}
                             </div>
                         )}
                     </>
