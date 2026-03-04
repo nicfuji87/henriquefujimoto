@@ -50,7 +50,7 @@ export default function AffiliateProducts() {
     if (loading || products.length === 0) return null;
 
     return (
-        <section className="py-10 px-4">
+        <section className="py-6 px-4">
             <div className="max-w-5xl mx-auto">
                 {/* Section Header */}
                 <motion.div

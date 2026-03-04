@@ -261,55 +261,10 @@ export default function HomePage() {
             case 'apoiar':
                 return (
                     <div className="space-y-3">
-                        {partners.length > 0 && (
-                            <div className="relative overflow-hidden rounded-lg h-10">
-                                <div className="absolute left-0 top-0 bottom-0 w-6 bg-gradient-to-r from-black/60 to-transparent z-10 pointer-events-none" />
-                                <div className="absolute right-0 top-0 bottom-0 w-6 bg-gradient-to-l from-black/60 to-transparent z-10 pointer-events-none" />
-                                <motion.div
-                                    className="flex gap-6 items-center w-max"
-                                    animate={{ x: ['0%', '-50%'] }}
-                                    transition={{ repeat: Infinity, duration: 12, ease: 'linear' }}
-                                >
-                                    {marqueePartners.map((p, i) => (
-                                        p.logo_url ? (
-                                            <img
-                                                key={`${p.id}-${i}`}
-                                                src={p.logo_url}
-                                                alt={p.name}
-                                                className="h-8 w-auto max-w-[100px] object-contain opacity-50 grayscale"
-                                            />
-                                        ) : (
-                                            <span key={`${p.id}-${i}`} className="text-xs font-bold text-gray-600 whitespace-nowrap">{p.name}</span>
-                                        )
-                                    ))}
-                                </motion.div>
-                            </div>
-                        )}
-                        {affiliateProducts.length > 0 && (
-                            <div className="flex items-center gap-2">
-                                <ShoppingBag className="w-3 h-3 text-emerald-400 flex-shrink-0" />
-                                <div className="flex items-center gap-1.5">
-                                    {affiliateProducts.slice(0, 3).map(p => (
-                                        p.image_url ? (
-                                            <img
-                                                key={p.id}
-                                                src={p.image_url}
-                                                alt={p.name}
-                                                className="w-6 h-6 rounded object-cover border border-white/10"
-                                            />
-                                        ) : (
-                                            <div key={p.id} className="w-6 h-6 rounded bg-zinc-800 border border-white/10 flex items-center justify-center">
-                                                <ShoppingBag className="w-3 h-3 text-zinc-600" />
-                                            </div>
-                                        )
-                                    ))}
-                                    {affiliateProducts.length > 3 && (
-                                        <span className="text-[10px] text-gray-500">+{affiliateProducts.length - 3}</span>
-                                    )}
-                                </div>
-                                <span className="text-[10px] text-emerald-400/60">Compre e apoie!</span>
-                            </div>
-                        )}
+                        <div className="flex items-center gap-2 text-xs text-gray-400">
+                            <Heart className="w-3 h-3 text-pink-400 flex-shrink-0" />
+                            <span>Veja como se tornar um patrocinador ou apoiador da jornada.</span>
+                        </div>
                         <p className="text-[11px] text-gray-500">{cardData.teaser_text}</p>
                     </div>
                 );
@@ -366,7 +321,45 @@ export default function HomePage() {
         <main className="relative min-h-screen w-full overflow-x-hidden">
             <Hero />
 
-            <div className="relative z-10 -mt-8">
+            <div className="relative z-10 -mt-6">
+                {/* Trust Bar (Patrocinadores) */}
+                {partners.length > 0 && (
+                    <div className="w-full bg-[#050505]/80 backdrop-blur-md border-y border-white/[0.05] py-5 mb-8">
+                        <div className="max-w-5xl mx-auto px-4">
+                            <div className="flex justify-center mb-4">
+                                <span className="text-[10px] uppercase tracking-widest text-gray-500 font-bold">Patrocinadores Oficiais</span>
+                            </div>
+                            <div className="relative overflow-hidden flex items-center h-12">
+                                <div className="absolute left-0 top-0 bottom-0 w-12 bg-gradient-to-r from-[#000000] via-[#000000]/80 to-transparent z-10 pointer-events-none" />
+                                <div className="absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-[#000000] via-[#000000]/80 to-transparent z-10 pointer-events-none" />
+                                <motion.div
+                                    className="flex gap-12 items-center w-max"
+                                    animate={{ x: ['0%', '-50%'] }}
+                                    transition={{ repeat: Infinity, duration: 25, ease: 'linear' }}
+                                >
+                                    {marqueePartners.map((p, i) => (
+                                        p.logo_url ? (
+                                            <img
+                                                key={`${p.id}-${i}`}
+                                                src={p.logo_url}
+                                                alt={p.name}
+                                                className="h-10 w-auto max-w-[120px] object-contain opacity-50 hover:opacity-100 transition-opacity grayscale hover:grayscale-0"
+                                            />
+                                        ) : (
+                                            <span key={`${p.id}-${i}`} className="text-sm font-bold text-gray-600 whitespace-nowrap">{p.name}</span>
+                                        )
+                                    ))}
+                                </motion.div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Produtos Afiliados no Topo */}
+                <div className="mb-10">
+                    <AffiliateProducts />
+                </div>
+
                 {/* Hub Section Title */}
                 <div className="max-w-5xl mx-auto px-4 mb-6">
                     <motion.div
@@ -376,7 +369,7 @@ export default function HomePage() {
                         className="flex items-center gap-3"
                     >
                         <div className="h-px flex-1 bg-gradient-to-r from-transparent via-white/10 to-transparent" />
-                        <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-gray-500">Explore</span>
+                        <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-gray-500">Explore Mais</span>
                         <div className="h-px flex-1 bg-gradient-to-r from-transparent via-white/10 to-transparent" />
                     </motion.div>
                 </div>
@@ -404,11 +397,10 @@ export default function HomePage() {
                     })}
                 </div>
 
-                {/* Produtos Afiliados */}
-                <AffiliateProducts />
-
                 {/* Histórico Competitivo */}
-                <CompetitionsSection />
+                <div className="mt-12">
+                    <CompetitionsSection />
+                </div>
 
                 {/* Quick social links */}
                 <motion.div
