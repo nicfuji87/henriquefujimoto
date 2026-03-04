@@ -11,8 +11,26 @@ type EventParams = {
  * @param params Parâmetros adicionais para detalhamento
  */
 export const trackEvent = (action: string, params?: EventParams) => {
-    if (typeof window !== 'undefined' && (window as any).gtag) {
-        (window as any).gtag('event', action, params);
+    if (typeof window !== 'undefined') {
+        const win = window as any;
+
+        // Disparo GA4
+        if (win.gtag) {
+            win.gtag('event', action, params);
+        }
+
+        // Disparo Meta Pixel (Facebook)
+        if (win.fbq) {
+            // Se for um evento padrão do Meta (AddToCart, Lead, etc), usamos 'track'
+            // Se for customizado (click_cta, affiliate_click), usamos 'trackCustom'
+            const standardEvents = ['AddToCart', 'AddToWishlist', 'CompleteRegistration', 'Contact', 'CustomizeProduct', 'Donate', 'FindLocation', 'InitiateCheckout', 'Lead', 'Purchase', 'Schedule', 'Search', 'StartTrial', 'SubmitApplication', 'Subscribe', 'ViewContent'];
+
+            if (standardEvents.includes(action)) {
+                win.fbq('track', action, params);
+            } else {
+                win.fbq('trackCustom', action, params);
+            }
+        }
 
         // Log para facilitar debug em desenvolvimento
         if (process.env.NODE_ENV === 'development') {
@@ -59,6 +77,16 @@ export const analytics = {
             method: platform,
             content_type: 'blog_post',
             item_id: slug
+        });
+    },
+
+    // Produtos Afiliados (Mercado Livre)
+    trackAffiliateClick: (productName: string, productId: string) => {
+        trackEvent('Click_Affiliate_Product', {
+            event_category: 'affiliate',
+            event_label: productName,
+            product_id: productId,
+            currency: 'BRL'
         });
     }
 };

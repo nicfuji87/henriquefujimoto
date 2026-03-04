@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { ShoppingBag, ExternalLink, Star, Heart } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import { analytics } from '../lib/analytics';
 
 interface AffiliateProduct {
     id: string;
@@ -13,10 +14,14 @@ interface AffiliateProduct {
     display_order: number;
 }
 
-function trackClick(productId: string) {
+function trackClick(product: AffiliateProduct) {
     try {
+        // Disparo para o Meta Ads e GA4
+        analytics.trackAffiliateClick(product.name, product.id);
+
+        // Disparo interno no Supabase
         supabase.rpc('track_affiliate_click', {
-            p_product_id: productId,
+            p_product_id: product.id,
             p_referrer: document.referrer || null,
             p_user_agent: navigator.userAgent || null,
         }).then(() => { });
@@ -83,7 +88,7 @@ export default function AffiliateProducts() {
                             href={product.affiliate_url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            onClick={() => trackClick(product.id)}
+                            onClick={() => trackClick(product)}
                             initial={{ opacity: 0, y: 20 }}
                             whileInView={{ opacity: 1, y: 0 }}
                             viewport={{ once: true }}

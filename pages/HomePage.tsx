@@ -59,6 +59,7 @@ interface HomeCard {
 }
 
 interface HubCardProps {
+    key?: React.Key;
     to: string;
     icon: React.ReactNode;
     accentColor: string;
