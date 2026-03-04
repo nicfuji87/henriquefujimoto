@@ -29,6 +29,49 @@ function logEventToSupabase(eventName: string, opts: EventLogOptions) {
     });
 }
 
+function getCookie(name: string): string | undefined {
+    if (typeof document === 'undefined') return undefined;
+    const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
+    return match ? decodeURIComponent(match[2]) : undefined;
+}
+
+/**
+ * Envia evento para a Meta Conversions API via Edge Function (server-side).
+ * Funciona mesmo se o usuário tiver AdBlock, pois o disparo é feito
+ * pelo nosso servidor e não pelo navegador.
+ */
+function sendToCAPI(eventName: string, customData?: Record<string, any>) {
+    try {
+        const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+        if (!supabaseUrl) return;
+
+        const payload = {
+            event_name: eventName,
+            event_time: Math.floor(Date.now() / 1000),
+            event_source_url: typeof window !== 'undefined' ? window.location.href : '',
+            action_source: 'website',
+            user_data: {
+                client_user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : '',
+                fbc: getCookie('_fbc'),
+                fbp: getCookie('_fbp'),
+            },
+            custom_data: customData || {},
+        };
+
+        fetch(`${supabaseUrl}/functions/v1/meta-conversions`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+        }).then(res => {
+            if (process.env.NODE_ENV === 'development') {
+                res.json().then(data => console.log('[CAPI]', eventName, data));
+            }
+        }).catch(() => { /* fire-and-forget */ });
+    } catch (_) {
+        // silently ignore
+    }
+}
+
 /**
  * Envia um evento personalizado para o Google Analytics 4 (GA4)
  * @param action Nome do evento (ex: 'click_cta', 'contact_whatsapp')
@@ -118,6 +161,13 @@ export const analytics = {
             source_id: productId,
             source_label: productName,
         });
+        // Meta CAPI (server-side)
+        sendToCAPI('Click_Affiliate_Product', {
+            content_name: productName,
+            content_ids: [productId],
+            content_type: 'product',
+            currency: 'BRL',
+        });
     },
 
     /**
@@ -161,5 +211,8 @@ export const analytics = {
                 ...logOpts,
             });
         }
+
+        // Meta CAPI (server-side)
+        sendToCAPI(event.event_name, { ...metaMerged, ...extraParams });
     }
 };
