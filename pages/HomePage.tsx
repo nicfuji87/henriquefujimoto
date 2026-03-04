@@ -50,6 +50,7 @@ interface BlogPost {
 }
 
 interface TrackingEventData {
+    id: string;
     event_name: string;
     is_standard_meta: boolean;
     meta_params: Record<string, any>;
@@ -183,7 +184,7 @@ export default function HomePage() {
                     .limit(1),
                 supabase
                     .from('home_cards')
-                    .select('*, tracking_events(event_name, is_standard_meta, meta_params, ga4_params)')
+                    .select('*, tracking_events(id, event_name, is_standard_meta, meta_params, ga4_params)')
                     .eq('is_visible', true)
                     .order('display_order', { ascending: true }),
                 supabase
@@ -406,7 +407,11 @@ export default function HomePage() {
                                 delay={0.05 + index * 0.05}
                                 teaser={renderTeaser(cardId, cardData)}
                                 onCardClick={dbCard?.tracking_events ? () => {
-                                    analytics.trackDynamicEvent(dbCard.tracking_events!, { card_id: cardId, card_title: cardData.title });
+                                    analytics.trackDynamicEvent(dbCard.tracking_events!, { card_id: cardId, card_title: cardData.title }, {
+                                        source_type: 'card',
+                                        source_id: cardId,
+                                        source_label: cardData.title,
+                                    });
                                 } : undefined}
                             />
                         );

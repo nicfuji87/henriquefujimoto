@@ -1,9 +1,34 @@
+import { supabase } from './supabase';
+
 type EventParams = {
     event_category?: string;
     event_label?: string;
     value?: number;
     [key: string]: any;
 };
+
+interface EventLogOptions {
+    tracking_event_id?: string | null;
+    source_type: 'product' | 'card';
+    source_id?: string;
+    source_label?: string;
+}
+
+function logEventToSupabase(eventName: string, opts: EventLogOptions) {
+    try {
+        supabase.from('tracking_event_logs').insert({
+            tracking_event_id: opts.tracking_event_id || null,
+            event_name: eventName,
+            source_type: opts.source_type,
+            source_id: opts.source_id || null,
+            source_label: opts.source_label || null,
+            referrer: typeof document !== 'undefined' ? document.referrer || null : null,
+            user_agent: typeof navigator !== 'undefined' ? navigator.userAgent || null : null,
+        }).then(() => { });
+    } catch (_) {
+        // fire-and-forget
+    }
+}
 
 /**
  * Envia um evento personalizado para o Google Analytics 4 (GA4)
@@ -88,18 +113,26 @@ export const analytics = {
             product_id: productId,
             currency: 'BRL'
         });
+        // Log no Supabase
+        logEventToSupabase('Click_Affiliate_Product', {
+            source_type: 'product',
+            source_id: productId,
+            source_label: productName,
+        });
     },
 
     /**
      * Dispara um evento dinâmico vindo do banco de dados (tracking_events).
      * Usa 'track' para eventos padrão Meta e 'trackCustom' para custom.
+     * Também registra o evento no Supabase com data/hora.
      */
     trackDynamicEvent: (event: {
+        id?: string;
         event_name: string;
         is_standard_meta: boolean;
         meta_params?: Record<string, any>;
         ga4_params?: Record<string, any>;
-    }, extraParams?: Record<string, any>) => {
+    }, extraParams?: Record<string, any>, logOpts?: EventLogOptions) => {
         const ga4Merged = { ...event.ga4_params, ...extraParams };
         const metaMerged = { ...event.meta_params, ...extraParams };
 
@@ -120,6 +153,14 @@ export const analytics = {
             if (process.env.NODE_ENV === 'development') {
                 console.log(`[Dynamic Event] ${event.event_name}`, { ga4Merged, metaMerged });
             }
+        }
+
+        // Log no Supabase
+        if (logOpts) {
+            logEventToSupabase(event.event_name, {
+                tracking_event_id: event.id || logOpts.tracking_event_id,
+                ...logOpts,
+            });
         }
     }
 };

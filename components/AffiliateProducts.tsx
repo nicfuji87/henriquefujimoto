@@ -5,6 +5,7 @@ import { supabase } from '../lib/supabase';
 import { analytics } from '../lib/analytics';
 
 interface TrackingEventData {
+    id: string;
     event_name: string;
     is_standard_meta: boolean;
     meta_params: Record<string, any>;
@@ -29,9 +30,13 @@ function trackClick(product: AffiliateProduct) {
             analytics.trackDynamicEvent(product.tracking_events, {
                 product_name: product.name,
                 product_id: product.id,
+            }, {
+                source_type: 'product',
+                source_id: product.id,
+                source_label: product.name,
             });
         } else {
-            // Fallback: evento padrão
+            // Fallback: evento padrão (já loga no Supabase internamente)
             analytics.trackAffiliateClick(product.name, product.id);
         }
 
@@ -55,7 +60,7 @@ export default function AffiliateProducts() {
             try {
                 const { data } = await supabase
                     .from('affiliate_products')
-                    .select('id, name, description, image_url, affiliate_url, badge, display_order, tracking_events(event_name, is_standard_meta, meta_params, ga4_params)')
+                    .select('id, name, description, image_url, affiliate_url, badge, display_order, tracking_events(id, event_name, is_standard_meta, meta_params, ga4_params)')
                     .eq('is_active', true)
                     .order('display_order', { ascending: true });
                 setProducts(data || []);
