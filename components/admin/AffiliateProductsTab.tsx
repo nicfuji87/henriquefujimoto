@@ -15,6 +15,7 @@ import {
     MousePointerClick,
     Edit,
     TrendingUp,
+    Activity,
 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 
@@ -28,6 +29,14 @@ interface AffiliateProduct {
     display_order: number;
     is_active: boolean;
     click_count: number;
+    tracking_event_id: string | null;
+}
+
+interface TrackingEvent {
+    id: string;
+    event_name: string;
+    description: string | null;
+    is_standard_meta: boolean;
 }
 
 export default function AffiliateProductsTab() {
@@ -45,14 +54,22 @@ export default function AffiliateProductsTab() {
     const [formAffiliateUrl, setFormAffiliateUrl] = useState('');
     const [formBadge, setFormBadge] = useState('');
     const [formOrder, setFormOrder] = useState(0);
+    const [formTrackingEventId, setFormTrackingEventId] = useState<string | null>(null);
     const [showAddForm, setShowAddForm] = useState(false);
+    const [trackingEvents, setTrackingEvents] = useState<TrackingEvent[]>([]);
 
     const fileInputRef = useRef<HTMLInputElement>(null);
     const editFileInputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
         fetchProducts();
+        fetchTrackingEvents();
     }, []);
+
+    async function fetchTrackingEvents() {
+        const { data } = await supabase.from('tracking_events').select('id, event_name, description, is_standard_meta').order('event_name');
+        setTrackingEvents(data || []);
+    }
 
     async function fetchProducts() {
         setLoading(true);
@@ -73,6 +90,7 @@ export default function AffiliateProductsTab() {
         setFormAffiliateUrl('');
         setFormBadge('');
         setFormOrder(0);
+        setFormTrackingEventId(null);
         setEditing(null);
         setShowAddForm(false);
     }
@@ -85,6 +103,7 @@ export default function AffiliateProductsTab() {
         setFormAffiliateUrl(product.affiliate_url);
         setFormBadge(product.badge || '');
         setFormOrder(product.display_order);
+        setFormTrackingEventId(product.tracking_event_id);
         setShowAddForm(false);
     }
 
@@ -140,6 +159,7 @@ export default function AffiliateProductsTab() {
             badge: formBadge.trim() || null,
             display_order: formOrder,
             is_active: true,
+            tracking_event_id: formTrackingEventId,
         });
         if (error) {
             console.error('Error saving product:', error);
@@ -163,6 +183,7 @@ export default function AffiliateProductsTab() {
                 affiliate_url: formAffiliateUrl.trim(),
                 badge: formBadge.trim() || null,
                 display_order: formOrder,
+                tracking_event_id: formTrackingEventId,
             })
             .eq('id', editing);
         if (!error) {
@@ -287,6 +308,26 @@ export default function AffiliateProductsTab() {
                         className="w-full bg-zinc-800/50 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-emerald-500/50"
                     />
                 </div>
+            </div>
+            {/* Tracking Event Selector */}
+            <div className="md:col-span-2">
+                <label className="block text-xs font-medium text-zinc-400 mb-1 flex items-center gap-1">
+                    <Activity className="w-3 h-3" />
+                    Evento de Tracking (Meta + GA4)
+                </label>
+                <select
+                    value={formTrackingEventId || ''}
+                    onChange={e => setFormTrackingEventId(e.target.value || null)}
+                    className="w-full bg-zinc-800/50 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-purple-500/50"
+                >
+                    <option value="">Padrão (Click_Affiliate_Product)</option>
+                    {trackingEvents.map(ev => (
+                        <option key={ev.id} value={ev.id}>
+                            {ev.event_name}{ev.description ? ` — ${ev.description}` : ''}
+                        </option>
+                    ))}
+                </select>
+                <p className="text-[10px] text-zinc-600 mt-1">Escolha o evento que será disparado ao clicar neste produto</p>
             </div>
         </div>
     );

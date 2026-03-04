@@ -23,6 +23,7 @@ import AffiliateProducts from '../components/AffiliateProducts';
 import { trackPageView } from '../lib/pageTracking';
 import { getAggregatedMetrics } from '../lib/metrics';
 import { supabase } from '../lib/supabase';
+import { analytics } from '../lib/analytics';
 
 interface Partner {
     id: string;
@@ -48,6 +49,13 @@ interface BlogPost {
     reading_time: number;
 }
 
+interface TrackingEventData {
+    event_name: string;
+    is_standard_meta: boolean;
+    meta_params: Record<string, any>;
+    ga4_params: Record<string, any>;
+}
+
 interface HomeCard {
     id: string;
     title: string;
@@ -56,6 +64,7 @@ interface HomeCard {
     teaser_text: string;
     display_order: number;
     is_visible: boolean;
+    tracking_events: TrackingEventData | null;
 }
 
 interface HubCardProps {
@@ -69,9 +78,10 @@ interface HubCardProps {
     teaser: React.ReactNode;
     delay?: number;
     ctaText?: string;
+    onCardClick?: () => void;
 }
 
-function HubCard({ to, icon, accentColor, bgGradient, title, subtitle, teaser, delay = 0, ctaText }: HubCardProps) {
+function HubCard({ to, icon, accentColor, bgGradient, title, subtitle, teaser, delay = 0, ctaText, onCardClick }: HubCardProps) {
     return (
         <motion.div
             initial={{ opacity: 0, y: 25 }}
@@ -81,6 +91,7 @@ function HubCard({ to, icon, accentColor, bgGradient, title, subtitle, teaser, d
         >
             <Link
                 to={to}
+                onClick={onCardClick}
                 className="group relative block bg-white/[0.03] backdrop-blur-sm border border-white/[0.06] rounded-2xl overflow-hidden hover:border-white/15 transition-all duration-500 hover:shadow-[0_0_40px_rgba(255,255,255,0.03)]"
             >
                 {/* Gradient overlay on hover */}
@@ -172,7 +183,7 @@ export default function HomePage() {
                     .limit(1),
                 supabase
                     .from('home_cards')
-                    .select('*')
+                    .select('*, tracking_events(event_name, is_standard_meta, meta_params, ga4_params)')
                     .eq('is_visible', true)
                     .order('display_order', { ascending: true }),
                 supabase
@@ -381,6 +392,7 @@ export default function HomePage() {
                         const config = CARD_CONFIG[cardId];
                         if (!config) return null;
                         const cardData = getCard(cardId);
+                        const dbCard = homeCards.find(c => c.id === cardId);
                         return (
                             <HubCard
                                 key={cardId}
@@ -393,6 +405,9 @@ export default function HomePage() {
                                 ctaText={cardData.cta_text}
                                 delay={0.05 + index * 0.05}
                                 teaser={renderTeaser(cardId, cardData)}
+                                onCardClick={dbCard?.tracking_events ? () => {
+                                    analytics.trackDynamicEvent(dbCard.tracking_events!, { card_id: cardId, card_title: cardData.title });
+                                } : undefined}
                             />
                         );
                     })}

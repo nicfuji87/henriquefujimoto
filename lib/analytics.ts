@@ -88,5 +88,38 @@ export const analytics = {
             product_id: productId,
             currency: 'BRL'
         });
+    },
+
+    /**
+     * Dispara um evento dinâmico vindo do banco de dados (tracking_events).
+     * Usa 'track' para eventos padrão Meta e 'trackCustom' para custom.
+     */
+    trackDynamicEvent: (event: {
+        event_name: string;
+        is_standard_meta: boolean;
+        meta_params?: Record<string, any>;
+        ga4_params?: Record<string, any>;
+    }, extraParams?: Record<string, any>) => {
+        const ga4Merged = { ...event.ga4_params, ...extraParams };
+        const metaMerged = { ...event.meta_params, ...extraParams };
+
+        // GA4
+        if (typeof window !== 'undefined') {
+            const win = window as any;
+            if (win.gtag) {
+                win.gtag('event', event.event_name, ga4Merged);
+            }
+            // Meta Pixel
+            if (win.fbq) {
+                if (event.is_standard_meta) {
+                    win.fbq('track', event.event_name, metaMerged);
+                } else {
+                    win.fbq('trackCustom', event.event_name, metaMerged);
+                }
+            }
+            if (process.env.NODE_ENV === 'development') {
+                console.log(`[Dynamic Event] ${event.event_name}`, { ga4Merged, metaMerged });
+            }
+        }
     }
 };

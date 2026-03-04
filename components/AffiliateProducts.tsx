@@ -4,6 +4,13 @@ import { ShoppingBag, ExternalLink, Star, Heart } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { analytics } from '../lib/analytics';
 
+interface TrackingEventData {
+    event_name: string;
+    is_standard_meta: boolean;
+    meta_params: Record<string, any>;
+    ga4_params: Record<string, any>;
+}
+
 interface AffiliateProduct {
     id: string;
     name: string;
@@ -12,12 +19,21 @@ interface AffiliateProduct {
     affiliate_url: string;
     badge: string | null;
     display_order: number;
+    tracking_events: TrackingEventData | null;
 }
 
 function trackClick(product: AffiliateProduct) {
     try {
-        // Disparo para o Meta Ads e GA4
-        analytics.trackAffiliateClick(product.name, product.id);
+        if (product.tracking_events) {
+            // Disparo dinâmico com evento personalizado
+            analytics.trackDynamicEvent(product.tracking_events, {
+                product_name: product.name,
+                product_id: product.id,
+            });
+        } else {
+            // Fallback: evento padrão
+            analytics.trackAffiliateClick(product.name, product.id);
+        }
 
         // Disparo interno no Supabase
         supabase.rpc('track_affiliate_click', {
@@ -39,7 +55,7 @@ export default function AffiliateProducts() {
             try {
                 const { data } = await supabase
                     .from('affiliate_products')
-                    .select('id, name, description, image_url, affiliate_url, badge, display_order')
+                    .select('id, name, description, image_url, affiliate_url, badge, display_order, tracking_events(event_name, is_standard_meta, meta_params, ga4_params)')
                     .eq('is_active', true)
                     .order('display_order', { ascending: true });
                 setProducts(data || []);

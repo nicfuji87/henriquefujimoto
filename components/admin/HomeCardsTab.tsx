@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Save, AlertCircle, CheckCircle2, GripVertical, Eye, EyeOff } from 'lucide-react';
+import { Save, AlertCircle, CheckCircle2, GripVertical, Eye, EyeOff, Activity } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 
 interface HomeCard {
@@ -10,6 +10,13 @@ interface HomeCard {
     teaser_text: string;
     display_order: number;
     is_visible: boolean;
+    tracking_event_id: string | null;
+}
+
+interface TrackingEvent {
+    id: string;
+    event_name: string;
+    description: string | null;
 }
 
 const CARD_LABELS: Record<string, { emoji: string; description: string }> = {
@@ -24,10 +31,17 @@ export default function HomeCardsTab() {
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+    const [trackingEvents, setTrackingEvents] = useState<TrackingEvent[]>([]);
 
     useEffect(() => {
         fetchCards();
+        fetchTrackingEvents();
     }, []);
+
+    async function fetchTrackingEvents() {
+        const { data } = await supabase.from('tracking_events').select('id, event_name, description').order('event_name');
+        setTrackingEvents(data || []);
+    }
 
     async function fetchCards() {
         try {
@@ -75,6 +89,7 @@ export default function HomeCardsTab() {
                         teaser_text: card.teaser_text,
                         display_order: card.display_order,
                         is_visible: card.is_visible,
+                        tracking_event_id: card.tracking_event_id,
                         updated_at: new Date().toISOString(),
                     })
                     .eq('id', card.id)
@@ -207,6 +222,26 @@ export default function HomeCardsTab() {
                                         placeholder="Texto descritivo curto..."
                                     />
                                 </div>
+                            </div>
+
+                            {/* Tracking Event Selector */}
+                            <div>
+                                <label className="block text-[10px] font-bold uppercase tracking-wider text-zinc-500 mb-1 flex items-center gap-1">
+                                    <Activity className="w-3 h-3" />
+                                    Evento de Tracking (Meta + GA4)
+                                </label>
+                                <select
+                                    value={card.tracking_event_id || ''}
+                                    onChange={e => updateCard(card.id, 'tracking_event_id' as keyof HomeCard, e.target.value || null as any)}
+                                    className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-purple-500 transition-colors"
+                                >
+                                    <option value="">Nenhum evento</option>
+                                    {trackingEvents.map(ev => (
+                                        <option key={ev.id} value={ev.id}>
+                                            {ev.event_name}{ev.description ? ` — ${ev.description}` : ''}
+                                        </option>
+                                    ))}
+                                </select>
                             </div>
                         </div>
                     );

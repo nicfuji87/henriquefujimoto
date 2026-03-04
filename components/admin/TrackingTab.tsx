@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
     Save, BarChart3, Globe, Code, Eye, AlertTriangle,
-    CheckCircle2, ExternalLink, Search, Share2
+    CheckCircle2, ExternalLink, Search, Share2,
+    Plus, Trash2, Zap, X, Activity
 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 
@@ -21,6 +22,23 @@ interface TrackingConfig {
     og_default_image: string;
 }
 
+interface TrackingEvent {
+    id: string;
+    event_name: string;
+    description: string | null;
+    is_standard_meta: boolean;
+    meta_params: Record<string, any>;
+    ga4_params: Record<string, any>;
+    created_at: string;
+}
+
+const META_STANDARD_EVENTS = [
+    'AddPaymentInfo', 'AddToCart', 'AddToWishlist', 'CompleteRegistration',
+    'Contact', 'CustomizeProduct', 'Donate', 'FindLocation', 'InitiateCheckout',
+    'Lead', 'Purchase', 'Schedule', 'Search', 'StartTrial', 'SubmitApplication',
+    'Subscribe', 'ViewContent'
+];
+
 function StatusBadge({ active }: { active: boolean }) {
     return (
         <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium ${active ? 'bg-emerald-500/20 text-emerald-400' : 'bg-zinc-700/30 text-zinc-500'
@@ -37,8 +55,18 @@ export default function TrackingTab() {
     const [saving, setSaving] = useState(false);
     const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
+    // Custom Events State
+    const [events, setEvents] = useState<TrackingEvent[]>([]);
+    const [showEventForm, setShowEventForm] = useState(false);
+    const [newEventName, setNewEventName] = useState('');
+    const [newEventDesc, setNewEventDesc] = useState('');
+    const [newEventIsStandard, setNewEventIsStandard] = useState(false);
+    const [newEventStandardName, setNewEventStandardName] = useState(META_STANDARD_EVENTS[0]);
+    const [savingEvent, setSavingEvent] = useState(false);
+
     useEffect(() => {
         fetchConfig();
+        fetchEvents();
     }, []);
 
     async function fetchConfig() {
@@ -95,6 +123,46 @@ export default function TrackingTab() {
 
     function updateField(field: keyof TrackingConfig, value: string) {
         setConfig(prev => prev ? { ...prev, [field]: value } : prev);
+    }
+
+    // ---- Custom Events Functions ----
+    async function fetchEvents() {
+        const { data } = await supabase
+            .from('tracking_events')
+            .select('*')
+            .order('created_at', { ascending: false });
+        setEvents(data || []);
+    }
+
+    async function handleAddEvent() {
+        const eventName = newEventIsStandard ? newEventStandardName : newEventName.trim();
+        if (!eventName) return;
+        setSavingEvent(true);
+        try {
+            const { error } = await supabase.from('tracking_events').insert({
+                event_name: eventName,
+                description: newEventDesc.trim() || null,
+                is_standard_meta: newEventIsStandard,
+                meta_params: {},
+                ga4_params: {},
+            });
+            if (error) throw error;
+            setNewEventName('');
+            setNewEventDesc('');
+            setNewEventIsStandard(false);
+            setShowEventForm(false);
+            fetchEvents();
+        } catch (err: any) {
+            setMessage({ type: 'error', text: err.message || 'Erro ao criar evento' });
+        } finally {
+            setSavingEvent(false);
+        }
+    }
+
+    async function handleDeleteEvent(id: string) {
+        if (!confirm('Excluir este evento? Produtos e cards associados perderão o vínculo.')) return;
+        await supabase.from('tracking_events').delete().eq('id', id);
+        fetchEvents();
     }
 
     if (loading) {
@@ -417,6 +485,128 @@ export default function TrackingTab() {
                         </p>
                     </div>
                 </div>
+            </motion.div>
+
+            {/* Custom Events Section */}
+            <motion.div
+                initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }}
+                className="bg-zinc-900/60 border border-zinc-800/50 rounded-2xl p-6 space-y-5"
+            >
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-purple-500/10 flex items-center justify-center">
+                            <Activity className="w-5 h-5 text-purple-400" />
+                        </div>
+                        <div>
+                            <h3 className="text-lg font-semibold text-white">Eventos Personalizados</h3>
+                            <p className="text-xs text-zinc-500">Crie eventos para rastrear cliques no Meta e GA4</p>
+                        </div>
+                    </div>
+                    <button
+                        onClick={() => setShowEventForm(!showEventForm)}
+                        className="flex items-center gap-1.5 px-3 py-1.5 bg-purple-500/20 text-purple-400 rounded-lg text-xs font-bold hover:bg-purple-500/30 transition-colors"
+                    >
+                        {showEventForm ? <X className="w-3 h-3" /> : <Plus className="w-3 h-3" />}
+                        {showEventForm ? 'Cancelar' : 'Novo Evento'}
+                    </button>
+                </div>
+
+                <AnimatePresence>
+                    {showEventForm && (
+                        <motion.div
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: 'auto' }}
+                            exit={{ opacity: 0, height: 0 }}
+                            className="overflow-hidden"
+                        >
+                            <div className="border border-purple-500/20 rounded-xl p-4 space-y-3 bg-purple-500/5">
+                                <div className="flex items-center gap-3">
+                                    <label className="flex items-center gap-2 text-xs text-zinc-400 cursor-pointer">
+                                        <input
+                                            type="checkbox"
+                                            checked={newEventIsStandard}
+                                            onChange={e => setNewEventIsStandard(e.target.checked)}
+                                            className="rounded border-zinc-600 bg-zinc-800"
+                                        />
+                                        Usar evento padrão do Meta
+                                    </label>
+                                </div>
+                                {newEventIsStandard ? (
+                                    <div>
+                                        <label className="block text-xs text-zinc-400 mb-1">Evento Padrão Meta</label>
+                                        <select
+                                            value={newEventStandardName}
+                                            onChange={e => setNewEventStandardName(e.target.value)}
+                                            className="w-full bg-zinc-800/50 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-purple-500"
+                                        >
+                                            {META_STANDARD_EVENTS.map(ev => (
+                                                <option key={ev} value={ev}>{ev}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                ) : (
+                                    <div>
+                                        <label className="block text-xs text-zinc-400 mb-1">Nome do Evento *</label>
+                                        <input
+                                            type="text"
+                                            value={newEventName}
+                                            onChange={e => setNewEventName(e.target.value)}
+                                            className="w-full bg-zinc-800/50 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-purple-500"
+                                            placeholder="Ex: Click_Kimono ou View_Support_Page"
+                                        />
+                                        <p className="text-[10px] text-zinc-600 mt-1">Sem espaços: use underscores. Ex: Click_Produto_X</p>
+                                    </div>
+                                )}
+                                <div>
+                                    <label className="block text-xs text-zinc-400 mb-1">Descrição (opcional)</label>
+                                    <input
+                                        type="text"
+                                        value={newEventDesc}
+                                        onChange={e => setNewEventDesc(e.target.value)}
+                                        className="w-full bg-zinc-800/50 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-purple-500"
+                                        placeholder="Descrição amigável para lembrar do propósito"
+                                    />
+                                </div>
+                                <button
+                                    onClick={handleAddEvent}
+                                    disabled={savingEvent}
+                                    className="flex items-center gap-2 px-4 py-2 bg-purple-500 text-white rounded-lg text-sm font-bold hover:bg-purple-600 transition-colors disabled:opacity-50"
+                                >
+                                    <Zap className="w-3 h-3" />
+                                    {savingEvent ? 'Criando...' : 'Criar Evento'}
+                                </button>
+                            </div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+
+                {/* Events List */}
+                {events.length === 0 ? (
+                    <p className="text-xs text-zinc-500 text-center py-4">Nenhum evento personalizado criado ainda.</p>
+                ) : (
+                    <div className="space-y-2">
+                        {events.map(ev => (
+                            <div key={ev.id} className="flex items-center justify-between bg-zinc-800/30 border border-zinc-700/50 rounded-xl px-4 py-3">
+                                <div className="flex items-center gap-3">
+                                    <Zap className={`w-4 h-4 flex-shrink-0 ${ev.is_standard_meta ? 'text-indigo-400' : 'text-purple-400'}`} />
+                                    <div>
+                                        <span className="text-sm font-semibold text-white">{ev.event_name}</span>
+                                        {ev.description && <p className="text-[10px] text-zinc-500">{ev.description}</p>}
+                                    </div>
+                                    <span className={`text-[9px] font-bold uppercase px-1.5 py-0.5 rounded ${ev.is_standard_meta ? 'bg-indigo-500/20 text-indigo-400' : 'bg-purple-500/20 text-purple-400'}`}>
+                                        {ev.is_standard_meta ? 'Padrão Meta' : 'Custom'}
+                                    </span>
+                                </div>
+                                <button
+                                    onClick={() => handleDeleteEvent(ev.id)}
+                                    className="p-1.5 text-zinc-500 hover:text-red-400 transition-colors"
+                                >
+                                    <Trash2 className="w-4 h-4" />
+                                </button>
+                            </div>
+                        ))}
+                    </div>
+                )}
             </motion.div>
 
             {/* Save button bottom */}
