@@ -51,7 +51,7 @@ Deno.serve(async (req: Request) => {
         const clientUserAgent = req.headers.get("user-agent") || "";
 
         // Build Meta CAPI payload
-        const metaEvents = events.map((ev) => {
+        const metaEvents = events.map((ev: any) => {
             const eventTime = ev.event_time || Math.floor(Date.now() / 1000);
 
             // Hash user data for Meta (they require SHA-256 hashing for PII)
@@ -74,16 +74,22 @@ Deno.serve(async (req: Request) => {
             };
         });
 
+        const fbPayload: any = {
+            data: metaEvents,
+            access_token: accessToken,
+        };
+
+        if (body.test_event_code) {
+            fbPayload.test_event_code = body.test_event_code;
+        }
+
         // Send to Meta Conversions API v21.0
         const metaUrl = `https://graph.facebook.com/v21.0/${pixelId}/events`;
 
         const metaResponse = await fetch(metaUrl, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                data: metaEvents,
-                access_token: accessToken,
-            }),
+            body: JSON.stringify(fbPayload),
         });
 
         const metaResult = await metaResponse.json();

@@ -45,7 +45,7 @@ function sendToCAPI(eventName: string, customData?: Record<string, any>) {
         const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
         if (!supabaseUrl) return;
 
-        const payload = {
+        const payload: any = {
             event_name: eventName,
             event_time: Math.floor(Date.now() / 1000),
             event_source_url: typeof window !== 'undefined' ? window.location.href : '',
@@ -57,6 +57,11 @@ function sendToCAPI(eventName: string, customData?: Record<string, any>) {
             },
             custom_data: customData || {},
         };
+
+        const testCode = import.meta.env.VITE_META_TEST_CODE;
+        if (testCode && process.env.NODE_ENV === 'development') {
+            payload.test_event_code = testCode;
+        }
 
         fetch(`${supabaseUrl}/functions/v1/meta-conversions`, {
             method: 'POST',
