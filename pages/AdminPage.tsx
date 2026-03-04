@@ -19,7 +19,7 @@ import {
     ExternalLink,
     Newspaper,
     Activity,
-    Clock, MapPin, ShoppingBag
+    Clock, MapPin, ShoppingBag, BarChart3
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { supabase, Post } from '../lib/supabase';
@@ -28,6 +28,7 @@ import TrackingTab from '../components/admin/TrackingTab';
 import JourneyTab from '../components/admin/JourneyTab';
 import HomeCardsTab from '../components/admin/HomeCardsTab';
 import AffiliateProductsTab from '../components/admin/AffiliateProductsTab';
+import EventLogsTab from '../components/admin/EventLogsTab';
 
 // Mock posts for development
 const mockPosts: Post[] = [
@@ -57,7 +58,7 @@ const mockPosts: Post[] = [
     },
 ];
 
-type Tab = 'dashboard' | 'blog' | 'posts' | 'bio' | 'home_cards' | 'products' | 'journey' | 'tracking' | 'settings';
+type Tab = 'dashboard' | 'blog' | 'posts' | 'bio' | 'home_cards' | 'products' | 'journey' | 'tracking' | 'event_logs' | 'settings';
 
 function Sidebar({
     activeTab,
@@ -79,6 +80,7 @@ function Sidebar({
         { id: 'products' as Tab, label: 'Produtos', icon: ShoppingBag },
         { id: 'journey' as Tab, label: 'Jornada', icon: MapPin },
         { id: 'tracking' as Tab, label: 'Tracking & SEO', icon: Activity },
+        { id: 'event_logs' as Tab, label: 'Eventos', icon: BarChart3 },
         { id: 'settings' as Tab, label: 'Configurações', icon: Settings },
     ];
 
@@ -2122,6 +2124,7 @@ export default function AdminPage() {
                             {activeTab === 'products' && <AffiliateProductsTab />}
                             {activeTab === 'journey' && <JourneyTab />}
                             {activeTab === 'tracking' && <TrackingTab />}
+                            {activeTab === 'event_logs' && <EventLogsTab />}
                             {activeTab === 'settings' && <SettingsTab />}
                         </motion.div>
                     </AnimatePresence>
