@@ -15,19 +15,18 @@ interface EventLogOptions {
 }
 
 function logEventToSupabase(eventName: string, opts: EventLogOptions) {
-    try {
-        supabase.from('tracking_event_logs').insert({
-            tracking_event_id: opts.tracking_event_id || null,
-            event_name: eventName,
-            source_type: opts.source_type,
-            source_id: opts.source_id || null,
-            source_label: opts.source_label || null,
-            referrer: typeof document !== 'undefined' ? document.referrer || null : null,
-            user_agent: typeof navigator !== 'undefined' ? navigator.userAgent || null : null,
-        }).then(() => { });
-    } catch (_) {
-        // fire-and-forget
-    }
+    supabase.from('tracking_event_logs').insert({
+        tracking_event_id: opts.tracking_event_id || null,
+        event_name: eventName,
+        source_type: opts.source_type,
+        source_id: opts.source_id || null,
+        source_label: opts.source_label || null,
+        referrer: typeof document !== 'undefined' ? document.referrer || null : null,
+        user_agent: typeof navigator !== 'undefined' ? navigator.userAgent || null : null,
+    }).then(({ error }) => {
+        if (error) console.error('[EventLog] insert error:', error.message);
+        else if (process.env.NODE_ENV === 'development') console.log('[EventLog] saved:', eventName);
+    });
 }
 
 /**
