@@ -26,6 +26,19 @@ import AppTrainingDetails from './pages/app/AppTrainingDetails';
 import PsicoLogin from './pages/app/PsicoLogin';
 import PsicoDashboard from './pages/app/PsicoDashboard';
 
+// Gym Module
+import GymLayout from './components/gym/GymLayout';
+import GymLogin from './pages/gym/GymLogin';
+import GymOnboarding from './pages/gym/GymOnboarding';
+import GymRegister from './pages/gym/GymRegister';
+import GymSchedule from './pages/gym/GymSchedule';
+import GymCompetitions from './pages/gym/GymCompetitions';
+import GymHome from './pages/gym/GymHome';
+import GymCheckin from './pages/gym/GymCheckin';
+import GymWorkout from './pages/gym/GymWorkout';
+import GymWorkoutDone from './pages/gym/GymWorkoutDone';
+import GymProfile from './pages/gym/GymProfile';
+
 function AppRoutes() {
   // Centralized tracking hook inside Router context
   useTracking();
@@ -56,9 +69,23 @@ function AppRoutes() {
         <Route path="/app/training/:id" element={<AppTrainingDetails />} />
       </Route>
 
-      {/* Psico Routes (outside AppLayout - no wizard context needed) */}
+      {/* Psico Routes */}
       <Route path="/app/psico/login" element={<PsicoLogin />} />
       <Route path="/app/psico" element={<PsicoDashboard />} />
+
+      {/* Gym Module Routes */}
+      <Route element={<GymLayout />}>
+        <Route path="/gym/login" element={<GymLogin />} />
+        <Route path="/gym/onboarding" element={<GymOnboarding />} />
+        <Route path="/gym/register" element={<GymRegister />} />
+        <Route path="/gym/schedule" element={<GymSchedule />} />
+        <Route path="/gym/competitions" element={<GymCompetitions />} />
+        <Route path="/gym" element={<GymHome />} />
+        <Route path="/gym/checkin" element={<GymCheckin />} />
+        <Route path="/gym/workout" element={<GymWorkout />} />
+        <Route path="/gym/workout-done" element={<GymWorkoutDone />} />
+        <Route path="/gym/profile" element={<GymProfile />} />
+      </Route>
     </Routes>
   );
 }
