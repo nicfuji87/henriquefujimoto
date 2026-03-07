@@ -113,6 +113,7 @@ export interface GymWorkout {
     acwr?: number;
     readiness_score?: number;
     athlete_load_score?: number;
+    grip_protocol?: GymGripProtocol;
     created_at?: string;
     completed_at?: string;
 }
@@ -139,6 +140,22 @@ export interface GymPostAnalysis {
     load_assessment: 'adequate' | 'high' | 'low';
     progression_suggestions: { exercise_name: string; suggestion: 'progress' | 'maintain' | 'regress'; reason: string }[];
 }
+
+export interface GymGripExercise {
+    name: string;
+    sets: number;
+    hold_time_seconds: number;
+    rest_seconds: number;
+    notes?: string;
+}
+
+export interface GymGripProtocol {
+    level: 'light' | 'standard' | 'competitive' | 'skip';
+    justification?: string;
+    estimated_time_seconds?: number;
+    exercises: GymGripExercise[];
+}
+
 
 export interface GymAIPrompt {
     id: string;

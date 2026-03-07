@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { gymApi } from '../../lib/api-gym';
-import type { GymWorkout as GymWorkoutType, GymWorkoutExercise } from '../../lib/api-gym';
+import type { GymWorkout as GymWorkoutType, GymWorkoutExercise, GymGripProtocol } from '../../lib/api-gym';
 
 export default function GymWorkout() {
     const navigate = useNavigate();
@@ -11,8 +11,11 @@ export default function GymWorkout() {
     const [error, setError] = useState('');
     const [completedExercises, setCompletedExercises] = useState<Set<number>>(new Set());
     const [showJustification, setShowJustification] = useState(false);
+    const [gripTimer, setGripTimer] = useState<{ name: string; seconds: number; running: boolean } | null>(null);
+    const gripTimerRef = useRef<any>(null);
 
     useEffect(() => { loadWorkout(); }, []);
+    useEffect(() => () => { if (gripTimerRef.current) clearInterval(gripTimerRef.current); }, []);
 
     const loadWorkout = async () => {
         try {
@@ -64,12 +67,41 @@ export default function GymWorkout() {
 
     const exercises = (workout?.exercises as GymWorkoutExercise[]) || [];
     const allDone = exercises.length > 0 && completedExercises.size === exercises.length;
+    const gripProtocol = workout?.grip_protocol as GymGripProtocol | undefined;
+    const showGrip = gripProtocol && gripProtocol.level !== 'skip' && gripProtocol.exercises?.length > 0;
 
     const handleFinish = () => {
         // Save completed state to exercises
         const updatedExercises = exercises.map((e, i) => ({ ...e, completed: completedExercises.has(i) }));
         // Navigate to workout-done with workout id
         navigate('/gym/workout-done', { state: { workoutId: workout?.id, exercises: updatedExercises } });
+    };
+
+    const startGripTimer = useCallback((name: string, seconds: number) => {
+        if (gripTimerRef.current) clearInterval(gripTimerRef.current);
+        setGripTimer({ name, seconds, running: true });
+        gripTimerRef.current = setInterval(() => {
+            setGripTimer(prev => {
+                if (!prev || prev.seconds <= 1) {
+                    clearInterval(gripTimerRef.current);
+                    return prev ? { ...prev, seconds: 0, running: false } : null;
+                }
+                return { ...prev, seconds: prev.seconds - 1 };
+            });
+        }, 1000);
+    }, []);
+
+    const stopGripTimer = useCallback(() => {
+        if (gripTimerRef.current) clearInterval(gripTimerRef.current);
+        setGripTimer(null);
+    }, []);
+
+    const formatTimer = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+
+    const gripLevelLabels: Record<string, { label: string; color: string }> = {
+        light: { label: 'Leve', color: 'bg-yellow-500/20 text-yellow-400' },
+        standard: { label: 'Padrão', color: 'bg-blue-500/20 text-blue-400' },
+        competitive: { label: 'Competitivo', color: 'bg-red-500/20 text-red-400' },
     };
 
     if (loading || generating) {
@@ -174,7 +206,15 @@ export default function GymWorkout() {
                                         <div className="flex flex-wrap items-center gap-3 mt-2">
                                             <span className="text-xs text-gym-primary font-semibold">{ex.sets} séries × {ex.reps}</span>
                                             <span className="text-xs text-gym-muted">⏱ {ex.rest_seconds}s descanso</span>
+                                            {ex.tempo && <span className="text-xs text-gym-muted">🎯 {ex.tempo}</span>}
                                         </div>
+                                        {ex.technical_cues && ex.technical_cues.length > 0 && (
+                                            <div className="mt-2 flex flex-wrap gap-1">
+                                                {ex.technical_cues.map((cue, ci) => (
+                                                    <span key={ci} className="text-[10px] bg-gym-primary/10 text-gym-primary px-2 py-0.5 rounded-full">💡 {cue}</span>
+                                                ))}
+                                            </div>
+                                        )}
                                         {ex.notes && (
                                             <p className="text-xs text-gym-muted mt-2 bg-gym-surface-light/50 rounded-lg px-3 py-2">
                                                 💡 {ex.notes}
@@ -186,6 +226,63 @@ export default function GymWorkout() {
                         </div>
                     );
                 })}
+
+                {/* Grip Protocol Section */}
+                {showGrip && (
+                    <div className="mt-6">
+                        <div className="flex items-center gap-2 mb-3">
+                            <span className="text-lg">🤜</span>
+                            <h2 className="text-sm font-bold text-white uppercase tracking-wider">Protocolo de Grip</h2>
+                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold ml-auto ${gripLevelLabels[gripProtocol!.level]?.color || ''}`}>
+                                {gripLevelLabels[gripProtocol!.level]?.label || gripProtocol!.level}
+                            </span>
+                        </div>
+                        {gripProtocol!.justification && (
+                            <p className="text-xs text-gym-muted mb-3 leading-relaxed">{gripProtocol!.justification}</p>
+                        )}
+
+                        {/* Grip Timer */}
+                        {gripTimer && (
+                            <div className="bg-gradient-to-br from-yellow-600/20 to-orange-600/10 rounded-xl border border-yellow-500/30 p-4 mb-3 text-center">
+                                <p className="text-xs text-gym-muted mb-1">{gripTimer.name}</p>
+                                <div className="text-4xl font-bold text-white font-mono mb-3">{formatTimer(gripTimer.seconds)}</div>
+                                {gripTimer.running ? (
+                                    <button onClick={stopGripTimer} className="px-5 py-1.5 bg-gym-danger/20 text-gym-danger rounded-lg font-bold text-xs">Parar</button>
+                                ) : (
+                                    <div className="flex gap-2 justify-center">
+                                        <span className="text-gym-accent text-sm font-bold">✓ Feito!</span>
+                                        <button onClick={stopGripTimer} className="text-xs text-gym-muted">Fechar</button>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        <div className="space-y-2">
+                            {gripProtocol!.exercises.map((g, i) => (
+                                <div key={i} className="bg-gym-surface rounded-xl border border-yellow-500/10 p-4 flex items-center gap-3">
+                                    <div className="flex-1">
+                                        <h3 className="font-bold text-white text-sm">{g.name}</h3>
+                                        <div className="flex items-center gap-3 mt-1 text-xs text-gym-muted">
+                                            <span>{g.sets} séries</span>
+                                            <span>⏱ {g.hold_time_seconds}s</span>
+                                            <span>💤 {g.rest_seconds}s</span>
+                                        </div>
+                                        {g.notes && <p className="text-xs text-gym-muted/70 mt-1">{g.notes}</p>}
+                                    </div>
+                                    <button onClick={() => startGripTimer(g.name, g.hold_time_seconds)}
+                                        className="w-9 h-9 bg-yellow-500/20 rounded-full flex items-center justify-center shrink-0">
+                                        <span className="material-symbols-outlined text-yellow-400 text-lg">timer</span>
+                                    </button>
+                                </div>
+                            ))}
+                        </div>
+                        {gripProtocol!.estimated_time_seconds && (
+                            <p className="text-[10px] text-gym-muted mt-2 text-center">
+                                Tempo estimado: ~{Math.ceil(gripProtocol!.estimated_time_seconds / 60)} min
+                            </p>
+                        )}
+                    </div>
+                )}
             </div>
 
             {/* Bottom CTA */}
