@@ -115,7 +115,7 @@ export default function GymCompetitions() {
 
             {/* Modal */}
             {showModal && (
-                <div className="fixed inset-0 bg-black/60 z-50 flex items-end justify-center" onClick={() => setShowModal(false)}>
+                <div className="fixed inset-0 bg-black/60 z-[100] flex items-end justify-center" onClick={() => setShowModal(false)}>
                     <div className="bg-gym-surface w-full max-w-md rounded-t-2xl p-6 pb-8 space-y-4 max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
                         <h3 className="text-lg font-bold text-white">Adicionar Competição</h3>
                         <div>
