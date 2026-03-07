@@ -103,7 +103,7 @@ export default function GymSchedule() {
             {/* Add/Edit Modal */}
             {showModal && (
                 <div className="fixed inset-0 bg-black/60 z-50 flex items-end justify-center" onClick={() => setShowModal(false)}>
-                    <div className="bg-gym-surface w-full max-w-md rounded-t-2xl p-6 space-y-5" onClick={e => e.stopPropagation()}>
+                    <div className="bg-gym-surface w-full max-w-md rounded-t-2xl p-6 pb-8 space-y-5 max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
                         <h3 className="text-lg font-bold text-white">Adicionar Treino</h3>
                         <p className="text-sm text-gym-muted">{dayNames[editEntry.day_of_week || 0]}</p>
 
