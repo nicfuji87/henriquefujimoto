@@ -70,11 +70,18 @@ export interface GymExercise {
 export interface GymWorkoutExercise {
     exercise_id: string;
     exercise_name: string;
+    block_type?: 'warmup' | 'main' | 'accessory' | 'cooldown';
     sets: number;
     reps: string;
     rest_seconds: number;
+    tempo?: string;
+    technical_cues?: string[];
+    common_errors?: string[];
+    regression_option?: string;
+    progression_option?: string;
     notes?: string;
     completed?: boolean;
+    category?: string;
 }
 
 export interface GymWorkout {
@@ -85,10 +92,13 @@ export interface GymWorkout {
     duration_minutes?: number;
     intensity?: 'low' | 'moderate' | 'high';
     atr_phase?: 'accumulation' | 'transmutation' | 'realization';
+    session_type?: 'complete' | 'standard' | 'light' | 'regenerative' | 'short_activation';
+    focus_tags?: string[];
     ai_justification?: string;
     ai_detailed_justification?: string;
     exercises?: GymWorkoutExercise[];
     checkin_id?: string;
+    plan_id?: string;
     status?: 'pending' | 'completed' | 'skipped';
     rpe?: number;
     post_workout_pain?: boolean;
@@ -97,9 +107,37 @@ export interface GymWorkout {
     easiest_exercise?: string;
     ai_model?: string;
     ai_prompt_id?: string;
-    ai_post_analysis?: any;
+    ai_post_analysis?: GymPostAnalysis;
+    acute_load?: number;
+    chronic_load?: number;
+    acwr?: number;
+    readiness_score?: number;
+    athlete_load_score?: number;
     created_at?: string;
     completed_at?: string;
+}
+
+export interface GymTrainingPlan {
+    id?: string;
+    name: string;
+    competition_id?: string;
+    start_date: string;
+    end_date?: string;
+    phase?: 'accumulation' | 'transmutation' | 'realization';
+    objective?: string;
+    focus_tags?: string[];
+    notes?: string;
+    is_active?: boolean;
+    created_at?: string;
+    updated_at?: string;
+}
+
+export interface GymPostAnalysis {
+    summary: string;
+    insights: string[];
+    recommendations: string[];
+    load_assessment: 'adequate' | 'high' | 'low';
+    progression_suggestions: { exercise_name: string; suggestion: 'progress' | 'maintain' | 'regress'; reason: string }[];
 }
 
 export interface GymAIPrompt {
@@ -334,6 +372,15 @@ export const gymApi = {
         return (data || []) as GymWorkout[];
     },
 
+    getAllWorkouts: async (): Promise<GymWorkout[]> => {
+        const { data, error } = await supabase
+            .from('gym_workouts')
+            .select('*')
+            .order('date', { ascending: false });
+        if (error) return [];
+        return (data || []) as GymWorkout[];
+    },
+
     completeWorkout: async (workoutId: string, feedback: Partial<GymWorkout>) => {
         const { error } = await supabase
             .from('gym_workouts')
@@ -343,6 +390,45 @@ export const gymApi = {
                 completed_at: new Date().toISOString(),
             })
             .eq('id', workoutId);
+        if (error) throw error;
+    },
+
+    // ---------- Training Plans ----------
+    getTrainingPlans: async (): Promise<GymTrainingPlan[]> => {
+        const { data, error } = await supabase
+            .from('gym_training_plans')
+            .select('*')
+            .order('start_date', { ascending: false });
+        if (error) return [];
+        return (data || []) as GymTrainingPlan[];
+    },
+
+    getActivePlan: async (): Promise<GymTrainingPlan | null> => {
+        const today = new Date().toISOString().slice(0, 10);
+        const { data, error } = await supabase
+            .from('gym_training_plans')
+            .select('*')
+            .eq('is_active', true)
+            .lte('start_date', today)
+            .order('start_date', { ascending: false })
+            .limit(1);
+        if (error) return null;
+        return data && data.length > 0 ? (data[0] as GymTrainingPlan) : null;
+    },
+
+    saveTrainingPlan: async (plan: Partial<GymTrainingPlan>) => {
+        if (plan.id) {
+            const { error } = await supabase.from('gym_training_plans').update({ ...plan, updated_at: new Date().toISOString() }).eq('id', plan.id);
+            if (error) throw error;
+        } else {
+            const { id: _id, ...toInsert } = plan;
+            const { error } = await supabase.from('gym_training_plans').insert([toInsert]);
+            if (error) throw error;
+        }
+    },
+
+    deleteTrainingPlan: async (id: string) => {
+        const { error } = await supabase.from('gym_training_plans').delete().eq('id', id);
         if (error) throw error;
     },
 
@@ -360,7 +446,7 @@ export const gymApi = {
     },
 
     // ---------- Generate Workout (calls edge function) ----------
-    generateWorkout: async (checkinId: string): Promise<GymWorkout> => {
+    generateWorkout: async (checkinId: string, planId?: string): Promise<GymWorkout> => {
         const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
         const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
         const res = await fetch(`${supabaseUrl}/functions/v1/gym-generate-workout`, {
@@ -369,13 +455,32 @@ export const gymApi = {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${supabaseKey}`,
             },
-            body: JSON.stringify({ checkin_id: checkinId }),
+            body: JSON.stringify({ checkin_id: checkinId, plan_id: planId }),
         });
         if (!res.ok) {
             const errText = await res.text();
             throw new Error(`Failed to generate workout: ${errText}`);
         }
         return await res.json() as GymWorkout;
+    },
+
+    // ---------- Post-workout AI Analysis ----------
+    analyzeWorkout: async (workoutId: string): Promise<GymPostAnalysis> => {
+        const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+        const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+        const res = await fetch(`${supabaseUrl}/functions/v1/gym-post-workout-analysis`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${supabaseKey}`,
+            },
+            body: JSON.stringify({ workout_id: workoutId }),
+        });
+        if (!res.ok) {
+            const errText = await res.text();
+            throw new Error(`Failed to analyze workout: ${errText}`);
+        }
+        return await res.json() as GymPostAnalysis;
     },
 
     // ---------- Load calculations ----------

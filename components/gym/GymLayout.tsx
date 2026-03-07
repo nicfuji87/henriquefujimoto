@@ -20,6 +20,8 @@ export default function GymLayout() {
         '/gym/checkin',
         '/gym/workout',
         '/gym/workout-done',
+        '/gym/phase',
+        '/gym/grip',
     ];
 
     const showNav = isAuth && !hideNavPaths.some(p => location.pathname.startsWith(p));
@@ -43,7 +45,7 @@ export default function GymLayout() {
 
                 {/* Bottom Navigation */}
                 {showNav && (
-                    <nav className="fixed bottom-0 w-full max-w-md bg-gym-surface border-t border-gym-surface-light px-4 pb-6 pt-2 z-50">
+                    <nav className="fixed bottom-0 w-full max-w-md bg-gym-surface border-t border-gym-surface-light px-2 pb-6 pt-2 z-50">
                         <div className="flex justify-between items-center">
                             <NavItem
                                 icon="today"
@@ -52,16 +54,22 @@ export default function GymLayout() {
                                 onClick={() => navigate('/gym')}
                             />
                             <NavItem
-                                icon="calendar_month"
-                                label="Agenda"
-                                active={location.pathname === '/gym/schedule'}
-                                onClick={() => navigate('/gym/schedule')}
+                                icon="fitness_center"
+                                label="Treinos"
+                                active={location.pathname === '/gym/history'}
+                                onClick={() => navigate('/gym/history')}
                             />
                             <NavItem
-                                icon="emoji_events"
-                                label="Compet."
-                                active={location.pathname === '/gym/competitions'}
-                                onClick={() => navigate('/gym/competitions')}
+                                icon="calendar_month"
+                                label="Calendário"
+                                active={location.pathname === '/gym/calendar'}
+                                onClick={() => navigate('/gym/calendar')}
+                            />
+                            <NavItem
+                                icon="analytics"
+                                label="Analytics"
+                                active={location.pathname === '/gym/analytics'}
+                                onClick={() => navigate('/gym/analytics')}
                             />
                             <NavItem
                                 icon="person"

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { gymApi } from '../../lib/api-gym';
+import type { GymPostAnalysis } from '../../lib/api-gym';
 
 export default function GymWorkoutDone() {
     const navigate = useNavigate();
@@ -14,6 +15,8 @@ export default function GymWorkoutDone() {
     const [notes, setNotes] = useState('');
     const [saving, setSaving] = useState(false);
     const [done, setDone] = useState(false);
+    const [analyzing, setAnalyzing] = useState(false);
+    const [analysis, setAnalysis] = useState<GymPostAnalysis | null>(null);
 
     const exerciseNames = (exercises || []).map((e: any) => e.exercise_name);
 
@@ -30,6 +33,13 @@ export default function GymWorkoutDone() {
                 exercises, // save with completed flags
             });
             setDone(true);
+            // Trigger AI analysis in background
+            setAnalyzing(true);
+            try {
+                const result = await gymApi.analyzeWorkout(workoutId);
+                setAnalysis(result);
+            } catch { /* Analysis is optional */ }
+            setAnalyzing(false);
         } catch (err) {
             console.error(err);
             alert('Erro ao salvar');
@@ -39,18 +49,88 @@ export default function GymWorkoutDone() {
     };
 
     if (done) {
+        const loadColors = { adequate: 'text-gym-accent', high: 'text-gym-danger', low: 'text-gym-warning' };
+        const progIcons = { progress: '↑', maintain: '→', regress: '↓' };
+        const progColors = { progress: 'text-gym-accent', maintain: 'text-gym-primary', regress: 'text-gym-warning' };
         return (
-            <div className="bg-gym-bg min-h-screen flex flex-col items-center justify-center font-app-display text-gym-text px-6">
-                <div className="w-20 h-20 bg-gym-accent/20 rounded-full flex items-center justify-center mb-6">
-                    <span className="material-symbols-outlined text-5xl text-gym-accent" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
+            <div className="bg-gym-bg min-h-screen flex flex-col font-app-display text-gym-text px-6 py-8">
+                <div className="flex flex-col items-center mb-6">
+                    <div className="w-20 h-20 bg-gym-accent/20 rounded-full flex items-center justify-center mb-4">
+                        <span className="material-symbols-outlined text-5xl text-gym-accent" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
+                    </div>
+                    <h1 className="text-2xl font-bold text-white mb-1">Treino Concluído! 🎉</h1>
+                    <p className="text-gym-muted text-sm text-center">Cada sessão conta na sua evolução.</p>
+                    <p className="text-gym-muted/60 text-xs mt-1">RPE: {rpe}/10 · Carga registrada</p>
                 </div>
-                <h1 className="text-2xl font-bold text-white mb-2">Treino Concluído! 🎉</h1>
-                <p className="text-gym-muted text-sm text-center mb-2">
-                    Parabéns, Henrique! Cada sessão conta na sua evolução.
-                </p>
-                <p className="text-gym-muted/60 text-xs mb-8">RPE: {rpe}/10 · Carga registrada</p>
+
+                {/* AI Analysis */}
+                {analyzing && (
+                    <div className="bg-gym-surface rounded-xl border border-gym-surface-light p-4 mb-4 flex items-center gap-3">
+                        <div className="w-5 h-5 border-2 border-gym-primary border-t-transparent rounded-full animate-spin" />
+                        <p className="text-sm text-gym-muted">Analisando seu treino com IA...</p>
+                    </div>
+                )}
+
+                {analysis && (
+                    <div className="space-y-3 mb-6">
+                        <div className="bg-gym-primary/10 rounded-xl border border-gym-primary/20 p-4">
+                            <div className="flex items-center gap-2 mb-2">
+                                <span className="material-symbols-outlined text-gym-primary text-sm">auto_awesome</span>
+                                <p className="text-xs font-bold text-gym-primary uppercase tracking-wider">Análise IA</p>
+                                <span className={`ml-auto text-xs font-bold ${loadColors[analysis.load_assessment] || ''}`}>
+                                    Carga: {analysis.load_assessment === 'adequate' ? 'Adequada' : analysis.load_assessment === 'high' ? 'Alta' : 'Baixa'}
+                                </span>
+                            </div>
+                            <p className="text-sm text-gym-text leading-relaxed">{analysis.summary}</p>
+                        </div>
+
+                        {analysis.insights.length > 0 && (
+                            <div className="bg-gym-surface rounded-xl border border-gym-surface-light p-4">
+                                <p className="text-xs font-bold text-gym-muted mb-2 uppercase tracking-wider">Insights</p>
+                                <div className="space-y-2">
+                                    {analysis.insights.map((ins, i) => (
+                                        <div key={i} className="flex items-start gap-2">
+                                            <span className="material-symbols-outlined text-gym-primary text-sm mt-0.5">lightbulb</span>
+                                            <p className="text-xs text-gym-text">{ins}</p>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {analysis.recommendations.length > 0 && (
+                            <div className="bg-gym-surface rounded-xl border border-gym-surface-light p-4">
+                                <p className="text-xs font-bold text-gym-muted mb-2 uppercase tracking-wider">Recomendações</p>
+                                <div className="space-y-2">
+                                    {analysis.recommendations.map((rec, i) => (
+                                        <div key={i} className="flex items-start gap-2">
+                                            <span className="material-symbols-outlined text-gym-accent text-sm mt-0.5">check</span>
+                                            <p className="text-xs text-gym-text">{rec}</p>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {analysis.progression_suggestions.length > 0 && (
+                            <div className="bg-gym-surface rounded-xl border border-gym-surface-light p-4">
+                                <p className="text-xs font-bold text-gym-muted mb-2 uppercase tracking-wider">Progressão</p>
+                                <div className="space-y-2">
+                                    {analysis.progression_suggestions.map((p, i) => (
+                                        <div key={i} className="flex items-center gap-2">
+                                            <span className={`text-sm font-bold ${progColors[p.suggestion] || ''}`}>{progIcons[p.suggestion] || ''}</span>
+                                            <span className="text-xs text-white font-bold">{p.exercise_name}</span>
+                                            <span className="text-xs text-gym-muted flex-1">— {p.reason}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                )}
+
                 <button onClick={() => navigate('/gym', { replace: true })}
-                    className="bg-gradient-to-r from-gym-primary to-blue-500 text-white font-bold py-3 px-8 rounded-xl shadow-lg shadow-gym-primary/30 transition-all active:scale-95">
+                    className="w-full bg-gradient-to-r from-gym-primary to-blue-500 text-white font-bold py-3 rounded-xl shadow-lg shadow-gym-primary/30 transition-all active:scale-95">
                     Voltar ao Início
                 </button>
             </div>

@@ -38,6 +38,11 @@ import GymCheckin from './pages/gym/GymCheckin';
 import GymWorkout from './pages/gym/GymWorkout';
 import GymWorkoutDone from './pages/gym/GymWorkoutDone';
 import GymProfile from './pages/gym/GymProfile';
+import GymHistory from './pages/gym/GymHistory';
+import GymAnalytics from './pages/gym/GymAnalytics';
+import GymCalendar from './pages/gym/GymCalendar';
+import GymPhase from './pages/gym/GymPhase';
+import GymGrip from './pages/gym/GymGrip';
 
 function AppRoutes() {
   // Centralized tracking hook inside Router context
@@ -85,6 +90,11 @@ function AppRoutes() {
         <Route path="/gym/workout" element={<GymWorkout />} />
         <Route path="/gym/workout-done" element={<GymWorkoutDone />} />
         <Route path="/gym/profile" element={<GymProfile />} />
+        <Route path="/gym/history" element={<GymHistory />} />
+        <Route path="/gym/analytics" element={<GymAnalytics />} />
+        <Route path="/gym/calendar" element={<GymCalendar />} />
+        <Route path="/gym/phase" element={<GymPhase />} />
+        <Route path="/gym/grip" element={<GymGrip />} />
       </Route>
     </Routes>
   );

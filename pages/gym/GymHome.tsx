@@ -212,35 +212,44 @@ export default function GymHome() {
                     </div>
                 )}
 
-                {/* Block 4: ATR PHASE */}
+                {/* Block 4: ATR PHASE (clickable) */}
                 {phase && (
-                    <div className="bg-gym-surface rounded-xl border border-gym-surface-light p-4">
+                    <button onClick={() => navigate('/gym/phase')} className="w-full text-left bg-gym-surface rounded-xl border border-gym-surface-light p-4 hover:border-gym-primary/50 transition-colors">
                         <div className="flex items-center gap-3">
                             <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${phase.color}`}>
                                 <span className="material-symbols-outlined text-lg">{phase.icon}</span>
                             </div>
-                            <div>
+                            <div className="flex-1">
                                 <p className="text-xs text-gym-muted">Fase de Preparação</p>
                                 <p className="font-bold text-white">{phase.label}</p>
                                 <p className="text-xs text-gym-muted">{phase.desc}</p>
                             </div>
+                            <span className="material-symbols-outlined text-gym-muted text-sm">chevron_right</span>
                         </div>
-                    </div>
+                    </button>
                 )}
 
                 {/* Quick Actions */}
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-4 gap-2">
                     <button onClick={() => navigate('/gym/checkin')}
-                        className="bg-gym-surface rounded-xl border border-gym-surface-light p-4 text-left hover:border-gym-primary/50 transition-colors active:scale-95">
-                        <span className="material-symbols-outlined text-gym-accent mb-2 block">mood</span>
-                        <p className="font-semibold text-white text-sm">Check-in</p>
-                        <p className="text-[10px] text-gym-muted">Como você está hoje?</p>
+                        className="bg-gym-surface rounded-xl border border-gym-surface-light p-3 text-center hover:border-gym-primary/50 transition-colors active:scale-95">
+                        <span className="material-symbols-outlined text-gym-accent mb-1 block text-xl">mood</span>
+                        <p className="font-semibold text-white text-[10px]">Check-in</p>
                     </button>
-                    <button onClick={() => navigate('/gym/schedule')}
-                        className="bg-gym-surface rounded-xl border border-gym-surface-light p-4 text-left hover:border-gym-primary/50 transition-colors active:scale-95">
-                        <span className="material-symbols-outlined text-gym-primary mb-2 block">calendar_month</span>
-                        <p className="font-semibold text-white text-sm">Agenda</p>
-                        <p className="text-[10px] text-gym-muted">Sua rotina semanal</p>
+                    <button onClick={() => navigate('/gym/calendar')}
+                        className="bg-gym-surface rounded-xl border border-gym-surface-light p-3 text-center hover:border-gym-primary/50 transition-colors active:scale-95">
+                        <span className="material-symbols-outlined text-gym-primary mb-1 block text-xl">calendar_month</span>
+                        <p className="font-semibold text-white text-[10px]">Calendário</p>
+                    </button>
+                    <button onClick={() => navigate('/gym/phase')}
+                        className="bg-gym-surface rounded-xl border border-gym-surface-light p-3 text-center hover:border-gym-primary/50 transition-colors active:scale-95">
+                        <span className="material-symbols-outlined text-purple-400 mb-1 block text-xl">timeline</span>
+                        <p className="font-semibold text-white text-[10px]">Fase ATR</p>
+                    </button>
+                    <button onClick={() => navigate('/gym/grip')}
+                        className="bg-gym-surface rounded-xl border border-gym-surface-light p-3 text-center hover:border-gym-primary/50 transition-colors active:scale-95">
+                        <span className="material-symbols-outlined text-yellow-400 mb-1 block text-xl">front_hand</span>
+                        <p className="font-semibold text-white text-[10px]">Grip</p>
                     </button>
                 </div>
             </main>
