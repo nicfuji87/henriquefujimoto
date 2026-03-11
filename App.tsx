@@ -7,6 +7,7 @@ import ConteudoPage from './pages/ConteudoPage';
 import BlogPage from './pages/BlogPage';
 import BlogPostPage from './pages/BlogPostPage';
 import AdminPage from './pages/AdminPage';
+import ProductPage from './pages/ProductPage';
 import { useTracking } from './hooks/useTracking';
 
 // Diário do Atleta App
@@ -57,6 +58,7 @@ function AppRoutes() {
       <Route path="/blog" element={<BlogPage />} />
       <Route path="/blog/:slug" element={<BlogPostPage />} />
       <Route path="/admin" element={<AdminPage />} />
+      <Route path="/produto/:slug" element={<ProductPage />} />
 
       {/* Diário do Atleta App Routes */}
       <Route element={<AppLayout />}>

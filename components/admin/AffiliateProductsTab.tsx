@@ -30,6 +30,12 @@ interface AffiliateProduct {
     is_active: boolean;
     click_count: number;
     tracking_event_id: string | null;
+    slug: string | null;
+    instagram_url: string | null;
+    extended_description: string | null;
+    price: string | null;
+    meta_title: string | null;
+    meta_description: string | null;
 }
 
 interface TrackingEvent {
@@ -55,6 +61,12 @@ export default function AffiliateProductsTab() {
     const [formBadge, setFormBadge] = useState('');
     const [formOrder, setFormOrder] = useState(0);
     const [formTrackingEventId, setFormTrackingEventId] = useState<string | null>(null);
+    const [formSlug, setFormSlug] = useState('');
+    const [formInstagramUrl, setFormInstagramUrl] = useState('');
+    const [formExtendedDescription, setFormExtendedDescription] = useState('');
+    const [formPrice, setFormPrice] = useState('');
+    const [formMetaTitle, setFormMetaTitle] = useState('');
+    const [formMetaDescription, setFormMetaDescription] = useState('');
     const [showAddForm, setShowAddForm] = useState(false);
     const [trackingEvents, setTrackingEvents] = useState<TrackingEvent[]>([]);
 
@@ -83,6 +95,13 @@ export default function AffiliateProductsTab() {
         setLoading(false);
     }
 
+    function generateSlug(name: string) {
+        return name.toLowerCase()
+            .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+            .replace(/[^a-z0-9]+/g, '-')
+            .replace(/^-|-$/g, '');
+    }
+
     function resetForm() {
         setFormName('');
         setFormDescription('');
@@ -91,6 +110,12 @@ export default function AffiliateProductsTab() {
         setFormBadge('');
         setFormOrder(0);
         setFormTrackingEventId(null);
+        setFormSlug('');
+        setFormInstagramUrl('');
+        setFormExtendedDescription('');
+        setFormPrice('');
+        setFormMetaTitle('');
+        setFormMetaDescription('');
         setEditing(null);
         setShowAddForm(false);
     }
@@ -104,6 +129,12 @@ export default function AffiliateProductsTab() {
         setFormBadge(product.badge || '');
         setFormOrder(product.display_order);
         setFormTrackingEventId(product.tracking_event_id);
+        setFormSlug(product.slug || '');
+        setFormInstagramUrl(product.instagram_url || '');
+        setFormExtendedDescription(product.extended_description || '');
+        setFormPrice(product.price || '');
+        setFormMetaTitle(product.meta_title || '');
+        setFormMetaDescription(product.meta_description || '');
         setShowAddForm(false);
     }
 
@@ -151,6 +182,7 @@ export default function AffiliateProductsTab() {
     async function handleAdd() {
         if (!formName.trim() || !formAffiliateUrl.trim()) return;
         setSaving(true);
+        const slug = formSlug.trim() || generateSlug(formName);
         const { error } = await supabase.from('affiliate_products').insert({
             name: formName.trim(),
             description: formDescription.trim() || null,
@@ -160,6 +192,12 @@ export default function AffiliateProductsTab() {
             display_order: formOrder,
             is_active: true,
             tracking_event_id: formTrackingEventId,
+            slug,
+            instagram_url: formInstagramUrl.trim() || null,
+            extended_description: formExtendedDescription.trim() || null,
+            price: formPrice.trim() || null,
+            meta_title: formMetaTitle.trim() || null,
+            meta_description: formMetaDescription.trim() || null,
         });
         if (error) {
             console.error('Error saving product:', error);
@@ -174,6 +212,7 @@ export default function AffiliateProductsTab() {
     async function handleUpdate() {
         if (!editing || !formName.trim() || !formAffiliateUrl.trim()) return;
         setSaving(true);
+        const slug = formSlug.trim() || generateSlug(formName);
         const { error } = await supabase
             .from('affiliate_products')
             .update({
@@ -184,6 +223,12 @@ export default function AffiliateProductsTab() {
                 badge: formBadge.trim() || null,
                 display_order: formOrder,
                 tracking_event_id: formTrackingEventId,
+                slug,
+                instagram_url: formInstagramUrl.trim() || null,
+                extended_description: formExtendedDescription.trim() || null,
+                price: formPrice.trim() || null,
+                meta_title: formMetaTitle.trim() || null,
+                meta_description: formMetaDescription.trim() || null,
             })
             .eq('id', editing);
         if (!error) {
@@ -328,6 +373,78 @@ export default function AffiliateProductsTab() {
                     ))}
                 </select>
                 <p className="text-[10px] text-zinc-600 mt-1">Escolha o evento que será disparado ao clicar neste produto</p>
+            </div>
+
+            {/* Landing Page Fields */}
+            <div className="md:col-span-2 mt-4 pt-4 border-t border-zinc-700/50">
+                <h4 className="text-xs font-bold text-zinc-300 uppercase tracking-wider mb-3 flex items-center gap-1.5">
+                    🚀 Landing Page (para Anúncios)
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label className="block text-xs font-medium text-zinc-400 mb-1">Slug (URL)</label>
+                        <div className="flex items-center gap-1">
+                            <span className="text-[10px] text-zinc-600">/produto/</span>
+                            <input
+                                type="text"
+                                value={formSlug}
+                                onChange={e => setFormSlug(e.target.value)}
+                                className="flex-1 bg-zinc-800/50 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-emerald-500/50"
+                                placeholder={formName ? generateSlug(formName) : 'auto-gerado'}
+                            />
+                        </div>
+                    </div>
+                    <div>
+                        <label className="block text-xs font-medium text-zinc-400 mb-1">Preço</label>
+                        <input
+                            type="text"
+                            value={formPrice}
+                            onChange={e => setFormPrice(e.target.value)}
+                            className="w-full bg-zinc-800/50 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-emerald-500/50"
+                            placeholder="R$ 299,90"
+                        />
+                    </div>
+                    <div className="md:col-span-2">
+                        <label className="block text-xs font-medium text-zinc-400 mb-1">Link do Instagram (post/reel)</label>
+                        <input
+                            type="url"
+                            value={formInstagramUrl}
+                            onChange={e => setFormInstagramUrl(e.target.value)}
+                            className="w-full bg-zinc-800/50 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-emerald-500/50"
+                            placeholder="https://www.instagram.com/p/..."
+                        />
+                    </div>
+                    <div className="md:col-span-2">
+                        <label className="block text-xs font-medium text-zinc-400 mb-1">Descrição Detalhada (Markdown)</label>
+                        <textarea
+                            value={formExtendedDescription}
+                            onChange={e => setFormExtendedDescription(e.target.value)}
+                            rows={5}
+                            className="w-full bg-zinc-800/50 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-emerald-500/50 resize-y"
+                            placeholder="Descreva por que você recomenda esse produto... (suporta markdown: **negrito**, - listas, ## títulos)"
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-xs font-medium text-zinc-400 mb-1">Título SEO</label>
+                        <input
+                            type="text"
+                            value={formMetaTitle}
+                            onChange={e => setFormMetaTitle(e.target.value)}
+                            className="w-full bg-zinc-800/50 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-emerald-500/50"
+                            placeholder="Título para SEO (opcional)"
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-xs font-medium text-zinc-400 mb-1">Descrição SEO</label>
+                        <input
+                            type="text"
+                            value={formMetaDescription}
+                            onChange={e => setFormMetaDescription(e.target.value)}
+                            className="w-full bg-zinc-800/50 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-emerald-500/50"
+                            placeholder="Descrição para SEO (opcional)"
+                        />
+                    </div>
+                </div>
             </div>
         </div>
     );
