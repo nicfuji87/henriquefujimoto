@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
     Save, BarChart3, Globe, Code, Eye, AlertTriangle,
     CheckCircle2, ExternalLink, Search, Share2,
-    Plus, Trash2, Zap, X, Activity
+    Plus, Trash2, Zap, X, Activity, Pencil
 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 
@@ -63,6 +63,12 @@ export default function TrackingTab() {
     const [newEventIsStandard, setNewEventIsStandard] = useState(false);
     const [newEventStandardName, setNewEventStandardName] = useState(META_STANDARD_EVENTS[0]);
     const [savingEvent, setSavingEvent] = useState(false);
+
+    // Edit event state
+    const [editingEventId, setEditingEventId] = useState<string | null>(null);
+    const [editEventName, setEditEventName] = useState('');
+    const [editEventDesc, setEditEventDesc] = useState('');
+    const [editEventIsStandard, setEditEventIsStandard] = useState(false);
 
     useEffect(() => {
         fetchConfig();
@@ -163,6 +169,42 @@ export default function TrackingTab() {
         if (!confirm('Excluir este evento? Produtos e cards associados perderão o vínculo.')) return;
         await supabase.from('tracking_events').delete().eq('id', id);
         fetchEvents();
+    }
+
+    function startEditEvent(ev: TrackingEvent) {
+        setEditingEventId(ev.id);
+        setEditEventName(ev.event_name);
+        setEditEventDesc(ev.description || '');
+        setEditEventIsStandard(ev.is_standard_meta);
+    }
+
+    function cancelEditEvent() {
+        setEditingEventId(null);
+        setEditEventName('');
+        setEditEventDesc('');
+        setEditEventIsStandard(false);
+    }
+
+    async function handleUpdateEvent() {
+        if (!editingEventId || !editEventName.trim()) return;
+        setSavingEvent(true);
+        try {
+            const { error } = await supabase
+                .from('tracking_events')
+                .update({
+                    event_name: editEventName.trim(),
+                    description: editEventDesc.trim() || null,
+                    is_standard_meta: editEventIsStandard,
+                })
+                .eq('id', editingEventId);
+            if (error) throw error;
+            cancelEditEvent();
+            fetchEvents();
+        } catch (err: any) {
+            setMessage({ type: 'error', text: err.message || 'Erro ao atualizar evento' });
+        } finally {
+            setSavingEvent(false);
+        }
     }
 
     if (loading) {
@@ -586,23 +628,96 @@ export default function TrackingTab() {
                 ) : (
                     <div className="space-y-2">
                         {events.map(ev => (
-                            <div key={ev.id} className="flex items-center justify-between bg-zinc-800/30 border border-zinc-700/50 rounded-xl px-4 py-3">
-                                <div className="flex items-center gap-3">
-                                    <Zap className={`w-4 h-4 flex-shrink-0 ${ev.is_standard_meta ? 'text-indigo-400' : 'text-purple-400'}`} />
-                                    <div>
-                                        <span className="text-sm font-semibold text-white">{ev.event_name}</span>
-                                        {ev.description && <p className="text-[10px] text-zinc-500">{ev.description}</p>}
+                            <div key={ev.id} className="bg-zinc-800/30 border border-zinc-700/50 rounded-xl px-4 py-3">
+                                {editingEventId === ev.id ? (
+                                    /* Inline Edit Form */
+                                    <div className="space-y-3">
+                                        <div className="flex items-center gap-3">
+                                            <label className="flex items-center gap-2 text-xs text-zinc-400 cursor-pointer">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={editEventIsStandard}
+                                                    onChange={e => setEditEventIsStandard(e.target.checked)}
+                                                    className="rounded border-zinc-600 bg-zinc-800"
+                                                />
+                                                Evento padrão Meta
+                                            </label>
+                                        </div>
+                                        {editEventIsStandard ? (
+                                            <select
+                                                value={editEventName}
+                                                onChange={e => setEditEventName(e.target.value)}
+                                                className="w-full bg-zinc-800/50 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-purple-500"
+                                            >
+                                                {META_STANDARD_EVENTS.map(se => (
+                                                    <option key={se} value={se}>{se}</option>
+                                                ))}
+                                            </select>
+                                        ) : (
+                                            <input
+                                                type="text"
+                                                value={editEventName}
+                                                onChange={e => setEditEventName(e.target.value)}
+                                                className="w-full bg-zinc-800/50 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-purple-500"
+                                                placeholder="Nome do evento"
+                                            />
+                                        )}
+                                        <input
+                                            type="text"
+                                            value={editEventDesc}
+                                            onChange={e => setEditEventDesc(e.target.value)}
+                                            className="w-full bg-zinc-800/50 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-purple-500"
+                                            placeholder="Descrição (opcional)"
+                                        />
+                                        <div className="flex items-center gap-2">
+                                            <button
+                                                onClick={handleUpdateEvent}
+                                                disabled={savingEvent}
+                                                className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500 text-white rounded-lg text-xs font-bold hover:bg-emerald-600 transition-colors disabled:opacity-50"
+                                            >
+                                                <Save className="w-3 h-3" />
+                                                {savingEvent ? 'Salvando...' : 'Salvar'}
+                                            </button>
+                                            <button
+                                                onClick={cancelEditEvent}
+                                                className="flex items-center gap-1.5 px-3 py-1.5 bg-zinc-700 text-zinc-300 rounded-lg text-xs font-bold hover:bg-zinc-600 transition-colors"
+                                            >
+                                                <X className="w-3 h-3" />
+                                                Cancelar
+                                            </button>
+                                        </div>
                                     </div>
-                                    <span className={`text-[9px] font-bold uppercase px-1.5 py-0.5 rounded ${ev.is_standard_meta ? 'bg-indigo-500/20 text-indigo-400' : 'bg-purple-500/20 text-purple-400'}`}>
-                                        {ev.is_standard_meta ? 'Padrão Meta' : 'Custom'}
-                                    </span>
-                                </div>
-                                <button
-                                    onClick={() => handleDeleteEvent(ev.id)}
-                                    className="p-1.5 text-zinc-500 hover:text-red-400 transition-colors"
-                                >
-                                    <Trash2 className="w-4 h-4" />
-                                </button>
+                                ) : (
+                                    /* Display Mode */
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-3">
+                                            <Zap className={`w-4 h-4 flex-shrink-0 ${ev.is_standard_meta ? 'text-indigo-400' : 'text-purple-400'}`} />
+                                            <div>
+                                                <span className="text-sm font-semibold text-white">{ev.event_name}</span>
+                                                {ev.description && <p className="text-[10px] text-zinc-500">{ev.description}</p>}
+                                            </div>
+                                            <span className={`text-[9px] font-bold uppercase px-1.5 py-0.5 rounded ${ev.is_standard_meta ? 'bg-indigo-500/20 text-indigo-400' : 'bg-purple-500/20 text-purple-400'}`}>
+                                                {ev.is_standard_meta ? 'Padrão Meta' : 'Custom'}
+                                            </span>
+                                        </div>
+                                        <div className="flex items-center gap-1">
+                                            <button
+                                                onClick={() => startEditEvent(ev)}
+                                                className="p-1.5 text-zinc-500 hover:text-purple-400 transition-colors"
+                                                title="Editar evento"
+                                            >
+                                                <Pencil className="w-4 h-4" />
+                                            </button>
+                                            <button
+                                                onClick={() => handleDeleteEvent(ev.id)}
+                                                className="p-1.5 text-zinc-500 hover:text-red-400 transition-colors"
+                                                title="Excluir evento"
+                                            >
+                                                <Trash2 className="w-4 h-4" />
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         ))}
                     </div>
