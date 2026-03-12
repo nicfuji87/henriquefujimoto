@@ -29,7 +29,7 @@ interface Product {
     instagram_url: string | null;
     meta_title: string | null;
     meta_description: string | null;
-    tracking_events: TrackingEventData | null;
+    tracking_events: TrackingEventData[];
 }
 
 function renderSimpleMarkdown(md: string): string {
@@ -63,9 +63,10 @@ export default function ProductPage() {
     async function fetchProduct(slug: string) {
         setLoading(true);
         try {
+            // Fetch product base data
             const { data, error } = await supabase
                 .from('affiliate_products')
-                .select('id, name, description, extended_description, image_url, affiliate_url, badge, slug, price, instagram_url, meta_title, meta_description, tracking_events(id, event_name, is_standard_meta, meta_params, ga4_params)')
+                .select('id, name, description, extended_description, image_url, affiliate_url, badge, slug, price, instagram_url, meta_title, meta_description')
                 .eq('slug', slug)
                 .eq('is_active', true)
                 .single();
@@ -75,13 +76,18 @@ export default function ProductPage() {
                 return;
             }
 
-            // Supabase FK join returns array, normalize to single object
-            const normalized = {
-                ...data,
-                tracking_events: Array.isArray(data.tracking_events) ? data.tracking_events[0] || null : data.tracking_events,
-            };
+            // Fetch all tracking events via junction table
+            const { data: junctionData } = await supabase
+                .from('product_tracking_events')
+                .select('tracking_events(id, event_name, is_standard_meta, meta_params, ga4_params)')
+                .eq('product_id', data.id);
 
-            setProduct(normalized as Product);
+            const trackingEvents: TrackingEventData[] = (junctionData || [])
+                .map((j: any) => j.tracking_events)
+                .filter(Boolean);
+
+            const product: Product = { ...data, tracking_events: trackingEvents };
+            setProduct(product);
 
             // SEO
             document.title = data.meta_title || `${data.name} — Henrique Fujimoto`;
@@ -93,7 +99,7 @@ export default function ProductPage() {
             if (data.image_url) setOGTag('og:image', data.image_url);
 
             // JSON-LD Product
-            addJsonLd(data);
+            addJsonLd(product);
 
             // Track ViewContent (Meta standard event)
             analytics.trackEvent('ViewContent', {
@@ -107,13 +113,13 @@ export default function ProductPage() {
             // Fetch other products
             const { data: others } = await supabase
                 .from('affiliate_products')
-                .select('id, name, description, image_url, affiliate_url, badge, slug, price, instagram_url, meta_title, meta_description, tracking_events(id, event_name, is_standard_meta, meta_params, ga4_params)')
+                .select('id, name, description, image_url, affiliate_url, badge, slug, price, instagram_url, meta_title, meta_description')
                 .eq('is_active', true)
                 .neq('id', data.id)
                 .order('display_order', { ascending: true })
                 .limit(4);
 
-            setOtherProducts(others || []);
+            setOtherProducts((others || []).map(o => ({ ...o, tracking_events: [] })));
         } catch (err) {
             console.error('Error fetching product:', err);
             navigate('/');
@@ -167,15 +173,17 @@ export default function ProductPage() {
 
         setCTAClicked(true);
 
-        // Track the click
-        if (product.tracking_events) {
-            analytics.trackDynamicEvent(product.tracking_events, {
-                product_name: product.name,
-                product_id: product.id,
-            }, {
-                source_type: 'product',
-                source_id: product.id,
-                source_label: product.name,
+        // Fire ALL associated tracking events
+        if (product.tracking_events.length > 0) {
+            product.tracking_events.forEach(ev => {
+                analytics.trackDynamicEvent(ev, {
+                    product_name: product.name,
+                    product_id: product.id,
+                }, {
+                    source_type: 'product',
+                    source_id: product.id,
+                    source_label: product.name,
+                });
             });
         } else {
             analytics.trackAffiliateClick(product.name, product.id);

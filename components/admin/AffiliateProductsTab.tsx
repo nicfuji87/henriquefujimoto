@@ -60,7 +60,7 @@ export default function AffiliateProductsTab() {
     const [formAffiliateUrl, setFormAffiliateUrl] = useState('');
     const [formBadge, setFormBadge] = useState('');
     const [formOrder, setFormOrder] = useState(0);
-    const [formTrackingEventId, setFormTrackingEventId] = useState<string | null>(null);
+    const [formTrackingEventIds, setFormTrackingEventIds] = useState<string[]>([]);
     const [formSlug, setFormSlug] = useState('');
     const [formInstagramUrl, setFormInstagramUrl] = useState('');
     const [formExtendedDescription, setFormExtendedDescription] = useState('');
@@ -109,7 +109,7 @@ export default function AffiliateProductsTab() {
         setFormAffiliateUrl('');
         setFormBadge('');
         setFormOrder(0);
-        setFormTrackingEventId(null);
+        setFormTrackingEventIds([]);
         setFormSlug('');
         setFormInstagramUrl('');
         setFormExtendedDescription('');
@@ -120,7 +120,7 @@ export default function AffiliateProductsTab() {
         setShowAddForm(false);
     }
 
-    function startEdit(product: AffiliateProduct) {
+    async function startEdit(product: AffiliateProduct) {
         setEditing(product.id);
         setFormName(product.name);
         setFormDescription(product.description || '');
@@ -128,13 +128,18 @@ export default function AffiliateProductsTab() {
         setFormAffiliateUrl(product.affiliate_url);
         setFormBadge(product.badge || '');
         setFormOrder(product.display_order);
-        setFormTrackingEventId(product.tracking_event_id);
         setFormSlug(product.slug || '');
         setFormInstagramUrl(product.instagram_url || '');
         setFormExtendedDescription(product.extended_description || '');
         setFormPrice(product.price || '');
         setFormMetaTitle(product.meta_title || '');
         setFormMetaDescription(product.meta_description || '');
+        // Fetch associated tracking event ids from junction table
+        const { data: junctionData } = await supabase
+            .from('product_tracking_events')
+            .select('tracking_event_id')
+            .eq('product_id', product.id);
+        setFormTrackingEventIds((junctionData || []).map((j: any) => j.tracking_event_id));
         setShowAddForm(false);
     }
 
@@ -183,7 +188,7 @@ export default function AffiliateProductsTab() {
         if (!formName.trim() || !formAffiliateUrl.trim()) return;
         setSaving(true);
         const slug = formSlug.trim() || generateSlug(formName);
-        const { error } = await supabase.from('affiliate_products').insert({
+        const { data: newProduct, error } = await supabase.from('affiliate_products').insert({
             name: formName.trim(),
             description: formDescription.trim() || null,
             image_url: formImageUrl.trim() || null,
@@ -191,18 +196,23 @@ export default function AffiliateProductsTab() {
             badge: formBadge.trim() || null,
             display_order: formOrder,
             is_active: true,
-            tracking_event_id: formTrackingEventId,
             slug,
             instagram_url: formInstagramUrl.trim() || null,
             extended_description: formExtendedDescription.trim() || null,
             price: formPrice.trim() || null,
             meta_title: formMetaTitle.trim() || null,
             meta_description: formMetaDescription.trim() || null,
-        });
+        }).select('id').single();
         if (error) {
             console.error('Error saving product:', error);
             alert('Erro ao salvar produto: ' + error.message);
-        } else {
+        } else if (newProduct) {
+            // Sync junction table
+            if (formTrackingEventIds.length > 0) {
+                await supabase.from('product_tracking_events').insert(
+                    formTrackingEventIds.map(eid => ({ product_id: newProduct.id, tracking_event_id: eid }))
+                );
+            }
             resetForm();
             await fetchProducts();
         }
@@ -222,7 +232,6 @@ export default function AffiliateProductsTab() {
                 affiliate_url: formAffiliateUrl.trim(),
                 badge: formBadge.trim() || null,
                 display_order: formOrder,
-                tracking_event_id: formTrackingEventId,
                 slug,
                 instagram_url: formInstagramUrl.trim() || null,
                 extended_description: formExtendedDescription.trim() || null,
@@ -232,6 +241,13 @@ export default function AffiliateProductsTab() {
             })
             .eq('id', editing);
         if (!error) {
+            // Sync junction table: delete old, insert new
+            await supabase.from('product_tracking_events').delete().eq('product_id', editing);
+            if (formTrackingEventIds.length > 0) {
+                await supabase.from('product_tracking_events').insert(
+                    formTrackingEventIds.map(eid => ({ product_id: editing, tracking_event_id: eid }))
+                );
+            }
             resetForm();
             await fetchProducts();
         }
@@ -354,25 +370,50 @@ export default function AffiliateProductsTab() {
                     />
                 </div>
             </div>
-            {/* Tracking Event Selector */}
+            {/* Tracking Events Selector (Multi) */}
             <div className="md:col-span-2">
-                <label className="block text-xs font-medium text-zinc-400 mb-1 flex items-center gap-1">
+                <label className="block text-xs font-medium text-zinc-400 mb-2 flex items-center gap-1">
                     <Activity className="w-3 h-3" />
-                    Evento de Tracking (Meta + GA4)
+                    Eventos de Tracking (Meta + GA4) — selecione um ou mais
                 </label>
-                <select
-                    value={formTrackingEventId || ''}
-                    onChange={e => setFormTrackingEventId(e.target.value || null)}
-                    className="w-full bg-zinc-800/50 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-purple-500/50"
-                >
-                    <option value="">Padrão (Click_Affiliate_Product)</option>
-                    {trackingEvents.map(ev => (
-                        <option key={ev.id} value={ev.id}>
-                            {ev.event_name}{ev.description ? ` — ${ev.description}` : ''}
-                        </option>
-                    ))}
-                </select>
-                <p className="text-[10px] text-zinc-600 mt-1">Escolha o evento que será disparado ao clicar neste produto</p>
+                <div className="flex flex-wrap gap-2">
+                    {trackingEvents.map(ev => {
+                        const isSelected = formTrackingEventIds.includes(ev.id);
+                        return (
+                            <button
+                                key={ev.id}
+                                type="button"
+                                onClick={() => {
+                                    setFormTrackingEventIds(prev =>
+                                        isSelected
+                                            ? prev.filter(id => id !== ev.id)
+                                            : [...prev, ev.id]
+                                    );
+                                }}
+                                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-all ${
+                                    isSelected
+                                        ? ev.is_standard_meta
+                                            ? 'bg-indigo-500/20 border-indigo-500/40 text-indigo-300'
+                                            : 'bg-purple-500/20 border-purple-500/40 text-purple-300'
+                                        : 'bg-zinc-800/50 border-zinc-700 text-zinc-500 hover:text-zinc-300 hover:border-zinc-600'
+                                }`}
+                            >
+                                <span className={`w-3 h-3 rounded border flex items-center justify-center text-[8px] ${
+                                    isSelected
+                                        ? 'bg-emerald-500 border-emerald-500 text-white'
+                                        : 'border-zinc-600'
+                                }`}>
+                                    {isSelected && '✓'}
+                                </span>
+                                {ev.event_name}
+                                {ev.is_standard_meta && (
+                                    <span className="text-[8px] uppercase px-1 py-0.5 rounded bg-indigo-500/20 text-indigo-400">padrão</span>
+                                )}
+                            </button>
+                        );
+                    })}
+                </div>
+                <p className="text-[10px] text-zinc-600 mt-1.5">Todos os eventos selecionados serão disparados quando o usuário clicar no botão de compra</p>
             </div>
 
             {/* Landing Page Fields */}
