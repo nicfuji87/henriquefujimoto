@@ -29,6 +29,8 @@ import JourneyTab from '../components/admin/JourneyTab';
 import HomeCardsTab from '../components/admin/HomeCardsTab';
 import AffiliateProductsTab from '../components/admin/AffiliateProductsTab';
 import EventLogsTab from '../components/admin/EventLogsTab';
+import AdsTab from '../components/admin/AdsTab';
+import { Target } from 'lucide-react';
 
 // Mock posts for development
 const mockPosts: Post[] = [
@@ -58,7 +60,7 @@ const mockPosts: Post[] = [
     },
 ];
 
-type Tab = 'dashboard' | 'blog' | 'posts' | 'bio' | 'home_cards' | 'products' | 'journey' | 'tracking' | 'event_logs' | 'settings';
+type Tab = 'dashboard' | 'blog' | 'posts' | 'bio' | 'home_cards' | 'products' | 'journey' | 'tracking' | 'event_logs' | 'ads' | 'settings';
 
 function Sidebar({
     activeTab,
@@ -81,6 +83,7 @@ function Sidebar({
         { id: 'journey' as Tab, label: 'Jornada', icon: MapPin },
         { id: 'tracking' as Tab, label: 'Tracking & SEO', icon: Activity },
         { id: 'event_logs' as Tab, label: 'Eventos', icon: BarChart3 },
+        { id: 'ads' as Tab, label: 'Meta Ads', icon: Target },
         { id: 'settings' as Tab, label: 'Configurações', icon: Settings },
     ];
 
@@ -2125,6 +2128,7 @@ export default function AdminPage() {
                             {activeTab === 'journey' && <JourneyTab />}
                             {activeTab === 'tracking' && <TrackingTab />}
                             {activeTab === 'event_logs' && <EventLogsTab />}
+                            {activeTab === 'ads' && <AdsTab />}
                             {activeTab === 'settings' && <SettingsTab />}
                         </motion.div>
                     </AnimatePresence>
