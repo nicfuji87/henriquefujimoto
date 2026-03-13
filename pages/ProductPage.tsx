@@ -101,14 +101,21 @@ export default function ProductPage() {
             // JSON-LD Product
             addJsonLd(product);
 
-            // Track ViewContent (Meta standard event)
-            analytics.trackEvent('ViewContent', {
+            // Track ViewContent (Meta standard event) — per-product differentiation
+            const viewContentParams = {
                 content_name: data.name,
                 content_ids: [data.id],
                 content_type: 'product',
+                content_category: data.slug,
                 value: data.price ? parseFloat(data.price.replace(/[^\d.,]/g, '').replace(',', '.')) : 0,
                 currency: 'BRL',
-            });
+            };
+            analytics.trackEvent('ViewContent', viewContentParams);
+            // Also fire ViewContent via CAPI (server-side) for AdBlock resilience
+            analytics.trackDynamicEvent({
+                event_name: 'ViewContent',
+                is_standard_meta: true,
+            }, viewContentParams);
 
             // Fetch other products
             const { data: others } = await supabase
