@@ -242,11 +242,18 @@ export default function AffiliateProductsTab() {
             .eq('id', editing);
         if (!error) {
             // Sync junction table: delete old, insert new
-            await supabase.from('product_tracking_events').delete().eq('product_id', editing);
+            const { error: delErr } = await supabase.from('product_tracking_events').delete().eq('product_id', editing);
+            if (delErr) console.error('[Junction] delete error:', delErr.message);
             if (formTrackingEventIds.length > 0) {
-                await supabase.from('product_tracking_events').insert(
+                const { error: insErr } = await supabase.from('product_tracking_events').insert(
                     formTrackingEventIds.map(eid => ({ product_id: editing, tracking_event_id: eid }))
                 );
+                if (insErr) {
+                    console.error('[Junction] insert error:', insErr.message);
+                    alert('Erro ao salvar eventos de tracking: ' + insErr.message);
+                } else {
+                    console.log('[Junction] Saved events:', formTrackingEventIds);
+                }
             }
             resetForm();
             await fetchProducts();
