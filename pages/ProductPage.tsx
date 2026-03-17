@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import {
@@ -54,6 +54,7 @@ export default function ProductPage() {
     const [otherProducts, setOtherProducts] = useState<Product[]>([]);
     const [loading, setLoading] = useState(true);
     const [ctaClicked, setCTAClicked] = useState(false);
+    const trackedSlug = useRef<string | null>(null);
 
     useEffect(() => {
         if (slug) fetchProduct(slug);
@@ -102,20 +103,23 @@ export default function ProductPage() {
             addJsonLd(product);
 
             // Track ViewContent (Meta standard event) — per-product differentiation
-            const viewContentParams = {
-                content_name: data.name,
-                content_ids: [data.id],
-                content_type: 'product',
-                content_category: data.slug,
-                value: data.price ? parseFloat(data.price.replace(/[^\d.,]/g, '').replace(',', '.')) : 0,
-                currency: 'BRL',
-            };
-            analytics.trackEvent('ViewContent', viewContentParams);
-            // Also fire ViewContent via CAPI (server-side) for AdBlock resilience
-            analytics.trackDynamicEvent({
-                event_name: 'ViewContent',
-                is_standard_meta: true,
-            }, viewContentParams);
+            if (trackedSlug.current !== data.slug) {
+                const viewContentParams = {
+                    content_name: data.name,
+                    content_ids: [data.slug],
+                    content_type: 'product',
+                    content_category: data.slug,
+                    value: data.price ? parseFloat(data.price.replace(/[^\d.,]/g, '').replace(',', '.')) : 0,
+                    currency: 'BRL',
+                };
+                analytics.trackEvent('ViewContent', viewContentParams);
+                // Also fire ViewContent via CAPI (server-side) for AdBlock resilience
+                analytics.trackDynamicEvent({
+                    event_name: 'ViewContent',
+                    is_standard_meta: true,
+                }, viewContentParams);
+                trackedSlug.current = data.slug;
+            }
 
             // Fetch other products
             const { data: others } = await supabase
@@ -180,13 +184,18 @@ export default function ProductPage() {
 
         setCTAClicked(true);
 
+        const eventParams = {
+            content_name: product.name,
+            content_ids: [product.slug],
+            content_type: 'product',
+            value: product.price ? parseFloat(product.price.replace(/[^\d.,]/g, '').replace(',', '.')) : 0,
+            currency: 'BRL',
+        };
+
         // Fire ALL associated tracking events
         if (product.tracking_events.length > 0) {
             product.tracking_events.forEach(ev => {
-                analytics.trackDynamicEvent(ev, {
-                    product_name: product.name,
-                    product_id: product.id,
-                }, {
+                analytics.trackDynamicEvent(ev, eventParams, {
                     source_type: 'product',
                     source_id: product.id,
                     source_label: product.name,
