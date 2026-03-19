@@ -49,6 +49,8 @@ import GymGrip from './pages/gym/GymGrip';
 import NutriLayout from './components/nutri/NutriLayout';
 import NutriLogin from './pages/nutri/NutriLogin';
 import NutriDashboard from './pages/nutri/NutriDashboard';
+import NutriMeals from './pages/nutri/NutriMeals';
+import NutriAnalytics from './pages/nutri/NutriAnalytics';
 
 function AppRoutes() {
   // Centralized tracking hook inside Router context
@@ -108,6 +110,8 @@ function AppRoutes() {
       <Route element={<NutriLayout />}>
         <Route path="/nutri/login" element={<NutriLogin />} />
         <Route path="/nutri" element={<NutriDashboard />} />
+        <Route path="/nutri/meals" element={<NutriMeals />} />
+        <Route path="/nutri/analytics" element={<NutriAnalytics />} />
       </Route>
     </Routes>
   );
