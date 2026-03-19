@@ -18,10 +18,23 @@ export interface NutriDailyLog {
     water_ml: number;
     sleep_bedtime: string | null;
     sleep_waketime: string | null;
+    sleep_date_bedtime: string | null;
+    sleep_date_waketime: string | null;
     sleep_hours: number | null;
     energy_level: number | null;
-    bowel_movement: number | null;
+    bowel_occurred: boolean;
+    bowel_type: string | null;
+    bowel_notes: string | null;
     diet_followed: boolean;
+    notes: string | null;
+    created_at: string;
+}
+
+export interface NutriHydrationLog {
+    id: string;
+    date: string;
+    drink_type: string;
+    amount_ml: number;
     notes: string | null;
     created_at: string;
 }
@@ -77,8 +90,50 @@ export const MEAL_ICONS: Record<string, string> = {
     other: 'fastfood',
 };
 
+export const DRINK_TYPES: Record<string, string> = {
+    water: 'Água',
+    electrolyte: 'Eletrólito',
+    juice: 'Suco',
+    tea: 'Chá',
+    coffee: 'Café',
+    milk: 'Leite',
+    sports_drink: 'Isotônico',
+    other: 'Outro',
+};
+
+export const DRINK_ICONS: Record<string, string> = {
+    water: 'water_drop',
+    electrolyte: 'bolt',
+    juice: 'local_bar',
+    tea: 'emoji_food_beverage',
+    coffee: 'coffee',
+    milk: 'water_full',
+    sports_drink: 'sports_bar',
+    other: 'local_drink',
+};
+
+export const DRINK_COLORS: Record<string, string> = {
+    water: '#38bdf8',
+    electrolyte: '#34d399',
+    juice: '#fb923c',
+    tea: '#a3e635',
+    coffee: '#a78bfa',
+    milk: '#f9fafb',
+    sports_drink: '#f472b6',
+    other: '#94a3b8',
+};
+
+export const BOWEL_TYPES: Record<string, { label: string; icon: string; desc: string }> = {
+    normal: { label: 'Normal', icon: '✅', desc: 'Formato e consistência normais' },
+    bolinha: { label: 'Bolinha', icon: '🔴', desc: 'Pequenas bolinhas, duras, ressecadas' },
+    pastoso: { label: 'Pastoso', icon: '🟡', desc: 'Mole, sem forma definida' },
+    liquido: { label: 'Líquido', icon: '🟠', desc: 'Aquoso, diarréia' },
+    ressecado: { label: 'Ressecado', icon: '🟤', desc: 'Duro, com esforço' },
+    misto: { label: 'Misto', icon: '🔵', desc: 'Combinação de tipos' },
+};
+
 // ============================================================
-// Weight API
+// API
 // ============================================================
 
 export const nutriApi = {
@@ -88,6 +143,7 @@ export const nutriApi = {
             .from('nutri_weight_logs')
             .select('*')
             .order('date', { ascending: false })
+            .order('time', { ascending: false })
             .limit(limit);
         if (error) { console.error(error); return []; }
         return data || [];
@@ -99,17 +155,22 @@ export const nutriApi = {
             .from('nutri_weight_logs')
             .select('*')
             .eq('date', today)
+            .order('time', { ascending: false })
             .limit(1)
             .single();
         return data as NutriWeightLog | null;
     },
 
-    saveWeight: async (weight: number): Promise<boolean> => {
-        const today = new Date().toISOString().slice(0, 10);
-        const now = new Date().toTimeString().slice(0, 8);
+    saveWeight: async (date: string, time: string, weight: number): Promise<boolean> => {
         const { error } = await supabase
             .from('nutri_weight_logs')
-            .upsert([{ date: today, time: now, weight }], { onConflict: 'date' });
+            .insert([{ date, time, weight }]);
+        if (error) { console.error(error); return false; }
+        return true;
+    },
+
+    deleteWeight: async (id: string): Promise<boolean> => {
+        const { error } = await supabase.from('nutri_weight_logs').delete().eq('id', id);
         if (error) { console.error(error); return false; }
         return true;
     },
@@ -141,6 +202,42 @@ export const nutriApi = {
         const { error } = await supabase
             .from('nutri_daily_logs')
             .upsert([{ ...log, date: today }], { onConflict: 'date' });
+        if (error) { console.error(error); return false; }
+        return true;
+    },
+
+    // Hydration
+    getHydrationForDate: async (date: string): Promise<NutriHydrationLog[]> => {
+        const { data, error } = await supabase
+            .from('nutri_hydration_logs')
+            .select('*')
+            .eq('date', date)
+            .order('created_at', { ascending: true });
+        if (error) { console.error(error); return []; }
+        return data || [];
+    },
+
+    getRecentHydration: async (limit = 200): Promise<NutriHydrationLog[]> => {
+        const { data, error } = await supabase
+            .from('nutri_hydration_logs')
+            .select('*')
+            .order('date', { ascending: false })
+            .order('created_at', { ascending: false })
+            .limit(limit);
+        if (error) { console.error(error); return []; }
+        return data || [];
+    },
+
+    saveHydration: async (entry: Partial<NutriHydrationLog>): Promise<boolean> => {
+        const { error } = await supabase
+            .from('nutri_hydration_logs')
+            .insert([entry]);
+        if (error) { console.error(error); return false; }
+        return true;
+    },
+
+    deleteHydration: async (id: string): Promise<boolean> => {
+        const { error } = await supabase.from('nutri_hydration_logs').delete().eq('id', id);
         if (error) { console.error(error); return false; }
         return true;
     },
