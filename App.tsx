@@ -45,6 +45,11 @@ import GymCalendar from './pages/gym/GymCalendar';
 import GymPhase from './pages/gym/GymPhase';
 import GymGrip from './pages/gym/GymGrip';
 
+// Nutri Module
+import NutriLayout from './components/nutri/NutriLayout';
+import NutriLogin from './pages/nutri/NutriLogin';
+import NutriDashboard from './pages/nutri/NutriDashboard';
+
 function AppRoutes() {
   // Centralized tracking hook inside Router context
   useTracking();
@@ -97,6 +102,12 @@ function AppRoutes() {
         <Route path="/gym/calendar" element={<GymCalendar />} />
         <Route path="/gym/phase" element={<GymPhase />} />
         <Route path="/gym/grip" element={<GymGrip />} />
+      </Route>
+
+      {/* Nutri Module Routes */}
+      <Route element={<NutriLayout />}>
+        <Route path="/nutri/login" element={<NutriLogin />} />
+        <Route path="/nutri" element={<NutriDashboard />} />
       </Route>
     </Routes>
   );
