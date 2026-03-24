@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import imageCompression from 'browser-image-compression';
 import {
     Plus,
     Trash2,
@@ -149,13 +150,15 @@ export default function AffiliateProductsTab() {
 
         setUploading(true);
         try {
-            const fileExt = file.name.split('.').pop();
+            const options = { maxSizeMB: 0.2, maxWidthOrHeight: 1080, useWebWorker: true };
+            const compressedFile = await imageCompression(file, options);
+            const fileExt = compressedFile.name.split('.').pop() || 'jpg';
             const fileName = `product-${Date.now()}.${fileExt}`;
             const filePath = `products/${fileName}`;
 
             const { error: uploadError } = await supabase.storage
                 .from('site-images')
-                .upload(filePath, file, { upsert: true });
+                .upload(filePath, compressedFile, { upsert: true, cacheControl: '31536000' });
 
             if (uploadError) throw uploadError;
 

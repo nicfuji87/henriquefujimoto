@@ -8,6 +8,7 @@ export default function NutriMeals() {
     const [dietPlan, setDietPlan] = useState<NutriDietPlan[]>([]);
     const [loading, setLoading] = useState(true);
     const [showForm, setShowForm] = useState(false);
+    const [mealDate, setMealDate] = useState(new Date().toISOString().slice(0, 10));
     const [mealType, setMealType] = useState('lunch');
     const [mode, setMode] = useState<MealMode>('diet_check');
     const [description, setDescription] = useState('');
@@ -78,7 +79,7 @@ export default function NutriMeals() {
         }
 
         const mealData: Partial<NutriMeal> = {
-            date: today,
+            date: mealDate,
             meal_type: mealType,
             followed_diet: mode === 'diet_check',
             description: mode === 'diet_check' ? 'Seguiu a dieta prescrita' : description,
@@ -170,7 +171,7 @@ export default function NutriMeals() {
 
                 {/* Add meal button */}
                 {!showForm ? (
-                    <button onClick={() => setShowForm(true)}
+                    <button onClick={() => { setShowForm(true); setMealDate(today); }}
                         className="w-full nutri-btn rounded-2xl py-4 font-bold text-white flex items-center justify-center gap-2 transition-all">
                         <span className="material-symbols-outlined">add</span>
                         Registrar Refeição
@@ -182,6 +183,13 @@ export default function NutriMeals() {
                             <button onClick={() => { setShowForm(false); setAiResult(null); setPhotoPreview(null); }} className="text-white/30 hover:text-white/60">
                                 <span className="material-symbols-outlined text-sm">close</span>
                             </button>
+                        </div>
+
+                        {/* Date selector */}
+                        <div className="mb-4">
+                            <label className="block text-[10px] font-bold text-emerald-400/70 uppercase tracking-wider mb-2">Data da refeição</label>
+                            <input type="date" value={mealDate} onChange={e => setMealDate(e.target.value)}
+                                className="w-full p-3 rounded-xl bg-white/5 border border-white/10 text-white text-sm focus:outline-none focus:border-emerald-500/50 transition-all" />
                         </div>
 
                         {/* Meal type selector */}

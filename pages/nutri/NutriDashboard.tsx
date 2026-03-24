@@ -33,6 +33,8 @@ export default function NutriDashboard() {
 
     // Hydration quick-add
     const [showHydration, setShowHydration] = useState(false);
+    const [hydDate, setHydDate] = useState(new Date().toISOString().slice(0, 10));
+    const [hydTime, setHydTime] = useState(new Date().toTimeString().slice(0, 5));
     const [hydDrinkType, setHydDrinkType] = useState('water');
     const [hydAmount, setHydAmount] = useState('');
     const [hydNotes, setHydNotes] = useState('');
@@ -100,7 +102,8 @@ export default function NutriDashboard() {
         if (!hydAmount) return;
         setSavingHyd(true);
         await nutriApi.saveHydration({
-            date: today,
+            date: hydDate,
+            time: hydTime + ':00',
             drink_type: hydDrinkType,
             amount_ml: parseInt(hydAmount),
             notes: hydNotes || null,
@@ -231,7 +234,7 @@ export default function NutriDashboard() {
 
                 {/* ===== HIDRATAÇÃO ===== */}
                 {!showHydration ? (
-                    <button onClick={() => setShowHydration(true)}
+                    <button onClick={() => { setShowHydration(true); setHydDate(today); setHydTime(new Date().toTimeString().slice(0, 5)); }}
                         className="w-full nutri-card rounded-2xl p-4 flex items-center gap-3 hover:border-sky-500/20 transition-all active:scale-[0.98]">
                         <div className="w-10 h-10 rounded-xl bg-sky-500/10 flex items-center justify-center">
                             <span className="material-symbols-outlined text-sky-400">water_drop</span>
@@ -256,6 +259,19 @@ export default function NutriDashboard() {
                             </button>
                         </div>
                         <div className="space-y-3">
+                            {/* Date & Time */}
+                            <div className="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label className="block text-[10px] font-bold text-sky-400/70 uppercase tracking-wider mb-1.5">Data</label>
+                                    <input type="date" value={hydDate} onChange={e => setHydDate(e.target.value)}
+                                        className="w-full p-3 rounded-xl bg-white/5 border border-white/10 text-white text-sm focus:outline-none focus:border-sky-500/50 transition-all" />
+                                </div>
+                                <div>
+                                    <label className="block text-[10px] font-bold text-sky-400/70 uppercase tracking-wider mb-1.5">Hora</label>
+                                    <input type="time" value={hydTime} onChange={e => setHydTime(e.target.value)}
+                                        className="w-full p-3 rounded-xl bg-white/5 border border-white/10 text-white text-sm focus:outline-none focus:border-sky-500/50 transition-all" />
+                                </div>
+                            </div>
                             {/* Drink Type */}
                             <div>
                                 <label className="block text-[10px] font-bold text-sky-400/70 uppercase tracking-wider mb-2">Tipo</label>
@@ -297,7 +313,10 @@ export default function NutriDashboard() {
                                 {todayHydration.map(h => (
                                     <div key={h.id} className="flex items-center gap-2 p-2 rounded-lg bg-white/3">
                                         <div className="w-2 h-2 rounded-full" style={{ background: DRINK_COLORS[h.drink_type] || '#94a3b8' }} />
-                                        <span className="text-xs font-semibold text-white/70 flex-1">{DRINK_TYPES[h.drink_type]} — {h.amount_ml}ml</span>
+                                        <span className="text-xs font-semibold text-white/70 flex-1">
+                                            {h.time && <span className="text-white/40 mr-1">{h.time.slice(0, 5)}</span>}
+                                            {DRINK_TYPES[h.drink_type]} — {h.amount_ml}ml
+                                        </span>
                                         {h.notes && <span className="text-[10px] text-white/30">{h.notes}</span>}
                                         <button onClick={async () => { await nutriApi.deleteHydration(h.id); loadData(); }} className="text-red-400/30 hover:text-red-400">
                                             <span className="material-symbols-outlined text-[14px]">close</span>

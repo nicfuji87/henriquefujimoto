@@ -44,6 +44,7 @@ export default function NutriAnalytics() {
     const weightChartData = filteredWeights.map(w => ({
         date: `${new Date(w.date + 'T12:00:00').getDate()}/${new Date(w.date + 'T12:00:00').getMonth() + 1}`,
         peso: w.weight,
+        horário: w.time ? w.time.slice(0, 5) : '—',
     }));
 
     // Hydration per day from nutri_hydration_logs

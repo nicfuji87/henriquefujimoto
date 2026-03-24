@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import imageCompression from 'browser-image-compression';
 import {
     LayoutDashboard,
     FileText,
@@ -1086,13 +1087,19 @@ function BioTab() {
         setMessage(null);
 
         try {
-            const fileExt = file.name.split('.').pop();
+            const options = {
+                maxSizeMB: 0.3, // Compress to max ~300KB
+                maxWidthOrHeight: 1920,
+                useWebWorker: true
+            };
+            const compressedFile = await imageCompression(file, options);
+            const fileExt = compressedFile.name.split('.').pop() || 'jpg';
             const fileName = `hero-${imageType}-${Date.now()}.${fileExt}`;
             const filePath = `hero/${fileName}`;
 
             const { error: uploadError } = await supabase.storage
                 .from('site-images')
-                .upload(filePath, file, { upsert: true });
+                .upload(filePath, compressedFile, { upsert: true, cacheControl: '31536000' });
 
             if (uploadError) throw uploadError;
 
@@ -1600,13 +1607,15 @@ function PartnersEditor() {
         }
 
         try {
-            const fileExt = file.name.split('.').pop();
+            const options = { maxSizeMB: 0.1, maxWidthOrHeight: 500, useWebWorker: true };
+            const compressedFile = await imageCompression(file, options);
+            const fileExt = compressedFile.name.split('.').pop() || 'png';
             const fileName = `partner-${Date.now()}.${fileExt}`;
             const filePath = `partners/${fileName}`;
 
             const { error: uploadError } = await supabase.storage
                 .from('site-images')
-                .upload(filePath, file, { upsert: true });
+                .upload(filePath, compressedFile, { upsert: true, cacheControl: '31536000' });
 
             if (uploadError) throw uploadError;
 

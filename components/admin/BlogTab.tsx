@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import imageCompression from 'browser-image-compression';
 import {
     Plus, Edit, Trash2, Eye, EyeOff, Save, X, ExternalLink,
     Search, Sparkles, Upload, Link2, Clock, BarChart3, CheckCircle2,
@@ -338,13 +339,15 @@ export default function BlogTab() {
 
         setUploadingImage(true);
         try {
-            const fileExt = file.name.split('.').pop();
+            const options = { maxSizeMB: 0.3, maxWidthOrHeight: 1200, useWebWorker: true };
+            const compressedFile = await imageCompression(file, options);
+            const fileExt = compressedFile.name.split('.').pop() || 'jpg';
             const fileName = `blog-${Date.now()}.${fileExt}`;
             const filePath = `blog/${fileName}`;
 
             const { error: uploadError } = await supabase.storage
                 .from('site-images')
-                .upload(filePath, file, { upsert: true });
+                .upload(filePath, compressedFile, { upsert: true, cacheControl: '31536000' });
 
             if (uploadError) throw uploadError;
 

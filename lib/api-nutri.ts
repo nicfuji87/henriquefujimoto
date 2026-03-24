@@ -1,4 +1,5 @@
 import { supabase } from './supabase';
+import imageCompression from 'browser-image-compression';
 
 // ============================================================
 // Types
@@ -33,6 +34,7 @@ export interface NutriDailyLog {
 export interface NutriHydrationLog {
     id: string;
     date: string;
+    time: string;
     drink_type: string;
     amount_ml: number;
     notes: string | null;
@@ -212,6 +214,7 @@ export const nutriApi = {
             .from('nutri_hydration_logs')
             .select('*')
             .eq('date', date)
+            .order('time', { ascending: true })
             .order('created_at', { ascending: true });
         if (error) { console.error(error); return []; }
         return data || [];
@@ -222,7 +225,7 @@ export const nutriApi = {
             .from('nutri_hydration_logs')
             .select('*')
             .order('date', { ascending: false })
-            .order('created_at', { ascending: false })
+            .order('time', { ascending: false })
             .limit(limit);
         if (error) { console.error(error); return []; }
         return data || [];
@@ -304,14 +307,26 @@ export const nutriApi = {
 
     // Photo upload
     uploadMealPhoto: async (file: File): Promise<string | null> => {
-        const ext = file.name.split('.').pop();
-        const fileName = `${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
-        const { error } = await supabase.storage
-            .from('nutri-photos')
-            .upload(fileName, file, { cacheControl: '3600', upsert: false });
-        if (error) { console.error(error); return null; }
-        const { data: publicUrl } = supabase.storage.from('nutri-photos').getPublicUrl(fileName);
-        return publicUrl.publicUrl;
+        try {
+            const options = {
+                maxSizeMB: 0.2, // Compress to max ~200KB
+                maxWidthOrHeight: 1200,
+                useWebWorker: true
+            };
+            const compressedFile = await imageCompression(file, options);
+            
+            const ext = compressedFile.name.split('.').pop() || 'jpg';
+            const fileName = `${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
+            const { error } = await supabase.storage
+                .from('nutri-photos')
+                .upload(fileName, compressedFile, { cacheControl: '31536000', upsert: false }); // Cache strong
+            if (error) { console.error(error); return null; }
+            const { data: publicUrl } = supabase.storage.from('nutri-photos').getPublicUrl(fileName);
+            return publicUrl.publicUrl;
+        } catch (error) {
+            console.error('Compression or upload error:', error);
+            return null;
+        }
     },
 
     // AI Analysis

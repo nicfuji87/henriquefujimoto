@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Save, Plus, Trash2, GripVertical, AlertCircle, CheckCircle2, Upload, Image, Film, Trophy, X } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
+import imageCompression from 'browser-image-compression';
 
 // ─── Types ───────────────────────────────────────────
 interface MediaItem {
@@ -173,13 +174,20 @@ export default function JourneyTab() {
             for (const file of Array.from(files) as File[]) {
                 const isVideo = (file as File).type.startsWith('video/');
                 const bucket = isVideo ? 'site-videos' : 'site-images';
-                const ext = (file as File).name.split('.').pop();
+                
+                let fileToUpload = file;
+                if (!isVideo) {
+                    const options = { maxSizeMB: 0.3, maxWidthOrHeight: 1200, useWebWorker: true };
+                    fileToUpload = await imageCompression(file, options);
+                }
+
+                const ext = fileToUpload.name.split('.').pop() || (isVideo ? 'mp4' : 'jpg');
                 const fileName = `milestone-${milestoneIndex}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}.${ext}`;
                 const filePath = `journey/${fileName}`;
 
                 const { error: uploadError } = await supabase.storage
                     .from(bucket)
-                    .upload(filePath, file as File, { upsert: true });
+                    .upload(filePath, fileToUpload, { upsert: true, cacheControl: '31536000' });
                 if (uploadError) throw uploadError;
 
                 const { data: { publicUrl } } = supabase.storage.from(bucket).getPublicUrl(filePath);
