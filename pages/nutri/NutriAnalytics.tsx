@@ -2,6 +2,21 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { nutriApi, NutriWeightLog, NutriDailyLog, NutriMeal, NutriDietPlan, NutriHydrationLog, DRINK_TYPES, DRINK_COLORS } from '../../lib/api-nutri';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine, Cell } from 'recharts';
 
+const CustomXAxisTick = (props: any) => {
+    const { x, y, payload } = props;
+    const parts = payload.value.split('\n');
+    return (
+        <g transform={`translate(${x},${y})`}>
+            <text x={0} y={0} dy={8} textAnchor="middle" fill="rgba(255,255,255,0.2)" fontSize={10}>
+                {parts[0]}
+                {parts.length > 1 && parts[1] !== '—' && (
+                    <tspan x={0} dy="12" fontSize={8} fill="rgba(255,255,255,0.15)">{parts[1]}</tspan>
+                )}
+            </text>
+        </g>
+    );
+};
+
 export default function NutriAnalytics() {
     const [weights, setWeights] = useState<NutriWeightLog[]>([]);
     const [dailyLogs, setDailyLogs] = useState<NutriDailyLog[]>([]);
@@ -42,7 +57,7 @@ export default function NutriAnalytics() {
 
     // Weight chart data
     const weightChartData = filteredWeights.map(w => ({
-        date: `${new Date(w.date + 'T12:00:00').getDate()}/${new Date(w.date + 'T12:00:00').getMonth() + 1}`,
+        date: `${new Date(w.date + 'T12:00:00').getDate()}/${new Date(w.date + 'T12:00:00').getMonth() + 1}\n${w.time ? w.time.slice(0, 5) : '—'}`,
         peso: w.weight,
         horário: w.time ? w.time.slice(0, 5) : '—',
     }));
@@ -160,7 +175,7 @@ export default function NutriAnalytics() {
                     <ResponsiveContainer width="100%" height={180}>
                         <LineChart data={weightChartData}>
                             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.03)" />
-                            <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: 'rgba(255,255,255,0.2)' }} dy={8} />
+                            <XAxis dataKey="date" axisLine={false} tickLine={false} tick={<CustomXAxisTick />} dy={8} />
                             <YAxis domain={['dataMin - 1', 'dataMax + 1']} axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: 'rgba(255,255,255,0.2)' }} dx={-5} />
                             <Tooltip {...tooltipStyle} />
                             <Line type="monotone" dataKey="peso" stroke="#34d399" strokeWidth={2.5} dot={{ r: 3, fill: '#34d399', strokeWidth: 0 }} activeDot={{ r: 5 }} />
@@ -173,7 +188,7 @@ export default function NutriAnalytics() {
                     <ResponsiveContainer width="100%" height={180}>
                         <BarChart data={hydrationChartData}>
                             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.03)" />
-                            <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: 'rgba(255,255,255,0.2)' }} dy={8} />
+                            <XAxis dataKey="date" axisLine={false} tickLine={false} tick={<CustomXAxisTick />} dy={8} />
                             <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: 'rgba(255,255,255,0.2)' }} dx={-5} />
                             <Tooltip {...tooltipStyle} />
                             <ReferenceLine y={2000} stroke="rgba(56,189,248,0.3)" strokeDasharray="4 4" label={{ value: '2L', position: 'right', fill: 'rgba(56,189,248,0.4)', fontSize: 10 }} />
@@ -195,7 +210,7 @@ export default function NutriAnalytics() {
                     <ResponsiveContainer width="100%" height={160}>
                         <BarChart data={sleepChartData}>
                             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.03)" />
-                            <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: 'rgba(255,255,255,0.2)' }} dy={8} />
+                            <XAxis dataKey="date" axisLine={false} tickLine={false} tick={<CustomXAxisTick />} dy={8} />
                             <YAxis domain={[0, 12]} axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: 'rgba(255,255,255,0.2)' }} dx={-5} />
                             <Tooltip {...tooltipStyle} />
                             <ReferenceLine y={8} stroke="rgba(167,139,250,0.3)" strokeDasharray="4 4" label={{ value: '8h', position: 'right', fill: 'rgba(167,139,250,0.4)', fontSize: 10 }} />
@@ -209,7 +224,7 @@ export default function NutriAnalytics() {
                     <ResponsiveContainer width="100%" height={140}>
                         <BarChart data={energyChartData}>
                             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.03)" />
-                            <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: 'rgba(255,255,255,0.2)' }} dy={8} />
+                            <XAxis dataKey="date" axisLine={false} tickLine={false} tick={<CustomXAxisTick />} dy={8} />
                             <YAxis domain={[0, 5]} axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: 'rgba(255,255,255,0.2)' }} dx={-5} />
                             <Tooltip {...tooltipStyle} />
                             <Bar dataKey="energia" radius={[4, 4, 0, 0]}>
@@ -268,7 +283,7 @@ export default function NutriAnalytics() {
                     <ResponsiveContainer width="100%" height={180}>
                         <BarChart data={calorieChartData}>
                             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.03)" />
-                            <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: 'rgba(255,255,255,0.2)' }} dy={8} />
+                            <XAxis dataKey="date" axisLine={false} tickLine={false} tick={<CustomXAxisTick />} dy={8} />
                             <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: 'rgba(255,255,255,0.2)' }} dx={-5} />
                             <Tooltip {...tooltipStyle} />
                             {prescribedTotal > 0 && (

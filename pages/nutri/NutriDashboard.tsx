@@ -20,6 +20,7 @@ export default function NutriDashboard() {
 
     // Daily log form
     const [showDailyForm, setShowDailyForm] = useState(false);
+    const [dailyDate, setDailyDate] = useState(new Date().toISOString().slice(0, 10));
     const [sleepDateBedtime, setSleepDateBedtime] = useState(new Date().toISOString().slice(0, 10));
     const [bedtime, setBedtime] = useState('');
     const [sleepDateWaketime, setSleepDateWaketime] = useState(new Date().toISOString().slice(0, 10));
@@ -83,6 +84,7 @@ export default function NutriDashboard() {
     const handleSaveDaily = async () => {
         setSavingDaily(true);
         await nutriApi.saveDailyLog({
+            date: dailyDate,
             sleep_bedtime: bedtime || null,
             sleep_waketime: waketime || null,
             sleep_date_bedtime: sleepDateBedtime || null,
@@ -330,7 +332,7 @@ export default function NutriDashboard() {
 
                 {/* ===== REGISTRO DIÁRIO ===== */}
                 {!showDailyForm ? (
-                    <button onClick={() => setShowDailyForm(true)}
+                    <button onClick={() => { setShowDailyForm(true); setDailyDate(today); }}
                         className="w-full nutri-card rounded-2xl p-4 flex items-center gap-3 hover:border-emerald-500/20 transition-all active:scale-[0.98]">
                         <div className="w-10 h-10 rounded-xl bg-purple-500/10 flex items-center justify-center">
                             <span className="material-symbols-outlined text-purple-400">edit_note</span>
@@ -353,6 +355,13 @@ export default function NutriDashboard() {
                             </button>
                         </div>
                         <div className="space-y-4">
+                            {/* Daily Log Date */}
+                            <div>
+                                <label className="block text-[10px] font-bold text-purple-400/70 uppercase tracking-wider mb-2">Data do Registro</label>
+                                <input type="date" value={dailyDate} onChange={e => setDailyDate(e.target.value)}
+                                    className="w-full p-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-xs focus:outline-none focus:border-purple-500/50" />
+                            </div>
+
                             {/* Sleep with dates */}
                             <div>
                                 <label className="block text-[10px] font-bold text-purple-400/70 uppercase tracking-wider mb-2">Sono</label>

@@ -200,10 +200,10 @@ export const nutriApi = {
     },
 
     saveDailyLog: async (log: Partial<NutriDailyLog>): Promise<boolean> => {
-        const today = new Date().toISOString().slice(0, 10);
+        const date = log.date || new Date().toISOString().slice(0, 10);
         const { error } = await supabase
             .from('nutri_daily_logs')
-            .upsert([{ ...log, date: today }], { onConflict: 'date' });
+            .upsert([{ ...log, date }], { onConflict: 'date' });
         if (error) { console.error(error); return false; }
         return true;
     },
