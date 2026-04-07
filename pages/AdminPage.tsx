@@ -1115,6 +1115,98 @@ function BioTab() {
         }
     }
 
+    async function compressVideo(file: File, maxHeight: number): Promise<File> {
+        return new Promise((resolve, reject) => {
+            const video = document.createElement('video');
+            video.muted = true;
+            video.playsInline = true;
+            video.preload = 'auto';
+
+            const url = URL.createObjectURL(file);
+            video.src = url;
+
+            video.onloadedmetadata = () => {
+                // Calculate target dimensions
+                const scale = Math.min(1, maxHeight / video.videoHeight);
+                const width = Math.round(video.videoWidth * scale);
+                const height = Math.round(video.videoHeight * scale);
+
+                const canvas = document.createElement('canvas');
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d')!;
+
+                // Check for MediaRecorder + webm support
+                const mimeType = MediaRecorder.isTypeSupported('video/webm;codecs=vp9')
+                    ? 'video/webm;codecs=vp9'
+                    : MediaRecorder.isTypeSupported('video/webm;codecs=vp8')
+                        ? 'video/webm;codecs=vp8'
+                        : 'video/webm';
+
+                const stream = canvas.captureStream(30);
+                const recorder = new MediaRecorder(stream, {
+                    mimeType,
+                    videoBitsPerSecond: 1_500_000, // 1.5 Mbps — good quality at small size
+                });
+
+                const chunks: Blob[] = [];
+                recorder.ondataavailable = (e) => {
+                    if (e.data.size > 0) chunks.push(e.data);
+                };
+
+                recorder.onstop = () => {
+                    URL.revokeObjectURL(url);
+                    const blob = new Blob(chunks, { type: mimeType });
+                    const compressedFile = new File([blob], file.name.replace(/\.[^.]+$/, '.webm'), { type: mimeType });
+                    console.log(`[Video Compress] ${(file.size / 1024 / 1024).toFixed(1)}MB → ${(compressedFile.size / 1024 / 1024).toFixed(1)}MB (${Math.round((1 - compressedFile.size / file.size) * 100)}% reduced)`);
+                    resolve(compressedFile);
+                };
+
+                recorder.onerror = (e) => {
+                    URL.revokeObjectURL(url);
+                    reject(e);
+                };
+
+                // Start recording and play
+                video.currentTime = 0;
+                video.oncanplay = () => {
+                    recorder.start();
+                    video.play();
+
+                    const drawFrame = () => {
+                        if (video.ended || video.paused) {
+                            recorder.stop();
+                            return;
+                        }
+                        ctx.drawImage(video, 0, 0, width, height);
+                        requestAnimationFrame(drawFrame);
+                    };
+                    requestAnimationFrame(drawFrame);
+
+                    // Update progress message
+                    const progressInterval = setInterval(() => {
+                        if (video.ended || video.paused) {
+                            clearInterval(progressInterval);
+                            return;
+                        }
+                        const pct = video.duration > 0 ? Math.round((video.currentTime / video.duration) * 100) : 0;
+                        setMessage({ type: 'success', text: `⏳ Comprimindo vídeo... ${pct}%` });
+                    }, 500);
+
+                    video.onended = () => {
+                        clearInterval(progressInterval);
+                        setTimeout(() => recorder.stop(), 100);
+                    };
+                };
+            };
+
+            video.onerror = () => {
+                URL.revokeObjectURL(url);
+                reject(new Error('Erro ao carregar vídeo para compressão'));
+            };
+        });
+    }
+
     async function handleVideoUpload(e: React.ChangeEvent<HTMLInputElement>, videoType: 'mobile' | 'desktop') {
         const file = e.target.files?.[0];
         if (!file) return;
@@ -1126,13 +1218,33 @@ function BioTab() {
         setMessage(null);
 
         try {
-            const fileExt = file.name.split('.').pop();
+            // Compress video: mobile → 720p, desktop → 1080p
+            const maxHeight = videoType === 'mobile' ? 720 : 1080;
+            let uploadFile: File = file;
+
+            const originalSizeMB = file.size / (1024 * 1024);
+            setMessage({ type: 'success', text: `⏳ Comprimindo vídeo (${originalSizeMB.toFixed(1)}MB)...` });
+
+            try {
+                if (typeof MediaRecorder !== 'undefined') {
+                    uploadFile = await compressVideo(file, maxHeight);
+                } else {
+                    console.warn('[Video] MediaRecorder not supported, uploading original');
+                }
+            } catch (compressErr) {
+                console.warn('[Video] Compression failed, uploading original:', compressErr);
+            }
+
+            const compressedSizeMB = uploadFile.size / (1024 * 1024);
+            setMessage({ type: 'success', text: `📤 Enviando vídeo (${compressedSizeMB.toFixed(1)}MB)...` });
+
+            const fileExt = uploadFile.name.split('.').pop() || 'webm';
             const fileName = `hero-video-${videoType}-${Date.now()}.${fileExt}`;
             const filePath = `hero/${fileName}`;
 
             const { error: uploadError } = await supabase.storage
                 .from('site-videos')
-                .upload(filePath, file, { upsert: true });
+                .upload(filePath, uploadFile, { upsert: true, cacheControl: '31536000' });
 
             if (uploadError) throw uploadError;
 
@@ -1141,10 +1253,10 @@ function BioTab() {
                 .getPublicUrl(filePath);
 
             setConfig(prev => ({ ...prev, [configKey]: data.publicUrl }));
-            setMessage({ type: 'success', text: `Vídeo ${videoType === 'mobile' ? 'mobile' : 'desktop'} carregado! Clique em Salvar para confirmar.` });
+            setMessage({ type: 'success', text: `✅ Vídeo ${videoType === 'mobile' ? 'mobile' : 'desktop'} carregado (${originalSizeMB.toFixed(1)}MB → ${compressedSizeMB.toFixed(1)}MB)! Clique em Salvar.` });
         } catch (err) {
             console.error('Error uploading video:', err);
-            setMessage({ type: 'error', text: 'Erro ao fazer upload do vídeo (verifique o tamanho, max ~50MB no plano free)' });
+            setMessage({ type: 'error', text: 'Erro ao fazer upload do vídeo. Tente comprimir o vídeo antes ou use um arquivo menor.' });
         } finally {
             setUploading(false);
         }
