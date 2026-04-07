@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { nutriApi, NutriMeal, NutriDietPlan, MEAL_TYPES, MEAL_ICONS, AiFoodAnalysis } from '../../lib/api-nutri';
+import { nutriApi, NutriMeal, NutriDietPlan, MEAL_TYPES, MEAL_ICONS, AiFoodAnalysis, SATIETY_LEVELS } from '../../lib/api-nutri';
 
 type MealMode = 'diet_check' | 'custom_text' | 'photo';
 
@@ -12,6 +12,7 @@ export default function NutriMeals() {
     const [mealType, setMealType] = useState('lunch');
     const [mode, setMode] = useState<MealMode>('diet_check');
     const [description, setDescription] = useState('');
+    const [satiety, setSatiety] = useState<string | null>(null);
     const [photoFile, setPhotoFile] = useState<File | null>(null);
     const [photoPreview, setPhotoPreview] = useState<string | null>(null);
     const [saving, setSaving] = useState(false);
@@ -86,6 +87,7 @@ export default function NutriMeals() {
             photo_url,
             ai_estimated_calories: aiResult?.total_calories || null,
             ai_analysis: aiResult ? JSON.stringify(aiResult) : null,
+            satiety,
         };
 
         // If diet_check, get prescribed calories
@@ -110,6 +112,7 @@ export default function NutriMeals() {
         setPhotoPreview(null);
         setAiResult(null);
         setMode('diet_check');
+        setSatiety(null);
         loadData();
         setSaving(false);
     };
@@ -287,6 +290,20 @@ export default function NutriMeals() {
                             </div>
                         )}
 
+                        {/* Satiety Selector */}
+                        <div className="mb-4">
+                            <label className="block text-[10px] font-bold text-emerald-400/70 uppercase tracking-wider mb-2">Como se sentiu?</label>
+                            <div className="flex flex-wrap gap-2">
+                                {Object.entries(SATIETY_LEVELS).map(([key, data]) => (
+                                    <button key={key} onClick={() => setSatiety(key)}
+                                        className={`px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${satiety === key ? 'bg-orange-500/20 text-orange-400 border border-orange-500/30' : 'bg-white/5 text-white/30 border border-white/5 hover:bg-white/10'}`}>
+                                        <span className="text-sm">{data.icon}</span>
+                                        {data.label}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
                         {/* AI Result */}
                         {aiResult && (
                             <div className="p-4 rounded-xl bg-gradient-to-br from-blue-500/10 to-purple-500/10 border border-blue-500/15 mb-4">
@@ -400,6 +417,12 @@ export default function NutriMeals() {
                                         <p className="text-xs text-white/40 line-clamp-2">{meal.description}</p>
                                         {meal.ai_estimated_calories && (
                                             <p className="text-xs font-bold text-orange-400 mt-1">{meal.ai_estimated_calories} kcal</p>
+                                        )}
+                                        {meal.satiety && SATIETY_LEVELS[meal.satiety] && (
+                                            <p className="text-[10px] text-white/40 mt-1 flex items-center gap-1">
+                                                <span>{SATIETY_LEVELS[meal.satiety].icon}</span>
+                                                {SATIETY_LEVELS[meal.satiety].label}
+                                            </p>
                                         )}
                                     </div>
                                 </div>

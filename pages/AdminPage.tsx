@@ -61,7 +61,7 @@ const mockPosts: Post[] = [
     },
 ];
 
-type Tab = 'dashboard' | 'blog' | 'posts' | 'bio' | 'home_cards' | 'products' | 'journey' | 'tracking' | 'event_logs' | 'ads' | 'settings';
+type Tab = 'dashboard' | 'blog' | 'home_config' | 'products' | 'journey' | 'tracking' | 'event_logs' | 'ads' | 'settings';
 
 function Sidebar({
     activeTab,
@@ -77,9 +77,7 @@ function Sidebar({
     const menuItems = [
         { id: 'dashboard' as Tab, label: 'Dashboard', icon: LayoutDashboard },
         { id: 'blog' as Tab, label: 'Blog', icon: Newspaper },
-        { id: 'posts' as Tab, label: 'Posts IG', icon: FileText },
-        { id: 'bio' as Tab, label: 'Bio / Home', icon: Home },
-        { id: 'home_cards' as Tab, label: 'Cards Home', icon: LayoutDashboard },
+        { id: 'home_config' as Tab, label: 'Home Config', icon: Home },
         { id: 'products' as Tab, label: 'Produtos', icon: ShoppingBag },
         { id: 'journey' as Tab, label: 'Jornada', icon: MapPin },
         { id: 'tracking' as Tab, label: 'Tracking & SEO', icon: Activity },
@@ -341,50 +339,50 @@ function DashboardTab() {
     }
 
     return (
-        <div className="space-y-8">
+        <div className="space-y-8 overflow-hidden">
             <div>
                 <h2 className="text-2xl font-bold text-white mb-2">Dashboard</h2>
                 <p className="text-zinc-400">Visão geral do Site e Instagram • Últimos 30 dias</p>
             </div>
 
             {/* Row 0: Site Analytics (GA4) */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3">
                 <motion.div
                     initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0 }}
-                    className="bg-zinc-900/60 backdrop-blur-sm border border-zinc-800/50 rounded-2xl p-5 relative overflow-hidden"
+                    className="bg-zinc-900/60 backdrop-blur-sm border border-zinc-800/50 rounded-2xl p-3 sm:p-5 relative overflow-hidden"
                 >
                     <div className="absolute top-0 right-0 p-3 opacity-10">
                         <Activity className="w-16 h-16 text-blue-500" />
                     </div>
                     <p className="text-zinc-400 text-xs font-medium uppercase tracking-wider mb-1">Usuários Ativos (30d)</p>
-                    <p className="text-3xl font-bold text-white">{formatNum(gaMetrics?.activeUsers || 0)}</p>
+                    <p className="text-xl sm:text-3xl font-bold text-white">{formatNum(gaMetrics?.activeUsers || 0)}</p>
                     <span className="text-xs text-blue-400 font-medium">Google Analytics 4</span>
                 </motion.div>
 
                 <motion.div
                     initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
-                    className="bg-zinc-900/60 backdrop-blur-sm border border-zinc-800/50 rounded-2xl p-5"
+                    className="bg-zinc-900/60 backdrop-blur-sm border border-zinc-800/50 rounded-2xl p-3 sm:p-5"
                 >
                     <p className="text-zinc-400 text-xs font-medium uppercase tracking-wider mb-1">Visualizações de Página</p>
-                    <p className="text-3xl font-bold text-white">{formatNum(gaMetrics?.screenPageViews || 0)}</p>
+                    <p className="text-xl sm:text-3xl font-bold text-white">{formatNum(gaMetrics?.screenPageViews || 0)}</p>
                     <span className="text-xs text-zinc-500">Total de views</span>
                 </motion.div>
 
                 <motion.div
                     initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
-                    className="bg-zinc-900/60 backdrop-blur-sm border border-zinc-800/50 rounded-2xl p-5"
+                    className="bg-zinc-900/60 backdrop-blur-sm border border-zinc-800/50 rounded-2xl p-3 sm:p-5"
                 >
                     <p className="text-zinc-400 text-xs font-medium uppercase tracking-wider mb-1">Sessões</p>
-                    <p className="text-3xl font-bold text-white">{formatNum(gaMetrics?.sessions || 0)}</p>
+                    <p className="text-xl sm:text-3xl font-bold text-white">{formatNum(gaMetrics?.sessions || 0)}</p>
                     <span className="text-xs text-zinc-500">Visitas únicas</span>
                 </motion.div>
 
                 <motion.div
                     initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
-                    className="bg-zinc-900/60 backdrop-blur-sm border border-zinc-800/50 rounded-2xl p-5"
+                    className="bg-zinc-900/60 backdrop-blur-sm border border-zinc-800/50 rounded-2xl p-3 sm:p-5"
                 >
                     <p className="text-zinc-400 text-xs font-medium uppercase tracking-wider mb-1">Engajamento Médio</p>
-                    <p className="text-3xl font-bold text-white">{gaMetrics ? (gaMetrics.engagementRate * 100).toFixed(1) + '%' : '0%'}</p>
+                    <p className="text-xl sm:text-3xl font-bold text-white">{gaMetrics ? (gaMetrics.engagementRate * 100).toFixed(1) + '%' : '0%'}</p>
                     <span className="text-xs text-zinc-500">Taxa de interação</span>
                 </motion.div>
             </div>
@@ -399,9 +397,9 @@ function DashboardTab() {
             )}
 
             {/* Row 0.5: Top Blog Posts & Locations */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-6">
                 {gaMetrics?.topPages && gaMetrics.topPages.length > 0 && (
-                    <div className="lg:col-span-2 bg-zinc-900/60 backdrop-blur-sm border border-zinc-800/50 rounded-2xl p-6">
+                    <div className="lg:col-span-2 bg-zinc-900/60 backdrop-blur-sm border border-zinc-800/50 rounded-2xl p-3 sm:p-6">
                         <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
                             <FileText className="w-5 h-5 text-purple-500" />
                             Posts Mais Lidos (30d)
@@ -452,7 +450,7 @@ function DashboardTab() {
                 {/* Locations */}
                 {
                     gaMetrics?.locations && gaMetrics.locations.length > 0 && (
-                        <div className="bg-zinc-900/60 backdrop-blur-sm border border-zinc-800/50 rounded-2xl p-6">
+                        <div className="bg-zinc-900/60 backdrop-blur-sm border border-zinc-800/50 rounded-2xl p-3 sm:p-6">
                             <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
                                 <MapPin className="w-5 h-5 text-green-500" />
                                 Top Cidades (30d)
@@ -486,14 +484,14 @@ function DashboardTab() {
             </div >
 
             {/* Row 1: Instagram Metrics */}
-            < div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4" >
+            < div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3" >
                 {/* Followers */}
                 < motion.div
                     initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0 }}
-                    className="bg-zinc-900/60 backdrop-blur-sm border border-zinc-800/50 rounded-2xl p-5"
+                    className="bg-zinc-900/60 backdrop-blur-sm border border-zinc-800/50 rounded-2xl p-3 sm:p-5"
                 >
                     <p className="text-zinc-400 text-xs font-medium uppercase tracking-wider mb-1">Seguidores</p>
-                    <p className="text-3xl font-bold text-white">{formatNum(igMetrics?.followers || 0)}</p>
+                    <p className="text-xl sm:text-3xl font-bold text-white">{formatNum(igMetrics?.followers || 0)}</p>
                     <div className="flex items-center gap-2 mt-1">
                         <span className="text-xs text-emerald-400 font-medium">+{igMetrics?.followersGain || 0} novos</span>
                         <GrowthIndicator value={igMetrics?.followersGrowth || 0} />
@@ -503,30 +501,30 @@ function DashboardTab() {
                 {/* Reach */}
                 < motion.div
                     initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
-                    className="bg-zinc-900/60 backdrop-blur-sm border border-zinc-800/50 rounded-2xl p-5"
+                    className="bg-zinc-900/60 backdrop-blur-sm border border-zinc-800/50 rounded-2xl p-3 sm:p-5"
                 >
                     <p className="text-zinc-400 text-xs font-medium uppercase tracking-wider mb-1">Alcance (30d)</p>
-                    <p className="text-3xl font-bold text-white">{formatNum(igMetrics?.reach || 0)}</p>
+                    <p className="text-xl sm:text-3xl font-bold text-white">{formatNum(igMetrics?.reach || 0)}</p>
                     <GrowthIndicator value={igMetrics?.reachGrowth || 0} />
                 </motion.div >
 
                 {/* Interactions */}
                 < motion.div
                     initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
-                    className="bg-zinc-900/60 backdrop-blur-sm border border-zinc-800/50 rounded-2xl p-5"
+                    className="bg-zinc-900/60 backdrop-blur-sm border border-zinc-800/50 rounded-2xl p-3 sm:p-5"
                 >
                     <p className="text-zinc-400 text-xs font-medium uppercase tracking-wider mb-1">Interações (30d)</p>
-                    <p className="text-3xl font-bold text-white">{formatNum(igMetrics?.interactions || 0)}</p>
+                    <p className="text-xl sm:text-3xl font-bold text-white">{formatNum(igMetrics?.interactions || 0)}</p>
                     <GrowthIndicator value={igMetrics?.interactionsGrowth || 0} />
                 </motion.div >
 
                 {/* Engagement */}
                 < motion.div
                     initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
-                    className="bg-zinc-900/60 backdrop-blur-sm border border-zinc-800/50 rounded-2xl p-5"
+                    className="bg-zinc-900/60 backdrop-blur-sm border border-zinc-800/50 rounded-2xl p-3 sm:p-5"
                 >
                     <p className="text-zinc-400 text-xs font-medium uppercase tracking-wider mb-1">Engajamento</p>
-                    <p className="text-3xl font-bold text-white">
+                    <p className="text-xl sm:text-3xl font-bold text-white">
                         {igMetrics && igMetrics.followers > 0
                             ? ((igMetrics.interactions / igMetrics.followers) * 100).toFixed(1) + '%'
                             : '—'}
@@ -536,29 +534,29 @@ function DashboardTab() {
             </div >
 
             {/* Row 2: Content Stats */}
-            < div className="grid grid-cols-1 md:grid-cols-3 gap-4" >
+            < div className="grid grid-cols-1 sm:grid-cols-3 gap-3" >
                 <motion.div
                     initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}
-                    className="bg-zinc-900/60 backdrop-blur-sm border border-zinc-800/50 rounded-2xl p-5"
+                    className="bg-zinc-900/60 backdrop-blur-sm border border-zinc-800/50 rounded-2xl p-3 sm:p-5"
                 >
                     <p className="text-zinc-400 text-xs font-medium uppercase tracking-wider mb-1">Posts Indexados</p>
-                    <p className="text-3xl font-bold text-white">{contentStats.totalPosts}</p>
+                    <p className="text-xl sm:text-3xl font-bold text-white">{contentStats.totalPosts}</p>
                     <span className="text-xs text-zinc-500">No banco de dados</span>
                 </motion.div>
                 <motion.div
                     initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}
-                    className="bg-zinc-900/60 backdrop-blur-sm border border-zinc-800/50 rounded-2xl p-5"
+                    className="bg-zinc-900/60 backdrop-blur-sm border border-zinc-800/50 rounded-2xl p-3 sm:p-5"
                 >
                     <p className="text-zinc-400 text-xs font-medium uppercase tracking-wider mb-1">Total de Likes</p>
-                    <p className="text-3xl font-bold text-white">{formatNum(contentStats.totalLikes)}</p>
+                    <p className="text-xl sm:text-3xl font-bold text-white">{formatNum(contentStats.totalLikes)}</p>
                     <span className="text-xs text-zinc-500">Todos os posts</span>
                 </motion.div>
                 <motion.div
                     initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }}
-                    className="bg-zinc-900/60 backdrop-blur-sm border border-zinc-800/50 rounded-2xl p-5"
+                    className="bg-zinc-900/60 backdrop-blur-sm border border-zinc-800/50 rounded-2xl p-3 sm:p-5"
                 >
                     <p className="text-zinc-400 text-xs font-medium uppercase tracking-wider mb-1">Total de Comentários</p>
-                    <p className="text-3xl font-bold text-white">{formatNum(contentStats.totalComments)}</p>
+                    <p className="text-xl sm:text-3xl font-bold text-white">{formatNum(contentStats.totalComments)}</p>
                     <span className="text-xs text-zinc-500">Todos os posts</span>
                 </motion.div>
             </div >
@@ -567,7 +565,7 @@ function DashboardTab() {
             {followersHistory.length > 1 && (
                 <motion.div
                     initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.7 }}
-                    className="bg-zinc-900/60 backdrop-blur-sm border border-zinc-800/50 rounded-2xl p-6 max-w-full overflow-hidden"
+                    className="bg-zinc-900/60 backdrop-blur-sm border border-zinc-800/50 rounded-2xl p-3 sm:p-6 max-w-full overflow-hidden"
                 >
                     <div className="flex items-center justify-between mb-4">
                         <h3 className="text-lg font-semibold text-white">📈 Evolução de Seguidores</h3>
@@ -631,7 +629,7 @@ function DashboardTab() {
                 pageViews.length > 0 && (
                     <motion.div
                         initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.75 }}
-                        className="bg-zinc-900/60 backdrop-blur-sm border border-zinc-800/50 rounded-2xl p-6"
+                        className="bg-zinc-900/60 backdrop-blur-sm border border-zinc-800/50 rounded-2xl p-3 sm:p-6"
                     >
                         <div className="flex items-center justify-between mb-4">
                             <h3 className="text-lg font-semibold text-white flex items-center gap-2">
@@ -676,7 +674,7 @@ function DashboardTab() {
                 topPosts.length > 0 && (
                     <motion.div
                         initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.8 }}
-                        className="bg-zinc-900/60 backdrop-blur-sm border border-zinc-800/50 rounded-2xl p-6"
+                        className="bg-zinc-900/60 backdrop-blur-sm border border-zinc-800/50 rounded-2xl p-3 sm:p-6"
                     >
                         <h3 className="text-lg font-semibold text-white mb-4">🔥 Top Posts por Engajamento</h3>
                         <div className="space-y-3">
@@ -2119,7 +2117,7 @@ export default function AdminPage() {
                 </header>
 
                 {/* Page Content */}
-                <main className="flex-1 p-6">
+                <main className="flex-1 p-3 sm:p-6 overflow-x-hidden">
                     <AnimatePresence mode="wait">
                         <motion.div
                             key={activeTab}
@@ -2130,9 +2128,14 @@ export default function AdminPage() {
                         >
                             {activeTab === 'dashboard' && <DashboardTab />}
                             {activeTab === 'blog' && <BlogTab />}
-                            {activeTab === 'posts' && <PostsTab />}
-                            {activeTab === 'bio' && <BioTab />}
-                            {activeTab === 'home_cards' && <HomeCardsTab />}
+                            {activeTab === 'home_config' && (
+                                <div className="space-y-10">
+                                    <BioTab />
+                                    <div className="border-t border-zinc-800/50 pt-8">
+                                        <HomeCardsTab />
+                                    </div>
+                                </div>
+                            )}
                             {activeTab === 'products' && <AffiliateProductsTab />}
                             {activeTab === 'journey' && <JourneyTab />}
                             {activeTab === 'tracking' && <TrackingTab />}

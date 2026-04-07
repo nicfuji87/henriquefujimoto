@@ -257,7 +257,7 @@ export default function HomePage() {
                                     <div className="flex items-center gap-1">
                                         <TrendingUp className="w-4 h-4 text-green-400" />
                                         <span className="text-sm font-bold text-green-400">
-                                            {metrics.reach_growth > 0 ? '+' : ''}{metrics.reach_growth}%
+                                            {metrics.reach_growth > 0 ? '+' : ''}{Number(metrics.reach_growth).toFixed(2)}%
                                         </span>
                                     </div>
                                 )}

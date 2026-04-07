@@ -501,10 +501,10 @@ export default function AffiliateProductsTab() {
     );
 
     return (
-        <div className="space-y-6">
-            <div className="flex items-center justify-between">
+        <div className="space-y-6 overflow-hidden">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                 <div>
-                    <h2 className="text-2xl font-bold text-white mb-1">Produtos Afiliados</h2>
+                    <h2 className="text-xl sm:text-2xl font-bold text-white mb-1">Produtos Afiliados</h2>
                     <p className="text-zinc-400 text-sm">Gerencie os produtos que aparecem na Home para comissão</p>
                 </div>
                 <button
@@ -512,7 +512,7 @@ export default function AffiliateProductsTab() {
                         resetForm();
                         setShowAddForm(true);
                     }}
-                    className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg font-medium hover:bg-emerald-500 transition-colors"
+                    className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg font-medium hover:bg-emerald-500 transition-colors w-full sm:w-auto justify-center"
                 >
                     <Plus className="w-4 h-4" />
                     Novo Produto
@@ -620,11 +620,11 @@ export default function AffiliateProductsTab() {
                                 : 'border-zinc-800/50 hover:border-zinc-700/50'
                                 } ${!product.is_active ? 'opacity-50' : ''}`}
                         >
-                            <div className="flex items-center gap-4 p-4">
-                                <GripVertical className="w-4 h-4 text-zinc-600 flex-shrink-0 cursor-grab" />
+                            <div className="flex items-center gap-2 sm:gap-4 p-3 sm:p-4">
+                                <GripVertical className="w-4 h-4 text-zinc-600 flex-shrink-0 cursor-grab hidden sm:block" />
 
                                 {/* Thumbnail */}
-                                <div className="w-14 h-14 rounded-lg bg-zinc-800 overflow-hidden flex-shrink-0 border border-zinc-700/50">
+                                <div className="w-10 h-10 sm:w-14 sm:h-14 rounded-lg bg-zinc-800 overflow-hidden flex-shrink-0 border border-zinc-700/50">
                                     {product.image_url ? (
                                         <img src={product.image_url} alt={product.name} className="w-full h-full object-cover" />
                                     ) : (
@@ -652,13 +652,13 @@ export default function AffiliateProductsTab() {
                                 </div>
 
                                 {/* Click count */}
-                                <div className="flex items-center gap-1 flex-shrink-0 bg-zinc-800/50 rounded-lg px-2 py-1" title="Cliques">
+                                <div className="flex items-center gap-1 flex-shrink-0 bg-zinc-800/50 rounded-lg px-2 py-1 hidden sm:flex" title="Cliques">
                                     <MousePointerClick className="w-3 h-3 text-amber-400" />
                                     <span className="text-xs font-bold text-white">{product.click_count || 0}</span>
                                 </div>
 
                                 {/* Order */}
-                                <span className="text-xs text-zinc-600 font-mono flex-shrink-0">#{product.display_order}</span>
+                                <span className="text-xs text-zinc-600 font-mono flex-shrink-0 hidden sm:inline">#{product.display_order}</span>
 
                                 {/* Actions */}
                                 <div className="flex items-center gap-1 flex-shrink-0">

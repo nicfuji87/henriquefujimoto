@@ -77,77 +77,77 @@ export default function AdsTab() {
     const cpa = totalCheckouts > 0 ? totalSpend / totalCheckouts : 0;
 
     return (
-        <div className="space-y-6">
-            <div className="flex justify-between items-center">
+        <div className="space-y-6 overflow-hidden">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                 <div>
-                    <h2 className="text-2xl font-display font-bold text-white flex items-center gap-2">
-                        <Target className="w-6 h-6 text-primary" />
+                    <h2 className="text-xl sm:text-2xl font-display font-bold text-white flex items-center gap-2">
+                        <Target className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
                         Meta Ads
                     </h2>
-                    <p className="text-zinc-400">Acompanhe Granularmente Conjuntos e Anúncios</p>
+                    <p className="text-sm text-zinc-400">Acompanhe Granularmente Conjuntos e Anúncios</p>
                 </div>
 
                 <button
                     onClick={handleSync}
                     disabled={syncing}
-                    className="flex items-center gap-2 px-4 py-2 bg-primary/10 text-primary rounded-xl font-medium hover:bg-primary/20 transition-all disabled:opacity-50"
+                    className="flex items-center gap-2 px-3 py-2 bg-primary/10 text-primary rounded-xl text-sm font-medium hover:bg-primary/20 transition-all disabled:opacity-50 w-full sm:w-auto justify-center"
                 >
                     <RefreshCw className={`w-4 h-4 ${syncing ? 'animate-spin' : ''}`} />
-                    Forçar Sincronização (Hoje)
+                    Sincronizar (Hoje)
                 </button>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 {/* Metrics Cards */}
-                <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-4">
+                <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-3 sm:p-4">
                     <div className="flex items-center justify-between text-zinc-400 mb-2">
-                        <span className="font-medium">Total Gasto (Recente)</span>
-                        <DollarSign className="w-4 h-4 text-emerald-400" />
+                        <span className="text-xs sm:text-sm font-medium">Total Gasto</span>
+                        <DollarSign className="w-4 h-4 text-emerald-400 hidden sm:block" />
                     </div>
-                    <div className="text-2xl font-bold text-white">
+                    <div className="text-lg sm:text-2xl font-bold text-white">
                         R$ {totalSpend.toFixed(2)}
                     </div>
                 </div>
 
-                <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-4">
+                <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-3 sm:p-4">
                     <div className="flex items-center justify-between text-zinc-400 mb-2">
-                        <span className="font-medium">Initiate Checkouts</span>
-                        <TrendingUp className="w-4 h-4 text-primary" />
+                        <span className="text-xs sm:text-sm font-medium">Checkouts</span>
+                        <TrendingUp className="w-4 h-4 text-primary hidden sm:block" />
                     </div>
-                    <div className="text-2xl font-bold text-white">
+                    <div className="text-lg sm:text-2xl font-bold text-white">
                         {totalCheckouts}
                     </div>
                 </div>
 
-                <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-4">
+                <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-3 sm:p-4">
                     <div className="flex items-center justify-between text-zinc-400 mb-2">
-                        <span className="font-medium">Custo por Checkout</span>
-                        <Target className="w-4 h-4 text-zinc-400" />
+                        <span className="text-xs sm:text-sm font-medium">CPA</span>
+                        <Target className="w-4 h-4 text-zinc-400 hidden sm:block" />
                     </div>
-                    <div className="text-2xl font-bold text-white">
+                    <div className="text-lg sm:text-2xl font-bold text-white">
                         R$ {cpa.toFixed(2)}
                     </div>
                 </div>
 
-                <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-4">
+                <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-3 sm:p-4">
                     <div className="flex items-center justify-between text-zinc-400 mb-2">
-                        <span className="font-medium">Cliques (Recente)</span>
-                        <MousePointerClick className="w-4 h-4 text-blue-400" />
+                        <span className="text-xs sm:text-sm font-medium">Cliques</span>
+                        <MousePointerClick className="w-4 h-4 text-blue-400 hidden sm:block" />
                     </div>
-                    <div className="text-2xl font-bold text-white">
+                    <div className="text-lg sm:text-2xl font-bold text-white">
                         {totalClicks}
                     </div>
                 </div>
             </div>
 
             <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl overflow-hidden">
-                <div className="p-4 border-b border-zinc-800 flex items-center gap-2">
+                <div className="p-3 sm:p-4 border-b border-zinc-800 flex items-center gap-2">
                     <Calendar className="w-4 h-4 text-zinc-400" />
-                    <h3 className="font-medium text-white">Dados Granulados (Por Dia/Conjunto)</h3>
+                    <h3 className="text-sm sm:text-base font-medium text-white">Dados Granulados (Por Dia/Conjunto)</h3>
                 </div>
 
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left border-collapse">
+                <div className="overflow-x-auto -mx-0">
+                    <table className="w-full text-left border-collapse min-w-[700px]">
                         <thead>
                             <tr className="bg-zinc-900 text-zinc-400 text-sm">
                                 <th className="px-4 py-3 font-medium">Data</th>

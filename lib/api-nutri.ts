@@ -51,6 +51,7 @@ export interface NutriMeal {
     ai_estimated_calories: number | null;
     ai_analysis: string | null;
     ai_model: string | null;
+    satiety: string | null;
     created_at: string;
 }
 
@@ -132,6 +133,14 @@ export const BOWEL_TYPES: Record<string, { label: string; icon: string; desc: st
     liquido: { label: 'Líquido', icon: '🟠', desc: 'Aquoso, diarréia' },
     ressecado: { label: 'Ressecado', icon: '🟤', desc: 'Duro, com esforço' },
     misto: { label: 'Misto', icon: '🔵', desc: 'Combinação de tipos' },
+};
+
+export const SATIETY_LEVELS: Record<string, { label: string; icon: string }> = {
+    very_hungry: { label: 'Muita fome', icon: '😫' },
+    hungry: { label: 'Fome', icon: '😕' },
+    satisfied: { label: 'Na medida', icon: '😊' },
+    full: { label: 'Cheio', icon: '😮‍💨' },
+    very_full: { label: 'Muito cheio', icon: '🤢' },
 };
 
 // ============================================================
