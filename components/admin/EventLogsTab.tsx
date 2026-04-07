@@ -170,7 +170,7 @@ export default function EventLogsTab() {
     const maxHourVal = Math.max(...stats.byHour, 1);
 
     return (
-        <div className="max-w-6xl mx-auto space-y-6">
+        <div className="max-w-6xl mx-auto space-y-6 overflow-hidden">
             {/* Header */}
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <div>
@@ -243,7 +243,7 @@ export default function EventLogsTab() {
                         value={filterEvent}
                         onChange={e => setFilterEvent(e.target.value)}
                         placeholder="Filtrar por nome do evento..."
-                        className="bg-zinc-800/50 border border-zinc-700/50 rounded-lg px-3 py-1.5 text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-purple-500/50 w-64"
+                        className="bg-zinc-800/50 border border-zinc-700/50 rounded-lg px-3 py-1.5 text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-purple-500/50 w-full sm:w-64"
                     />
                     <select
                         value={filterSource}
@@ -264,52 +264,52 @@ export default function EventLogsTab() {
             ) : (
                 <>
                     {/* Summary Cards */}
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                         <motion.div
                             initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-                            className="bg-zinc-900/60 border border-zinc-800/50 rounded-2xl p-5"
+                            className="bg-zinc-900/60 border border-zinc-800/50 rounded-2xl p-3 sm:p-5"
                         >
                             <div className="flex items-center gap-2 mb-2">
                                 <Zap className="w-4 h-4 text-purple-400" />
                                 <span className="text-xs font-medium text-zinc-400 uppercase tracking-wider">Total Eventos</span>
                             </div>
-                            <p className="text-3xl font-bold text-white">{stats.total}</p>
+                            <p className="text-xl sm:text-3xl font-bold text-white">{stats.total}</p>
                             <p className="text-xs text-zinc-500 mt-1">nos últimos {periodLabels[period]}</p>
                         </motion.div>
 
                         <motion.div
                             initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}
-                            className="bg-zinc-900/60 border border-zinc-800/50 rounded-2xl p-5"
+                            className="bg-zinc-900/60 border border-zinc-800/50 rounded-2xl p-3 sm:p-5"
                         >
                             <div className="flex items-center gap-2 mb-2">
                                 <MousePointerClick className="w-4 h-4 text-blue-400" />
                                 <span className="text-xs font-medium text-zinc-400 uppercase tracking-wider">Produtos</span>
                             </div>
-                            <p className="text-3xl font-bold text-white">{stats.products}</p>
+                            <p className="text-xl sm:text-3xl font-bold text-white">{stats.products}</p>
                             <p className="text-xs text-zinc-500 mt-1">cliques em produtos</p>
                         </motion.div>
 
                         <motion.div
                             initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
-                            className="bg-zinc-900/60 border border-zinc-800/50 rounded-2xl p-5"
+                            className="bg-zinc-900/60 border border-zinc-800/50 rounded-2xl p-3 sm:p-5"
                         >
                             <div className="flex items-center gap-2 mb-2">
                                 <ArrowUpRight className="w-4 h-4 text-green-400" />
                                 <span className="text-xs font-medium text-zinc-400 uppercase tracking-wider">Cards</span>
                             </div>
-                            <p className="text-3xl font-bold text-white">{stats.cards}</p>
+                            <p className="text-xl sm:text-3xl font-bold text-white">{stats.cards}</p>
                             <p className="text-xs text-zinc-500 mt-1">cliques em cards</p>
                         </motion.div>
 
                         <motion.div
                             initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}
-                            className="bg-zinc-900/60 border border-zinc-800/50 rounded-2xl p-5"
+                            className="bg-zinc-900/60 border border-zinc-800/50 rounded-2xl p-3 sm:p-5"
                         >
                             <div className="flex items-center gap-2 mb-2">
                                 <TrendingUp className="w-4 h-4 text-amber-400" />
                                 <span className="text-xs font-medium text-zinc-400 uppercase tracking-wider">Eventos Únicos</span>
                             </div>
-                            <p className="text-3xl font-bold text-white">{stats.uniqueEvents}</p>
+                            <p className="text-xl sm:text-3xl font-bold text-white">{stats.uniqueEvents}</p>
                             <p className="text-xs text-zinc-500 mt-1">tipos diferentes</p>
                         </motion.div>
                     </div>
@@ -318,14 +318,14 @@ export default function EventLogsTab() {
                     {stats.dailyData.length > 1 && (
                         <motion.div
                             initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
-                            className="bg-zinc-900/60 border border-zinc-800/50 rounded-2xl p-6"
+                            className="bg-zinc-900/60 border border-zinc-800/50 rounded-2xl p-3 sm:p-6"
                         >
                             <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
                                 <TrendingUp className="w-5 h-5 text-purple-400" />
                                 Eventos por Dia
                             </h3>
                             <div className="w-full overflow-x-auto">
-                                <svg viewBox={`0 0 ${chartW} ${chartH}`} className="w-full h-auto" preserveAspectRatio="xMidYMid meet">
+                                <svg viewBox={`0 0 ${chartW} ${chartH}`} className="w-full h-auto min-w-[300px]" preserveAspectRatio="xMidYMid meet">
                                     <defs>
                                         <linearGradient id="eventAreaGrad" x1="0" y1="0" x2="0" y2="1">
                                             <stop offset="0%" stopColor="#a855f7" stopOpacity="0.3" />
@@ -363,11 +363,11 @@ export default function EventLogsTab() {
                     )}
 
                     {/* Two columns: Top Events + Hourly Distribution */}
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-6">
                         {/* Top Events Table */}
                         <motion.div
                             initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}
-                            className="bg-zinc-900/60 border border-zinc-800/50 rounded-2xl p-6"
+                            className="bg-zinc-900/60 border border-zinc-800/50 rounded-2xl p-3 sm:p-6 min-w-0"
                         >
                             <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
                                 <Zap className="w-5 h-5 text-amber-400" />
@@ -388,7 +388,7 @@ export default function EventLogsTab() {
                                                                 i === 2 ? 'bg-amber-700/20 text-amber-600' :
                                                                     'bg-zinc-800 text-zinc-500'
                                                             }`}>{i + 1}</span>
-                                                        <span className="text-sm font-medium text-white truncate max-w-[200px]" title={ev.name}>{ev.name}</span>
+                                                        <span className="text-sm font-medium text-white truncate max-w-[120px] sm:max-w-[200px]" title={ev.name}>{ev.name}</span>
                                                     </div>
                                                     <div className="flex items-center gap-3">
                                                         <span className="text-xs text-blue-400" title="Produtos">🛒 {ev.products}</span>
@@ -412,13 +412,13 @@ export default function EventLogsTab() {
                         {/* Hourly Distribution */}
                         <motion.div
                             initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
-                            className="bg-zinc-900/60 border border-zinc-800/50 rounded-2xl p-6"
+                            className="bg-zinc-900/60 border border-zinc-800/50 rounded-2xl p-3 sm:p-6 min-w-0"
                         >
                             <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
                                 <Clock className="w-5 h-5 text-cyan-400" />
                                 Distribuição por Horário
                             </h3>
-                            <div className="flex items-end gap-[3px] h-28">
+                            <div className="flex items-end gap-[2px] sm:gap-[3px] h-28 overflow-x-auto">
                                 {stats.byHour.map((count, hour) => (
                                     <div key={hour} className="flex-1 flex flex-col items-center gap-1 group" title={`${hour}h: ${count} eventos`}>
                                         <div
@@ -444,7 +444,7 @@ export default function EventLogsTab() {
                     {stats.topSources.length > 0 && (
                         <motion.div
                             initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }}
-                            className="bg-zinc-900/60 border border-zinc-800/50 rounded-2xl p-6"
+                            className="bg-zinc-900/60 border border-zinc-800/50 rounded-2xl p-3 sm:p-6"
                         >
                             <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
                                 <MousePointerClick className="w-5 h-5 text-blue-400" />
@@ -474,7 +474,7 @@ export default function EventLogsTab() {
                     {/* Recent Events Timeline */}
                     <motion.div
                         initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}
-                        className="bg-zinc-900/60 border border-zinc-800/50 rounded-2xl p-6"
+                        className="bg-zinc-900/60 border border-zinc-800/50 rounded-2xl p-3 sm:p-6"
                     >
                         <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
                             <Clock className="w-5 h-5 text-zinc-400" />

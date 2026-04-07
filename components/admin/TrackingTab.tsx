@@ -229,9 +229,9 @@ export default function TrackingTab() {
     if (!config) return null;
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-6 overflow-hidden">
             {/* Header */}
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                 <div>
                     <h2 className="text-2xl font-bold text-white mb-2">Tracking & SEO</h2>
                     <p className="text-zinc-400">Configure pixels, analytics e meta tags para indexação</p>
@@ -239,7 +239,7 @@ export default function TrackingTab() {
                 <button
                     onClick={handleSave}
                     disabled={saving}
-                    className="flex items-center gap-2 px-5 py-2.5 bg-primary text-black rounded-xl font-medium hover:bg-primary/90 transition-colors disabled:opacity-50"
+                    className="flex items-center gap-2 px-5 py-2.5 bg-primary text-black rounded-xl font-medium hover:bg-primary/90 transition-colors disabled:opacity-50 w-full sm:w-auto justify-center"
                 >
                     <Save className="w-4 h-4" />
                     {saving ? 'Salvando...' : 'Salvar Tudo'}
