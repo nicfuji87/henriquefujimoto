@@ -221,8 +221,11 @@ export default function BlogTab() {
     const [sourceText, setSourceText] = useState('');
     const [generationMode, setGenerationMode] = useState<'url' | 'text'>('url');
     const [uploadingImage, setUploadingImage] = useState(false);
+    const [uploadingContentImage, setUploadingContentImage] = useState(false);
     const [newKeyword, setNewKeyword] = useState('');
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const contentImageInputRef = useRef<HTMLInputElement>(null);
+    const contentTextareaRef = useRef<HTMLTextAreaElement>(null);
 
     useEffect(() => {
         fetchPosts();
@@ -362,6 +365,45 @@ export default function BlogTab() {
             setMessage({ type: 'error', text: 'Erro ao fazer upload da imagem' });
         } finally {
             setUploadingImage(false);
+        }
+    }
+
+    // Upload a photo and insert it into the post content (Markdown image) at the cursor position
+    async function handleContentImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        setUploadingContentImage(true);
+        try {
+            const options = { maxSizeMB: 0.3, maxWidthOrHeight: 1600, useWebWorker: true };
+            const compressedFile = await imageCompression(file, options);
+            const fileExt = compressedFile.name.split('.').pop() || 'jpg';
+            const fileName = `blog-content-${Date.now()}.${fileExt}`;
+            const filePath = `blog/${fileName}`;
+
+            const { error: uploadError } = await supabase.storage
+                .from('site-images')
+                .upload(filePath, compressedFile, { upsert: true, cacheControl: '31536000' });
+
+            if (uploadError) throw uploadError;
+
+            const { data } = supabase.storage.from('site-images').getPublicUrl(filePath);
+            const snippet = `\n\n![](${data.publicUrl})\n\n`;
+
+            setEditingPost(prev => {
+                const content = prev?.content || '';
+                const ta = contentTextareaRef.current;
+                const pos = ta ? ta.selectionStart : content.length;
+                const next = content.slice(0, pos) + snippet + content.slice(pos);
+                return { ...prev, content: next, reading_time: estimateReadingTime(next) };
+            });
+            setMessage({ type: 'success', text: 'Foto adicionada ao conteúdo!' });
+        } catch (err) {
+            console.error('Error uploading content image:', err);
+            setMessage({ type: 'error', text: 'Erro ao fazer upload da foto' });
+        } finally {
+            setUploadingContentImage(false);
+            e.target.value = '';
         }
     }
 
@@ -744,7 +786,20 @@ export default function BlogTab() {
                     {/* Content Editor */}
                     <div>
                         <div className="flex items-center justify-between mb-1">
-                            <label className="text-xs font-medium text-zinc-400">Conteúdo (Markdown)</label>
+                            <div className="flex items-center gap-3">
+                                <label className="text-xs font-medium text-zinc-400">Conteúdo (Markdown)</label>
+                                <button
+                                    type="button"
+                                    onClick={() => contentImageInputRef.current?.click()}
+                                    disabled={uploadingContentImage}
+                                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-zinc-800 border border-zinc-700 text-[11px] text-white hover:bg-zinc-700 transition-colors disabled:opacity-50"
+                                    title="Faz upload e insere a foto no ponto do cursor"
+                                >
+                                    {uploadingContentImage ? <Loader2 className="w-3 h-3 animate-spin" /> : <Upload className="w-3 h-3" />}
+                                    {uploadingContentImage ? 'Enviando...' : 'Adicionar foto'}
+                                </button>
+                                <input ref={contentImageInputRef} type="file" accept="image/*" onChange={handleContentImageUpload} className="hidden" />
+                            </div>
                             <div className="flex items-center gap-3 text-xs text-zinc-500">
                                 <span>
                                     <Clock className="w-3 h-3 inline mr-1" />
@@ -754,6 +809,7 @@ export default function BlogTab() {
                             </div>
                         </div>
                         <textarea
+                            ref={contentTextareaRef}
                             value={editingPost?.content || ''}
                             onChange={(e) => setEditingPost(prev => ({
                                 ...prev,

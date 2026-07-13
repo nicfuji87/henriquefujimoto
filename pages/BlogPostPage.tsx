@@ -36,10 +36,10 @@ function renderMarkdown(md: string): string {
         .replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>')
         .replace(/\*\*(.+?)\*\*/g, '<strong class="text-white font-semibold">$1</strong>')
         .replace(/\*(.+?)\*/g, '<em class="text-white/80">$1</em>')
+        // Images (must run before links, so ![alt](url) isn't consumed by the link rule)
+        .replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img src="$2" alt="$1" class="rounded-2xl my-6 w-full border border-white/[0.07]" loading="lazy" />')
         // Links
         .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" class="text-lime hover:text-lime-dim underline" target="_blank" rel="noopener noreferrer">$1</a>')
-        // Images
-        .replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img src="$2" alt="$1" class="rounded-2xl my-6 w-full border border-white/[0.07]" loading="lazy" />')
         // Unordered lists
         .replace(/^- (.+)$/gm, '<li class="ml-4 text-white/70 leading-relaxed">$1</li>')
         // Ordered lists
