@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowRight, Check, Download, Mail, MessageCircle, MapPin } from 'lucide-react';
+import { ArrowRight, Check, Download, Mail, MessageCircle, MapPin, Instagram, Youtube, Newspaper, Globe } from 'lucide-react';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { supabase } from '../lib/supabase';
@@ -62,6 +62,11 @@ interface Competition {
     medal_type: string | null;
 }
 
+interface Channel {
+    name: string;
+    detail: string;
+}
+
 interface PartnershipProject {
     slug: string;
     is_active: boolean;
@@ -107,6 +112,8 @@ interface PartnershipProject {
     comms_title: string;
     comms_body: string;
     show_metrics: boolean;
+    channels_note: string;
+    channels: Channel[] | null;
     // Photos
     photos: Photo[] | null;
     // Investment + scholarship
@@ -150,6 +157,14 @@ const ATHLETE = 'Henrique Fujimoto · Judoca Sub-15';
 
 const medalEmoji = (type: string | null) =>
     type === 'gold' ? '🥇' : type === 'silver' ? '🥈' : type === 'bronze' ? '🥉' : '🏅';
+
+const channelIcon = (name: string) => {
+    const n = (name || '').toLowerCase();
+    if (n.includes('insta')) return Instagram;
+    if (n.includes('you')) return Youtube;
+    if (n.includes('blog')) return Newspaper;
+    return Globe;
+};
 
 const reveal = {
     initial: { opacity: 0, y: 16 },
@@ -572,6 +587,11 @@ export default function PartnershipPage() {
                     [90, 90, 95],
                 );
             }
+            const channelsPdf = Array.isArray(project.channels) ? project.channels.filter((c) => c && c.name) : [];
+            if (project.channels_note || channelsPdf.length > 0) {
+                if (project.channels_note) paragraph(project.channels_note, 9.5, [90, 90, 95]);
+                for (const c of channelsPdf) paragraph(`${c.name}: ${c.detail || ''}`, 9.5);
+            }
         }
 
         // Costs table
@@ -765,6 +785,8 @@ export default function PartnershipPage() {
             accent: false,
         },
     ];
+
+    const channels = Array.isArray(p.channels) ? p.channels.filter((c) => c && c.name) : [];
 
     return (
         <div className="min-h-screen bg-night">
@@ -1152,7 +1174,7 @@ export default function PartnershipPage() {
             )}
 
             {/* ---- 10. Image return + communication (metric tiles moved here) ---- */}
-            {(p.comms_body || p.show_metrics) && (
+            {(p.comms_body || p.show_metrics || p.channels_note || channels.length > 0) && (
                 <Section>
                     <Heading>{p.comms_title || 'Retorno de imagem e comunicação'}</Heading>
                     {p.comms_body && <Body>{p.comms_body}</Body>}
@@ -1191,6 +1213,43 @@ export default function PartnershipPage() {
                                 ? `Projeção anual com base na média real dos últimos ${Math.round(metrics.monthsOfData)} meses — dados do Instagram, atualizados automaticamente.`
                                 : 'Dados reais do Instagram, atualizados automaticamente.'}
                         </p>
+                    )}
+
+                    {(p.channels_note || channels.length > 0) && (
+                        <motion.div
+                            {...reveal}
+                            transition={{ duration: 0.6, delay: 0.1 }}
+                            className="mt-8 rounded-3xl border border-white/[0.07] bg-coal p-6 sm:p-7"
+                        >
+                            <p className="font-grotesk text-[11px] font-semibold uppercase tracking-[0.16em] text-lime">
+                                Presença em múltiplos canais
+                            </p>
+                            {p.channels_note && (
+                                <p className="mt-3 max-w-2xl whitespace-pre-line font-grotesk text-sm leading-relaxed text-white/70 sm:text-base">
+                                    {p.channels_note}
+                                </p>
+                            )}
+                            {channels.length > 0 && (
+                                <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-3">
+                                    {channels.map((c, i) => {
+                                        const Icon = channelIcon(c.name);
+                                        return (
+                                            <div key={`${c.name}-${i}`} className="rounded-2xl border border-white/[0.07] bg-night/40 p-4">
+                                                <div className="flex items-center gap-2">
+                                                    <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-lime/12 text-lime">
+                                                        <Icon className="h-4 w-4" />
+                                                    </span>
+                                                    <span className="font-grotesk text-sm font-semibold text-white">{c.name}</span>
+                                                </div>
+                                                {c.detail && (
+                                                    <p className="mt-2 font-grotesk text-[13px] leading-relaxed text-white/55">{c.detail}</p>
+                                                )}
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            )}
+                        </motion.div>
                     )}
                 </Section>
             )}
