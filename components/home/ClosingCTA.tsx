@@ -17,7 +17,7 @@ export default function ClosingCTA({ ctaLink }: ClosingCTAProps) {
     const wa = buildWaLink(ctaLink, 'Olá! Vim pelo site do Henrique e quero fazer parte dessa jornada. Podemos conversar?');
 
     return (
-        <section className="relative overflow-hidden bg-night px-6 py-28 md:py-36">
+        <section className="relative overflow-hidden bg-night px-6 py-20 sm:py-28 md:py-36">
             <div className="pointer-events-none absolute left-1/2 top-1/2 h-80 w-[38rem] -translate-x-1/2 -translate-y-1/2 rounded-full bg-lime/[0.08] blur-[130px]" />
 
             <div className="relative mx-auto max-w-3xl text-center">

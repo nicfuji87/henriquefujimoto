@@ -16,7 +16,7 @@ const items = [
 
 export default function FollowJourney() {
     return (
-        <section className="bg-night px-6 py-20 md:py-28">
+        <section className="bg-night px-6 py-14 sm:py-20 md:py-28">
             <div className="mx-auto max-w-6xl">
                 <SectionHeading
                     title={<>Acompanhe uma jornada <span className="font-editorial font-normal italic text-lime">em tempo real</span></>}

@@ -81,7 +81,7 @@ export default function AchievementsSection() {
     const restYears = Object.keys(restByYear).sort((a, b) => Number(b) - Number(a));
 
     return (
-        <section className="bg-night px-6 py-20 md:py-28">
+        <section className="bg-night px-6 py-14 sm:py-20 md:py-28">
             <div className="mx-auto max-w-6xl">
                 <SectionHeading
                     title={<>Cada medalha conta <span className="font-editorial font-normal italic text-lime">uma história</span></>}

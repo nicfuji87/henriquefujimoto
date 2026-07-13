@@ -10,7 +10,7 @@ const steps = [
 
 export default function IntentionStrip() {
     return (
-        <section id="entenda" className="scroll-mt-20 bg-night px-6 py-20 md:py-28">
+        <section id="entenda" className="scroll-mt-20 bg-night px-6 py-14 sm:py-20 md:py-28">
             <div className="mx-auto max-w-6xl">
                 {/* Manifesto */}
                 <motion.div

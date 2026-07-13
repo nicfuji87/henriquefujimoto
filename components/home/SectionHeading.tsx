@@ -28,7 +28,7 @@ export default function SectionHeading({ kicker, title, lead, align = 'left' }: 
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: '-60px' }}
                 transition={{ duration: 0.6 }}
-                className="font-grotesk text-[2rem] font-semibold leading-[1.08] tracking-tight text-white sm:text-[2.75rem]"
+                className="font-grotesk text-[1.6rem] leading-[1.15] font-semibold tracking-tight text-white sm:text-[2rem] sm:leading-[1.08] md:text-[2.75rem]"
             >
                 {title}
             </motion.h2>

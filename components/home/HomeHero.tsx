@@ -75,7 +75,7 @@ export default function HomeHero({ age, category }: HomeHeroProps) {
                         initial={{ opacity: 0, y: 26 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.85, delay: 0.2 }}
-                        className="max-w-4xl font-grotesk text-[2.7rem] font-semibold leading-[0.98] tracking-[-0.02em] text-white sm:text-7xl lg:text-[5.5rem]"
+                        className="max-w-4xl font-grotesk text-[2.15rem] font-semibold leading-[1.1] tracking-[-0.02em] text-white sm:text-7xl lg:text-[5.5rem]"
                     >
                         Um sonho olímpico começa{' '}
                         <span className="font-editorial font-normal italic text-lime">muito antes da medalha.</span>

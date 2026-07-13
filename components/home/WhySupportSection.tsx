@@ -12,7 +12,7 @@ const reasons = [
 
 export default function WhySupportSection() {
     return (
-        <section id="apoiar" className="scroll-mt-16 bg-night px-6 py-20 md:py-28">
+        <section id="apoiar" className="scroll-mt-16 bg-night px-6 py-14 sm:py-20 md:py-28">
             <div className="mx-auto max-w-6xl">
                 <SectionHeading
                     eyebrow="Por que apoiar"

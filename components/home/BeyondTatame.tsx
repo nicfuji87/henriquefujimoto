@@ -12,14 +12,14 @@ const unseen = [
 
 export default function BeyondTatame() {
     return (
-        <section className="bg-night px-6 py-24 md:py-32">
+        <section className="bg-night px-6 py-16 sm:py-24 md:py-32">
             <div className="mx-auto max-w-3xl">
                 <motion.h2
                     initial={{ opacity: 0, y: 18 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true, margin: '-70px' }}
                     transition={{ duration: 0.6 }}
-                    className="font-grotesk text-[2rem] font-semibold leading-[1.1] tracking-tight text-white sm:text-5xl"
+                    className="font-grotesk text-[1.6rem] leading-[1.15] font-semibold tracking-tight text-white sm:text-[2rem] sm:leading-tight md:text-5xl"
                 >
                     Muito além do <span className="font-editorial font-normal italic text-lime">tatame</span>
                 </motion.h2>

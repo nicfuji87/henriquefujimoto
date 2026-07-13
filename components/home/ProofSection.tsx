@@ -56,7 +56,7 @@ export default function ProofSection({ metrics }: ProofSectionProps) {
     const gained = metrics?.followers_gained ?? 0;
 
     return (
-        <section id="numeros" className="scroll-mt-16 bg-night px-6 py-20 md:py-28">
+        <section id="numeros" className="scroll-mt-16 bg-night px-6 py-14 sm:py-20 md:py-28">
             <div className="mx-auto max-w-6xl">
                 <SectionHeading
                     title={<>Uma história que já <span className="font-editorial font-normal italic text-lime">alcança muita gente</span></>}

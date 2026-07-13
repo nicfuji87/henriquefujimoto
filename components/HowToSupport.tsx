@@ -36,7 +36,7 @@ const options = [
 
 const HowToSupport: React.FC = () => {
     return (
-        <section className="bg-night px-6 py-20 md:py-28">
+        <section className="bg-night px-6 py-14 sm:py-20 md:py-28">
             <motion.div
                 initial={{ opacity: 0, y: 16 }}
                 whileInView={{ opacity: 1, y: 0 }}
@@ -47,7 +47,7 @@ const HowToSupport: React.FC = () => {
                 <p className="mb-3 font-grotesk text-[12px] font-semibold uppercase tracking-[0.16em] text-lime">
                     Formas de apoio
                 </p>
-                <h2 className="font-grotesk text-[2rem] font-semibold leading-[1.08] tracking-tight text-white sm:text-[2.75rem]">
+                <h2 className="font-grotesk text-[1.6rem] font-semibold leading-[1.15] tracking-tight text-white sm:text-[2rem] sm:leading-[1.08] md:text-[2.75rem]">
                     Como participar dessa <span className="font-editorial font-normal italic text-lime">jornada</span>?
                 </h2>
             </motion.div>

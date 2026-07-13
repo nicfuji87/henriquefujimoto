@@ -169,7 +169,7 @@ function Section({
     id?: string;
 }) {
     return (
-        <section id={id} className={`bg-night px-6 py-20 md:py-28 ${className}`}>
+        <section id={id} className={`bg-night px-6 py-14 sm:py-20 md:py-28 ${className}`}>
             <div className="mx-auto max-w-4xl">{children}</div>
         </section>
     );
@@ -187,7 +187,7 @@ function Heading({ children }: { children: React.ReactNode }) {
     return (
         <motion.h2
             {...reveal}
-            className="font-grotesk text-[2rem] font-semibold leading-[1.08] tracking-tight text-white sm:text-[2.75rem]"
+            className="font-grotesk text-[1.6rem] font-semibold leading-[1.15] tracking-tight text-white sm:text-[2rem] sm:leading-[1.08] md:text-[2.75rem]"
         >
             {children}
         </motion.h2>
@@ -769,7 +769,7 @@ export default function PartnershipPage() {
     return (
         <div className="min-h-screen bg-night">
             {/* ---- 1. Hero ---- */}
-            <section className="relative overflow-hidden bg-night px-6 pt-24 pb-20 md:pt-32 md:pb-28">
+            <section className="relative overflow-hidden bg-night px-6 pt-16 pb-14 sm:pt-24 sm:pb-20 md:pt-32 md:pb-28">
                 <div className="pointer-events-none absolute -top-20 left-1/2 h-72 w-[40rem] -translate-x-1/2 rounded-full bg-lime/[0.07] blur-[130px]" />
                 <div className="relative mx-auto max-w-4xl">
                     <motion.div
@@ -788,7 +788,7 @@ export default function PartnershipPage() {
                     </motion.div>
 
                     {p.hero_kicker && (
-                        <motion.div {...reveal} transition={{ duration: 0.5, delay: 0.05 }} className="mt-10">
+                        <motion.div {...reveal} transition={{ duration: 0.5, delay: 0.05 }} className="mt-7 sm:mt-10">
                             <Kicker>{p.hero_kicker}</Kicker>
                         </motion.div>
                     )}
@@ -796,7 +796,7 @@ export default function PartnershipPage() {
                     <motion.h1
                         {...reveal}
                         transition={{ duration: 0.7, delay: 0.08 }}
-                        className="mt-1 font-grotesk text-[2.6rem] font-semibold leading-[1.04] tracking-tight text-white sm:text-[4rem]"
+                        className="mt-1 font-grotesk text-[1.9rem] font-semibold leading-[1.12] tracking-tight text-white sm:text-[3.25rem] sm:leading-[1.05] md:text-[4rem]"
                     >
                         {p.hero_title}
                     </motion.h1>
@@ -805,7 +805,7 @@ export default function PartnershipPage() {
                         <motion.p
                             {...reveal}
                             transition={{ duration: 0.6, delay: 0.16 }}
-                            className="mt-6 max-w-2xl font-grotesk text-lg leading-relaxed text-white/60 sm:text-xl"
+                            className="mt-5 max-w-2xl font-grotesk text-base leading-relaxed text-white/60 sm:text-lg md:text-xl"
                         >
                             {p.hero_subtitle}
                         </motion.p>
@@ -1485,7 +1485,7 @@ export default function PartnershipPage() {
                     <motion.h2
                         {...reveal}
                         transition={{ duration: 0.6 }}
-                        className="font-grotesk text-[2rem] font-semibold leading-[1.08] tracking-tight text-white sm:text-[2.75rem]"
+                        className="font-grotesk text-[1.6rem] font-semibold leading-[1.15] tracking-tight text-white sm:text-[2rem] sm:leading-[1.08] md:text-[2.75rem]"
                     >
                         {p.closing_title || 'Vamos construir isso juntos'}
                     </motion.h2>

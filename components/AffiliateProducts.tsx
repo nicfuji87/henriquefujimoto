@@ -40,7 +40,7 @@ export default function AffiliateProducts() {
     if (loading || products.length === 0) return null;
 
     return (
-        <section className="bg-night px-6 py-20 md:py-28">
+        <section className="bg-night px-6 py-14 sm:py-20 md:py-28">
             <div className="max-w-6xl mx-auto">
                 {/* Section Header */}
                 <motion.div
@@ -50,7 +50,7 @@ export default function AffiliateProducts() {
                     transition={{ duration: 0.6 }}
                     className="text-center mb-10"
                 >
-                    <h2 className="font-grotesk text-[2rem] font-semibold leading-[1.08] tracking-tight text-white sm:text-[2.75rem]">
+                    <h2 className="font-grotesk text-[1.6rem] font-semibold leading-[1.15] tracking-tight text-white sm:text-[2rem] sm:leading-[1.08] md:text-[2.75rem]">
                         Meus produtos <span className="font-editorial font-normal italic text-lime">favoritos</span>
                     </h2>
                     <p className="mx-auto mt-5 max-w-xl font-grotesk text-base leading-relaxed text-white/60 sm:text-lg">

@@ -27,7 +27,7 @@ const reasons = [
 
 const WhySupport: React.FC = () => {
     return (
-        <section className="bg-night px-6 py-20 md:py-28">
+        <section className="bg-night px-6 py-14 sm:py-20 md:py-28">
             <div className="max-w-4xl mx-auto">
                 <motion.div
                     initial={{ opacity: 0, y: 16 }}
@@ -36,7 +36,7 @@ const WhySupport: React.FC = () => {
                     transition={{ duration: 0.6 }}
                     className="text-center mb-12"
                 >
-                    <h2 className="font-grotesk text-[2rem] font-semibold leading-[1.08] tracking-tight text-white sm:text-[2.75rem]">
+                    <h2 className="font-grotesk text-[1.6rem] font-semibold leading-[1.15] tracking-tight text-white sm:text-[2rem] sm:leading-[1.08] md:text-[2.75rem]">
                         Por que apoiar o <span className="font-editorial font-normal italic text-lime">Henrique</span>?
                     </h2>
                     <p className="mx-auto mt-5 max-w-xl font-grotesk text-base leading-relaxed text-white/60 sm:text-lg">

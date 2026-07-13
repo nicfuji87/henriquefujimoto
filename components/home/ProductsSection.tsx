@@ -41,7 +41,7 @@ export default function ProductsSection() {
     if (loading || products.length === 0) return null;
 
     return (
-        <section id="produtos" className="scroll-mt-16 bg-night px-6 py-20 md:py-28">
+        <section id="produtos" className="scroll-mt-16 bg-night px-6 py-14 sm:py-20 md:py-28">
             <div className="mx-auto max-w-6xl">
                 <SectionHeading
                     title={<>O que ele usa <span className="font-editorial font-normal italic text-lime">de verdade</span></>}

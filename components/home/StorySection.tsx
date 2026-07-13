@@ -16,7 +16,7 @@ interface StorySectionProps {
 
 export default function StorySection({ portrait, facts }: StorySectionProps) {
     return (
-        <section id="historia" className="scroll-mt-16 bg-night px-6 py-20 md:py-28">
+        <section id="historia" className="scroll-mt-16 bg-night px-6 py-14 sm:py-20 md:py-28">
             <div className="mx-auto grid max-w-6xl grid-cols-1 items-start gap-10 lg:grid-cols-[0.8fr_1fr] lg:gap-16">
                 {/* Portrait */}
                 <motion.div

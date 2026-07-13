@@ -268,7 +268,7 @@ export default function BlogPage() {
                         <p className="font-grotesk text-[12px] font-semibold uppercase tracking-[0.16em] text-lime">
                             Blog oficial
                         </p>
-                        <h1 className="font-grotesk text-4xl md:text-6xl font-semibold text-white tracking-tight leading-[1.05]">
+                        <h1 className="font-grotesk text-[2.1rem] md:text-6xl font-semibold text-white tracking-tight leading-[1.1] md:leading-[1.05]">
                             Histórias e bastidores do <span className="font-editorial font-normal italic text-lime">judô</span>
                         </h1>
                         <p className="text-white/60 text-lg md:text-xl max-w-2xl mx-auto leading-relaxed">

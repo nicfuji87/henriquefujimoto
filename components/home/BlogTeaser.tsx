@@ -40,7 +40,7 @@ export default function BlogTeaser() {
     const dateOf = (p: BlogPost) => new Date(p.published_at || p.created_at).toLocaleDateString('pt-BR');
 
     return (
-        <section className="bg-night px-6 py-20 md:py-28">
+        <section className="bg-night px-6 py-14 sm:py-20 md:py-28">
             <div className="mx-auto max-w-6xl">
                 <div className="flex flex-wrap items-end justify-between gap-4">
                     <SectionHeading

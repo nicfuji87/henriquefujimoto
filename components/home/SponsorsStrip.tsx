@@ -17,7 +17,7 @@ export default function SponsorsStrip({ partners }: SponsorsStripProps) {
     const track = [...partners, ...partners];
 
     return (
-        <section className="bg-night px-6 py-20 md:py-24">
+        <section className="bg-night px-6 py-14 sm:py-20 md:py-24">
             <div className="mx-auto max-w-6xl">
                 <SectionHeading
                     title="Quem já acredita nessa jornada"

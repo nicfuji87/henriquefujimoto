@@ -274,7 +274,7 @@ export default function BlogPostPage() {
                         {catStyle.label}
                     </span>
 
-                    <h1 className="font-grotesk text-3xl md:text-4xl lg:text-5xl font-semibold text-white leading-[1.08] tracking-tight">
+                    <h1 className="font-grotesk text-[1.9rem] md:text-4xl lg:text-5xl font-semibold text-white leading-[1.15] md:leading-[1.08] tracking-tight">
                         {post.title}
                     </h1>
 
