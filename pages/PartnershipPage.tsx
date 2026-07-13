@@ -38,6 +38,10 @@ interface RoutineNode {
     time: string;
     label: string;
 }
+interface RoutineDay {
+    day: string;
+    blocks: { time: string; label: string }[];
+}
 interface Photo {
     url: string;
     caption?: string;
@@ -98,6 +102,7 @@ interface PartnershipProject {
     routine_title: string;
     routine_body: string;
     routine_timeline?: RoutineNode[] | null;
+    routine_week?: RoutineDay[] | null;
     // Image return + communication
     comms_title: string;
     comms_body: string;
@@ -439,6 +444,9 @@ export default function PartnershipPage() {
         const routineTimelinePdf = Array.isArray(project.routine_timeline)
             ? project.routine_timeline.filter((r) => r && (r.time || r.label))
             : [];
+        const routineWeekPdf = Array.isArray(project.routine_week)
+            ? project.routine_week.filter((d) => d && d.day && Array.isArray(d.blocks) && d.blocks.length > 0)
+            : [];
         const deliverablesPdf = Array.isArray(project.deliverables)
             ? project.deliverables.filter((d) => typeof d === 'string' && d.trim() !== '')
             : [];
@@ -538,10 +546,16 @@ export default function PartnershipPage() {
             paragraph(project.discipline_body);
         }
         // Routine
-        if (project.routine_body || routineTimelinePdf.length > 0) {
+        if (project.routine_body || routineWeekPdf.length > 0 || routineTimelinePdf.length > 0) {
             heading(project.routine_title || 'Rotina de treinamento');
             paragraph(project.routine_body);
-            for (const r of routineTimelinePdf) paragraph(`${r.time} — ${r.label}`, 10);
+            if (routineWeekPdf.length > 0) {
+                for (const d of routineWeekPdf) {
+                    paragraph(`${d.day}: ${d.blocks.map((b) => `${b.time} ${b.label}`).join('  ·  ')}`, 10);
+                }
+            } else {
+                for (const r of routineTimelinePdf) paragraph(`${r.time} — ${r.label}`, 10);
+            }
         }
 
         // Image return + communication
@@ -707,6 +721,9 @@ export default function PartnershipPage() {
     const routineTimeline = Array.isArray(p.routine_timeline)
         ? p.routine_timeline.filter((r) => r && (r.time || r.label))
         : [];
+    const routineWeek = Array.isArray(p.routine_week)
+        ? p.routine_week.filter((d) => d && d.day && Array.isArray(d.blocks) && d.blocks.length > 0)
+        : [];
     const deliverables = Array.isArray(p.deliverables)
         ? p.deliverables.filter((d) => typeof d === 'string' && d.trim() !== '')
         : [];
@@ -764,7 +781,7 @@ export default function PartnershipPage() {
                             <img
                                 src={p.partner_logo_url}
                                 alt={p.partner_name || 'Parceiro'}
-                                className="h-11 w-auto max-w-[180px] object-contain"
+                                className="h-16 w-auto max-w-[280px] object-contain sm:h-20"
                             />
                         )}
                         <span className="font-grotesk text-sm font-medium text-white/55">{ATHLETE}</span>
@@ -1081,12 +1098,37 @@ export default function PartnershipPage() {
             )}
 
             {/* ---- 9. Training routine ---- */}
-            {(p.routine_body || routineTimeline.length > 0) && (
+            {(p.routine_body || routineWeek.length > 0 || routineTimeline.length > 0) && (
                 <Section>
                     <Heading>{p.routine_title || 'Rotina de treinamento'}</Heading>
                     {p.routine_body && <Body>{p.routine_body}</Body>}
 
-                    {routineTimeline.length > 0 && (
+                    {routineWeek.length > 0 ? (
+                        <div className="mt-10 space-y-3">
+                            {routineWeek.map((d, i) => (
+                                <motion.div
+                                    key={`${d.day}-${i}`}
+                                    initial={{ opacity: 0, y: 16 }}
+                                    whileInView={{ opacity: 1, y: 0 }}
+                                    viewport={{ once: true, margin: '-50px' }}
+                                    transition={{ duration: 0.5, delay: i * 0.06 }}
+                                    className="rounded-2xl border border-white/[0.07] bg-coal p-5 transition-colors hover:border-lime/25 sm:flex sm:gap-6"
+                                >
+                                    <div className="mb-3 shrink-0 font-grotesk text-sm font-semibold uppercase tracking-wide text-lime sm:mb-0 sm:w-24">
+                                        {d.day}
+                                    </div>
+                                    <div className="flex flex-wrap gap-2">
+                                        {d.blocks.map((b, j) => (
+                                            <span key={j} className="inline-flex items-center gap-2 rounded-full border border-white/[0.07] bg-night px-3 py-1.5">
+                                                <span className="font-grotesk text-[11px] font-semibold text-lime">{b.time}</span>
+                                                <span className="font-grotesk text-[13px] text-white/75">{b.label}</span>
+                                            </span>
+                                        ))}
+                                    </div>
+                                </motion.div>
+                            ))}
+                        </div>
+                    ) : routineTimeline.length > 0 ? (
                         <motion.div {...reveal} transition={{ duration: 0.6, delay: 0.1 }} className="mt-10">
                             {routineTimeline.map((r, i) => (
                                 <div key={`${r.time}-${i}`} className="relative flex gap-5 pb-6 last:pb-0">
@@ -1105,7 +1147,7 @@ export default function PartnershipPage() {
                                 </div>
                             ))}
                         </motion.div>
-                    )}
+                    ) : null}
                 </Section>
             )}
 

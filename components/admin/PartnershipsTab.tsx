@@ -16,6 +16,7 @@ interface Photo { url: string; caption: string; section?: string; }
 interface Goal { horizon: string; text: string; }
 interface AcademicCard { title: string; text: string; }
 interface RoutineStep { time: string; label: string; }
+interface RoutineDay { day: string; blocks: { time: string; label: string }[]; }
 
 interface Project {
     id?: string;
@@ -77,6 +78,7 @@ interface Project {
     deliverables_title: string;
     deliverables: string[];
     closing_image_url: string;
+    routine_week: RoutineDay[];
 }
 
 const EMPTY: Project = {
@@ -92,6 +94,7 @@ const EMPTY: Project = {
     goals_title: '', goals: [], representation_title: '', representation_body: '', family_commitments: [],
     executive_highlights: [], executive_objective: '', why_marista_title: '', why_marista_body: '',
     academic_cards: [], routine_timeline: [], deliverables_title: '', deliverables: [], closing_image_url: '',
+    routine_week: [],
 };
 
 const inputCls = 'w-full bg-zinc-800/50 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-emerald-500/50';
@@ -437,6 +440,27 @@ export default function PartnershipsTab() {
                                         </div>
                                     ))}
                                     <button onClick={() => addItem<RoutineStep>('routine_timeline', { time: '', label: '' })} className="text-xs text-emerald-400 hover:text-emerald-300 flex items-center gap-1"><Plus className="w-3 h-3" /> Adicionar etapa</button>
+                                </div>
+                            </Labeled>
+                            <Labeled label="Rotina — cronograma semanal" hint="Cada dia com seus blocos de horário. Quando preenchido, substitui a timeline diária na página.">
+                                <div className="space-y-3">
+                                    {form.routine_week.map((d, di) => (
+                                        <div key={di} className="bg-zinc-800/30 border border-zinc-700/50 rounded-xl p-3 space-y-2">
+                                            <div className="flex items-center gap-2">
+                                                <input className={inputCls + ' flex-1 font-semibold'} value={d.day} onChange={e => patchItem('routine_week', di, { day: e.target.value })} placeholder="Dia (ex: Segunda)" />
+                                                <button onClick={() => removeItem('routine_week', di)} className="p-2 text-zinc-500 hover:text-red-400"><Trash2 className="w-4 h-4" /></button>
+                                            </div>
+                                            {d.blocks.map((b, bi) => (
+                                                <div key={bi} className="flex items-center gap-2 pl-3">
+                                                    <input className={inputCls + ' w-32'} value={b.time} onChange={e => { const blocks = d.blocks.map((x, k) => k === bi ? { ...x, time: e.target.value } : x); patchItem('routine_week', di, { blocks }); }} placeholder="07:30–12:30" />
+                                                    <input className={inputCls + ' flex-1'} value={b.label} onChange={e => { const blocks = d.blocks.map((x, k) => k === bi ? { ...x, label: e.target.value } : x); patchItem('routine_week', di, { blocks }); }} placeholder="Atividade" />
+                                                    <button onClick={() => patchItem('routine_week', di, { blocks: d.blocks.filter((_, k) => k !== bi) })} className="p-1.5 text-zinc-500 hover:text-red-400"><X className="w-3.5 h-3.5" /></button>
+                                                </div>
+                                            ))}
+                                            <button onClick={() => patchItem('routine_week', di, { blocks: [...d.blocks, { time: '', label: '' }] })} className="text-xs text-emerald-400 hover:text-emerald-300 flex items-center gap-1 pl-3"><Plus className="w-3 h-3" /> Adicionar horário</button>
+                                        </div>
+                                    ))}
+                                    <button onClick={() => addItem<RoutineDay>('routine_week', { day: '', blocks: [] })} className="text-xs text-emerald-400 hover:text-emerald-300 flex items-center gap-1"><Plus className="w-3 h-3" /> Adicionar dia</button>
                                 </div>
                             </Labeled>
 
