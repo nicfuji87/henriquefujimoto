@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { ArrowLeft, Calendar, Clock, User, Tag, Share2, ExternalLink, Package, Handshake, Coffee } from 'lucide-react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
+import AboutHenrique from '../components/blog/AboutHenrique';
 
 interface BlogPost {
     id: string;
@@ -389,6 +390,9 @@ export default function BlogPostPage() {
                     </button>
                 </motion.div>
             </article>
+
+            {/* Conheça mais sobre o Henrique (para quem chega direto no post) */}
+            <AboutHenrique />
 
             {/* Related Posts */}
             {relatedPosts.length > 0 && (
