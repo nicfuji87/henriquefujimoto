@@ -1,5 +1,5 @@
-import React from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 import HomePage from './pages/HomePage';
 import NumerosPage from './pages/NumerosPage';
 import ApoiarPage from './pages/ApoiarPage';
@@ -53,12 +53,25 @@ import NutriDashboard from './pages/nutri/NutriDashboard';
 import NutriMeals from './pages/nutri/NutriMeals';
 import NutriAnalytics from './pages/nutri/NutriAnalytics';
 
+// Reset scroll to the top on route (pathname) change, so a new page opens at its
+// hero instead of inheriting the previous page's scroll position. Anchor links
+// (URLs with a #hash) are left to the browser so in-page navigation still works.
+function ScrollToTop() {
+  const { pathname, hash } = useLocation();
+  useEffect(() => {
+    if (!hash) window.scrollTo(0, 0);
+  }, [pathname, hash]);
+  return null;
+}
+
 function AppRoutes() {
   // Centralized tracking hook inside Router context
   useTracking();
 
   return (
-    <Routes>
+    <>
+      <ScrollToTop />
+      <Routes>
       <Route path="/" element={<HomePage />} />
       <Route path="/numeros" element={<NumerosPage />} />
       <Route path="/apoiar" element={<ApoiarPage />} />
@@ -116,6 +129,7 @@ function AppRoutes() {
         <Route path="/nutri/analytics" element={<NutriAnalytics />} />
       </Route>
     </Routes>
+    </>
   );
 }
 
