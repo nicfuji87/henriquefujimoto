@@ -71,11 +71,13 @@ export default function HomePage() {
         { label: 'Categoria', value: category },
     ].filter(Boolean) as StoryFact[];
 
-    // Portrait: most recent milestone image (falls back to hero image)
+    // Portrait for the "Quem é o Henrique?" story: use the heritage/legado milestone
+    // (the first one — família Fujimoto / "terceira geração"), matching the section's caption.
+    // Falls back to the hero image.
     const portrait = (() => {
         const ms = profile?.milestones;
         if (ms && ms.length) {
-            for (let i = ms.length - 1; i >= 0; i--) {
+            for (let i = 0; i < ms.length; i++) {
                 const url = ms[i].media_items?.[0]?.url || ms[i].media_url;
                 if (url) return url;
             }
