@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Check, Download, Mail, MessageCircle, MapPin } from 'lucide-react';
+import { ArrowRight, Check, Download, Mail, MessageCircle, MapPin } from 'lucide-react';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { supabase } from '../lib/supabase';
@@ -30,9 +30,18 @@ interface CustomSection {
     title: string;
     body: string;
 }
+interface AcademicCard {
+    title: string;
+    text: string;
+}
+interface RoutineNode {
+    time: string;
+    label: string;
+}
 interface Photo {
     url: string;
     caption?: string;
+    section?: string; // 'potential' | 'why_partner' | 'results' | 'closing' | 'gallery'
 }
 interface Goal {
     horizon: string;
@@ -61,6 +70,8 @@ interface PartnershipProject {
     intro: string;
     // Executive summary + federation credibility
     executive_summary: string;
+    executive_highlights?: string[] | null;
+    executive_objective?: string | null;
     federation_info: string;
     // Results
     results_title: string;
@@ -71,6 +82,9 @@ interface PartnershipProject {
     why_now_body: string;
     goals_title: string;
     goals: Goal[] | null;
+    // Why the Marista school
+    why_marista_title?: string | null;
+    why_marista_body?: string | null;
     // How the athlete represents the school
     representation_title: string;
     representation_body: string;
@@ -78,10 +92,12 @@ interface PartnershipProject {
     // Academic / discipline / routine
     academic_title: string;
     academic_body: string;
+    academic_cards?: AcademicCard[] | null;
     discipline_title: string;
     discipline_body: string;
     routine_title: string;
     routine_body: string;
+    routine_timeline?: RoutineNode[] | null;
     // Image return + communication
     comms_title: string;
     comms_body: string;
@@ -95,6 +111,9 @@ interface PartnershipProject {
     scholarship_monthly: number;
     scholarship_body: string;
     ask_body: string;
+    // Deliverables — what the school receives over a school year
+    deliverables_title?: string | null;
+    deliverables?: string[] | null;
     // Institutional
     institutional: Institutional[] | null;
     // Family
@@ -111,6 +130,7 @@ interface PartnershipProject {
     contact_email: string;
     closing_title: string;
     closing_body: string;
+    closing_image_url?: string | null;
 }
 
 // ---- Helpers -------------------------------------------------------------
@@ -218,6 +238,36 @@ function CompRow({ comp }: { comp: Competition }) {
             >
                 {comp.placement}
             </span>
+        </div>
+    );
+}
+
+// Contextual photo strip — renders a small grid of captioned photos inside a section
+function PhotoStrip({ items }: { items: Photo[] }) {
+    if (!items.length) return null;
+    return (
+        <div className={`mt-8 grid grid-cols-1 gap-4 ${items.length > 1 ? 'sm:grid-cols-2' : ''}`}>
+            {items.map((ph, i) => (
+                <motion.figure
+                    key={`${ph.url}-${i}`}
+                    initial={{ opacity: 0, y: 16 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true, margin: '-50px' }}
+                    transition={{ duration: 0.5, delay: (i % 2) * 0.08 }}
+                >
+                    <img
+                        src={ph.url}
+                        alt={ph.caption || 'Henrique Fujimoto'}
+                        loading="lazy"
+                        className="w-full rounded-3xl border border-white/[0.07] object-cover"
+                    />
+                    {ph.caption && (
+                        <figcaption className="mt-2.5 font-grotesk text-[13px] leading-relaxed text-white/45">
+                            {ph.caption}
+                        </figcaption>
+                    )}
+                </motion.figure>
+            ))}
         </div>
     );
 }
@@ -380,6 +430,18 @@ export default function PartnershipPage() {
         const familyCommitments = Array.isArray(project.family_commitments)
             ? project.family_commitments
             : [];
+        const execHighlights = Array.isArray(project.executive_highlights)
+            ? project.executive_highlights.filter((h) => typeof h === 'string' && h.trim() !== '')
+            : [];
+        const academicCardsPdf = Array.isArray(project.academic_cards)
+            ? project.academic_cards.filter((c) => c && (c.title || c.text))
+            : [];
+        const routineTimelinePdf = Array.isArray(project.routine_timeline)
+            ? project.routine_timeline.filter((r) => r && (r.time || r.label))
+            : [];
+        const deliverablesPdf = Array.isArray(project.deliverables)
+            ? project.deliverables.filter((d) => typeof d === 'string' && d.trim() !== '')
+            : [];
 
         // Title block
         doc.setFont('helvetica', 'bold');
@@ -402,9 +464,17 @@ export default function PartnershipPage() {
         y += 10;
 
         // Executive summary
-        if (project.executive_summary) {
+        if (project.executive_summary || execHighlights.length > 0 || project.executive_objective) {
             heading('Resumo executivo');
             paragraph(project.executive_summary);
+            if (execHighlights.length > 0) {
+                paragraph('Nos últimos 12 meses:', 10.5, [18, 20, 23]);
+                for (const h of execHighlights) paragraph(`•  ${h}`, 10);
+            }
+            if (project.executive_objective) {
+                paragraph('Objetivo', 11, [18, 20, 23]);
+                paragraph(project.executive_objective);
+            }
         }
 
         // Thesis
@@ -435,6 +505,12 @@ export default function PartnershipPage() {
             }
         }
 
+        // Why the Marista school
+        if (project.why_marista_body) {
+            heading(project.why_marista_title || 'Por que o Marista?');
+            paragraph(project.why_marista_body);
+        }
+
         // How the athlete represents the school
         if (project.representation_body || (Array.isArray(project.counterparts) && project.counterparts.length > 0)) {
             heading(project.representation_title || 'Como o Henrique representa a escola');
@@ -448,9 +524,13 @@ export default function PartnershipPage() {
         }
 
         // Academic
-        if (project.academic_body) {
+        if (project.academic_body || academicCardsPdf.length > 0) {
             heading(project.academic_title || 'Vida acadêmica');
             paragraph(project.academic_body);
+            for (const c of academicCardsPdf) {
+                const line = c.title && c.text ? `${c.title}: ${c.text}` : c.title || c.text || '';
+                paragraph(line, 10);
+            }
         }
         // Discipline
         if (project.discipline_body) {
@@ -458,9 +538,10 @@ export default function PartnershipPage() {
             paragraph(project.discipline_body);
         }
         // Routine
-        if (project.routine_body) {
+        if (project.routine_body || routineTimelinePdf.length > 0) {
             heading(project.routine_title || 'Rotina de treinamento');
             paragraph(project.routine_body);
+            for (const r of routineTimelinePdf) paragraph(`${r.time} — ${r.label}`, 10);
         }
 
         // Image return + communication
@@ -524,6 +605,13 @@ export default function PartnershipPage() {
         }
         paragraph(project.scholarship_body);
         paragraph(project.ask_body);
+
+        // Deliverables — what the school receives over a school year
+        if (deliverablesPdf.length > 0) {
+            heading(project.deliverables_title || 'O que o Marista receberá durante um ano letivo');
+            paragraph('Entregas concretas ao longo do ano letivo:', 10);
+            for (const d of deliverablesPdf) paragraph(`•  ${d}`, 10);
+        }
 
         // Institutional
         if (Array.isArray(project.institutional) && project.institutional.length > 0) {
@@ -600,9 +688,27 @@ export default function PartnershipPage() {
     const timeline = Array.isArray(p.timeline) ? p.timeline : [];
     const customSections = Array.isArray(p.custom_sections) ? p.custom_sections : [];
     const photos = Array.isArray(p.photos) ? p.photos.filter((ph) => ph && ph.url) : [];
+    const closingImage =
+        (p.closing_image_url && p.closing_image_url.trim()) ||
+        photos.find((ph) => ph.section === 'closing')?.url ||
+        '';
+    const photosFor = (sec: string) =>
+        photos.filter((ph) => (ph.section || 'gallery') === sec && ph.url !== closingImage);
     const goals = Array.isArray(p.goals) ? p.goals.filter((g) => g && g.text) : [];
     const familyCommitments = Array.isArray(p.family_commitments)
         ? p.family_commitments.filter((c) => typeof c === 'string' && c.trim() !== '')
+        : [];
+    const executiveHighlights = Array.isArray(p.executive_highlights)
+        ? p.executive_highlights.filter((h) => typeof h === 'string' && h.trim() !== '')
+        : [];
+    const academicCards = Array.isArray(p.academic_cards)
+        ? p.academic_cards.filter((c) => c && (c.title || c.text))
+        : [];
+    const routineTimeline = Array.isArray(p.routine_timeline)
+        ? p.routine_timeline.filter((r) => r && (r.time || r.label))
+        : [];
+    const deliverables = Array.isArray(p.deliverables)
+        ? p.deliverables.filter((d) => typeof d === 'string' && d.trim() !== '')
         : [];
 
     const showCompetitions = p.show_competitions && competitions.length > 0;
@@ -691,16 +797,56 @@ export default function PartnershipPage() {
             </section>
 
             {/* ---- 2. Executive summary ---- */}
-            {p.executive_summary && (
+            {(p.executive_summary || executiveHighlights.length > 0 || p.executive_objective) && (
                 <Section className="py-16 md:py-20">
                     <Kicker>Resumo executivo</Kicker>
-                    <motion.p
-                        {...reveal}
-                        transition={{ duration: 0.7 }}
-                        className="max-w-3xl whitespace-pre-line font-grotesk text-xl leading-relaxed text-white/85 sm:text-2xl"
-                    >
-                        {p.executive_summary}
-                    </motion.p>
+                    {p.executive_summary && (
+                        <motion.p
+                            {...reveal}
+                            transition={{ duration: 0.7 }}
+                            className="max-w-3xl whitespace-pre-line font-grotesk text-xl leading-relaxed text-white/85 sm:text-2xl"
+                        >
+                            {p.executive_summary}
+                        </motion.p>
+                    )}
+
+                    {executiveHighlights.length > 0 && (
+                        <div className="mt-10">
+                            <p className="mb-4 font-grotesk text-[12px] font-semibold uppercase tracking-[0.16em] text-lime">
+                                Nos últimos 12 meses
+                            </p>
+                            <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                                {executiveHighlights.map((h, i) => (
+                                    <motion.li
+                                        key={i}
+                                        initial={{ opacity: 0, y: 14 }}
+                                        whileInView={{ opacity: 1, y: 0 }}
+                                        viewport={{ once: true, margin: '-50px' }}
+                                        transition={{ duration: 0.45, delay: (i % 2) * 0.06 }}
+                                        className="flex items-start gap-2.5 rounded-2xl border border-white/[0.07] bg-coal px-5 py-4 transition-colors hover:border-lime/25"
+                                    >
+                                        <Check className="mt-0.5 h-4 w-4 shrink-0 text-lime" />
+                                        <span className="font-grotesk text-sm leading-relaxed text-white/70">{h}</span>
+                                    </motion.li>
+                                ))}
+                            </ul>
+                        </div>
+                    )}
+
+                    {p.executive_objective && (
+                        <motion.div
+                            {...reveal}
+                            transition={{ duration: 0.6, delay: 0.1 }}
+                            className="mt-10 border-l-2 border-lime/60 pl-4"
+                        >
+                            <p className="mb-1.5 font-grotesk text-[12px] font-semibold uppercase tracking-[0.16em] text-lime">
+                                Objetivo
+                            </p>
+                            <p className="whitespace-pre-line font-grotesk text-base leading-relaxed text-white/80 sm:text-lg">
+                                {p.executive_objective}
+                            </p>
+                        </motion.div>
+                    )}
                 </Section>
             )}
 
@@ -781,6 +927,7 @@ export default function PartnershipPage() {
                             </div>
                         </>
                     )}
+                    <PhotoStrip items={photosFor('results')} />
                 </Section>
             )}
 
@@ -789,6 +936,31 @@ export default function PartnershipPage() {
                 <Section>
                     <Heading>{p.why_now_title || 'Potencial e metas'}</Heading>
                     {p.why_now_body && <Body>{p.why_now_body}</Body>}
+
+                    {/* Age-window graphic — fixed 12 → 16 development window */}
+                    <motion.div
+                        {...reveal}
+                        transition={{ duration: 0.6, delay: 0.15 }}
+                        className="mt-10 rounded-3xl border border-white/[0.07] bg-coal p-6 transition-colors hover:border-lime/25 sm:p-8"
+                    >
+                        <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:justify-center sm:overflow-visible">
+                            {[12, 13, 14, 15, 16].map((age, i, arr) => (
+                                <React.Fragment key={age}>
+                                    <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-lime/40 bg-lime/[0.08] font-grotesk text-lg font-semibold text-lime sm:h-14 sm:w-14 sm:text-xl">
+                                        {age}
+                                    </span>
+                                    {i < arr.length - 1 && (
+                                        <ArrowRight className="h-4 w-4 shrink-0 text-white/30" />
+                                    )}
+                                </React.Fragment>
+                            ))}
+                        </div>
+                        <div className="mt-5 flex items-center justify-center rounded-full border border-lime/25 bg-lime/[0.06] px-4 py-2 text-center">
+                            <span className="font-grotesk text-[11px] font-semibold uppercase tracking-[0.12em] text-lime sm:text-[13px]">
+                                Janela de maior desenvolvimento esportivo
+                            </span>
+                        </div>
+                    </motion.div>
 
                     {goals.length > 0 && (
                         <div className="mt-10">
@@ -820,6 +992,16 @@ export default function PartnershipPage() {
                             </div>
                         </div>
                     )}
+                    <PhotoStrip items={photosFor('potential')} />
+                </Section>
+            )}
+
+            {/* ---- Why the Marista school ---- */}
+            {(p.why_marista_body || photosFor('why_partner').length > 0) && (
+                <Section>
+                    <Heading>{p.why_marista_title || 'Por que o Marista?'}</Heading>
+                    {p.why_marista_body && <Body>{p.why_marista_body}</Body>}
+                    <PhotoStrip items={photosFor('why_partner')} />
                 </Section>
             )}
 
@@ -859,10 +1041,34 @@ export default function PartnershipPage() {
             )}
 
             {/* ---- 7. Academic life ---- */}
-            {p.academic_body && (
+            {(p.academic_body || academicCards.length > 0) && (
                 <Section>
                     <Heading>{p.academic_title || 'Vida acadêmica'}</Heading>
-                    <Body>{p.academic_body}</Body>
+                    {p.academic_body && <Body>{p.academic_body}</Body>}
+
+                    {academicCards.length > 0 && (
+                        <div className="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-2">
+                            {academicCards.map((c, i) => (
+                                <motion.div
+                                    key={`${c.title}-${i}`}
+                                    initial={{ opacity: 0, y: 16 }}
+                                    whileInView={{ opacity: 1, y: 0 }}
+                                    viewport={{ once: true, margin: '-50px' }}
+                                    transition={{ duration: 0.5, delay: (i % 2) * 0.08 }}
+                                    className="rounded-3xl border border-white/[0.07] bg-coal p-6 transition-colors hover:border-lime/25 hover:bg-coal-2"
+                                >
+                                    {c.title && (
+                                        <h3 className="font-grotesk text-lg font-semibold text-white">{c.title}</h3>
+                                    )}
+                                    {c.text && (
+                                        <p className="mt-2 whitespace-pre-line font-grotesk text-sm leading-relaxed text-white/60">
+                                            {c.text}
+                                        </p>
+                                    )}
+                                </motion.div>
+                            ))}
+                        </div>
+                    )}
                 </Section>
             )}
 
@@ -875,10 +1081,31 @@ export default function PartnershipPage() {
             )}
 
             {/* ---- 9. Training routine ---- */}
-            {p.routine_body && (
+            {(p.routine_body || routineTimeline.length > 0) && (
                 <Section>
                     <Heading>{p.routine_title || 'Rotina de treinamento'}</Heading>
-                    <Body>{p.routine_body}</Body>
+                    {p.routine_body && <Body>{p.routine_body}</Body>}
+
+                    {routineTimeline.length > 0 && (
+                        <motion.div {...reveal} transition={{ duration: 0.6, delay: 0.1 }} className="mt-10">
+                            {routineTimeline.map((r, i) => (
+                                <div key={`${r.time}-${i}`} className="relative flex gap-5 pb-6 last:pb-0">
+                                    {i < routineTimeline.length - 1 && (
+                                        <span className="absolute left-[5px] top-4 h-full w-px border-l border-white/10" />
+                                    )}
+                                    <span className="relative mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full bg-lime ring-4 ring-lime/15" />
+                                    <div className="flex min-w-0 flex-col gap-0.5 sm:flex-row sm:items-baseline sm:gap-4">
+                                        <span className="w-16 shrink-0 font-grotesk text-sm font-semibold text-lime">
+                                            {r.time}
+                                        </span>
+                                        <span className="font-grotesk text-base leading-relaxed text-white/80">
+                                            {r.label}
+                                        </span>
+                                    </div>
+                                </div>
+                            ))}
+                        </motion.div>
+                    )}
                 </Section>
             )}
 
@@ -926,35 +1153,13 @@ export default function PartnershipPage() {
                 </Section>
             )}
 
-            {/* ---- 11. Photos ---- */}
-            {photos.length > 0 && (
+            {/* ---- 11. Photos (untagged gallery — contextual photos are rendered inside their sections) ---- */}
+            {photosFor('gallery').length > 0 && (
                 <Section>
                     <Heading>
                         O Henrique <span className="font-editorial font-normal italic text-lime">em ação</span>
                     </Heading>
-                    <div className="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-2">
-                        {photos.map((ph, i) => (
-                            <motion.figure
-                                key={`${ph.url}-${i}`}
-                                initial={{ opacity: 0, y: 16 }}
-                                whileInView={{ opacity: 1, y: 0 }}
-                                viewport={{ once: true, margin: '-50px' }}
-                                transition={{ duration: 0.5, delay: (i % 2) * 0.08 }}
-                            >
-                                <img
-                                    src={ph.url}
-                                    alt={ph.caption || 'Henrique Fujimoto'}
-                                    loading="lazy"
-                                    className="w-full rounded-3xl border border-white/[0.07] object-cover"
-                                />
-                                {ph.caption && (
-                                    <figcaption className="mt-2.5 font-grotesk text-[13px] leading-relaxed text-white/45">
-                                        {ph.caption}
-                                    </figcaption>
-                                )}
-                            </motion.figure>
-                        ))}
-                    </div>
+                    <PhotoStrip items={photosFor('gallery')} />
                 </Section>
             )}
 
@@ -1063,6 +1268,37 @@ export default function PartnershipPage() {
                     )}
                 </motion.div>
             </Section>
+
+            {/* ---- What the school receives over a school year ---- */}
+            {deliverables.length > 0 && (
+                <Section>
+                    <Heading>
+                        {p.deliverables_title || 'O que o Marista receberá durante um ano letivo'}
+                    </Heading>
+                    <motion.p
+                        {...reveal}
+                        transition={{ duration: 0.6, delay: 0.1 }}
+                        className="mt-6 font-grotesk text-base leading-relaxed text-white/60 sm:text-lg"
+                    >
+                        Entregas concretas ao longo do ano letivo:
+                    </motion.p>
+                    <div className="mt-8 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                        {deliverables.map((d, i) => (
+                            <motion.div
+                                key={i}
+                                initial={{ opacity: 0, y: 14 }}
+                                whileInView={{ opacity: 1, y: 0 }}
+                                viewport={{ once: true, margin: '-50px' }}
+                                transition={{ duration: 0.45, delay: (i % 2) * 0.06 }}
+                                className="flex items-start gap-2.5 rounded-2xl border border-white/[0.07] bg-coal px-5 py-4 transition-colors hover:border-lime/25"
+                            >
+                                <Check className="mt-0.5 h-4 w-4 shrink-0 text-lime" />
+                                <span className="font-grotesk text-sm leading-relaxed text-white/80">{d}</span>
+                            </motion.div>
+                        ))}
+                    </div>
+                </Section>
+            )}
 
             {/* ---- 13. Institutional value ---- */}
             {institutional.length > 0 && (
@@ -1190,6 +1426,17 @@ export default function PartnershipPage() {
                             src={p.partner_logo_url}
                             alt={p.partner_name || 'Parceiro'}
                             className="mx-auto mb-8 h-12 w-auto max-w-[200px] object-contain"
+                        />
+                    )}
+
+                    {closingImage && (
+                        <motion.img
+                            {...reveal}
+                            transition={{ duration: 0.5, delay: 0.05 }}
+                            src={closingImage}
+                            alt={p.closing_title || 'Henrique Fujimoto'}
+                            loading="lazy"
+                            className="mx-auto mb-10 max-h-[420px] w-full rounded-3xl border border-white/[0.07] object-cover"
                         />
                     )}
 

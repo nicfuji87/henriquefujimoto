@@ -12,8 +12,10 @@ interface Counterpart { category: string; items: string[]; }
 interface Institutional { title: string; text: string; }
 interface TimelineItem { year: string; label: string; }
 interface CustomSection { title: string; body: string; }
-interface Photo { url: string; caption: string; }
+interface Photo { url: string; caption: string; section?: string; }
 interface Goal { horizon: string; text: string; }
+interface AcademicCard { title: string; text: string; }
+interface RoutineStep { time: string; label: string; }
 
 interface Project {
     id?: string;
@@ -66,6 +68,15 @@ interface Project {
     representation_title: string;
     representation_body: string;
     family_commitments: string[];
+    executive_highlights: string[];
+    executive_objective: string;
+    why_marista_title: string;
+    why_marista_body: string;
+    academic_cards: AcademicCard[];
+    routine_timeline: RoutineStep[];
+    deliverables_title: string;
+    deliverables: string[];
+    closing_image_url: string;
 }
 
 const EMPTY: Project = {
@@ -79,6 +90,8 @@ const EMPTY: Project = {
     photos: [], executive_summary: '', federation_info: '', results_title: '', results_intro: '', show_competitions: true,
     academic_title: '', academic_body: '', discipline_title: '', discipline_body: '', routine_title: '', routine_body: '',
     goals_title: '', goals: [], representation_title: '', representation_body: '', family_commitments: [],
+    executive_highlights: [], executive_objective: '', why_marista_title: '', why_marista_body: '',
+    academic_cards: [], routine_timeline: [], deliverables_title: '', deliverables: [], closing_image_url: '',
 };
 
 const inputCls = 'w-full bg-zinc-800/50 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-emerald-500/50';
@@ -186,7 +199,7 @@ export default function PartnershipsTab() {
                 const { error } = await supabase.storage.from('site-images').upload(path, compressed, { upsert: true, cacheControl: '31536000' });
                 if (error) throw error;
                 const { data } = supabase.storage.from('site-images').getPublicUrl(path);
-                setForm(f => ({ ...f, photos: [...f.photos, { url: data.publicUrl, caption: '' }] }));
+                setForm(f => ({ ...f, photos: [...f.photos, { url: data.publicUrl, caption: '', section: 'gallery' }] }));
             }
         } catch (err) {
             console.error(err);
@@ -340,6 +353,20 @@ export default function PartnershipsTab() {
                             <Labeled label="Federação / ranking / clube">
                                 <textarea rows={2} className={inputCls} value={form.federation_info} onChange={e => set('federation_info', e.target.value)} />
                             </Labeled>
+                            <Labeled label="Destaques (Nos últimos 12 meses)" hint="Lista curta de pontos fortes que aparece no topo.">
+                                <div className="space-y-2">
+                                    {form.executive_highlights.map((h, i) => (
+                                        <div key={i} className="flex items-center gap-2">
+                                            <input className={inputCls + ' flex-1'} value={h} onChange={e => setForm(f => ({ ...f, executive_highlights: f.executive_highlights.map((x, k) => k === i ? e.target.value : x) }))} placeholder="Ex: 13 pódios" />
+                                            <button onClick={() => setForm(f => ({ ...f, executive_highlights: f.executive_highlights.filter((_, k) => k !== i) }))} className="p-2 text-zinc-500 hover:text-red-400"><Trash2 className="w-4 h-4" /></button>
+                                        </div>
+                                    ))}
+                                    <button onClick={() => setForm(f => ({ ...f, executive_highlights: [...f.executive_highlights, ''] }))} className="text-xs text-emerald-400 hover:text-emerald-300 flex items-center gap-1"><Plus className="w-3 h-3" /> Adicionar destaque</button>
+                                </div>
+                            </Labeled>
+                            <Labeled label="Objetivo" hint="Frase de objetivo que fecha o resumo executivo.">
+                                <textarea rows={2} className={inputCls} value={form.executive_objective} onChange={e => set('executive_objective', e.target.value)} />
+                            </Labeled>
 
                             {/* Resultados */}
                             <GroupTitle>Resultados esportivos</GroupTitle>
@@ -364,6 +391,13 @@ export default function PartnershipsTab() {
                                 <button onClick={() => addItem<Goal>('goals', { horizon: '', text: '' })} className="text-xs text-emerald-400 hover:text-emerald-300 flex items-center gap-1"><Plus className="w-3 h-3" /> Adicionar meta</button>
                             </div>
 
+                            {/* Por que o Marista */}
+                            <GroupTitle>Por que o parceiro? (identificação de valores)</GroupTitle>
+                            <Labeled label="Título"><input className={inputCls} value={form.why_marista_title} onChange={e => set('why_marista_title', e.target.value)} placeholder="Por que o Marista?" /></Labeled>
+                            <Labeled label="Texto" hint="Por que esta escola especificamente. Deixe vazio para ocultar.">
+                                <textarea rows={3} className={inputCls} value={form.why_marista_body} onChange={e => set('why_marista_body', e.target.value)} />
+                            </Labeled>
+
                             {/* Representação */}
                             <GroupTitle>Como representa a escola</GroupTitle>
                             <Labeled label="Título"><input className={inputCls} value={form.representation_title} onChange={e => set('representation_title', e.target.value)} /></Labeled>
@@ -381,6 +415,30 @@ export default function PartnershipsTab() {
                             </Labeled>
                             <Labeled label="Rotina — título"><input className={inputCls} value={form.routine_title} onChange={e => set('routine_title', e.target.value)} /></Labeled>
                             <Labeled label="Rotina — texto"><textarea rows={2} className={inputCls} value={form.routine_body} onChange={e => set('routine_body', e.target.value)} /></Labeled>
+                            <Labeled label="Vida acadêmica — cards" hint="Cards curtos: rendimento, comportamento, participação, frequência.">
+                                <div className="space-y-2">
+                                    {form.academic_cards.map((c, i) => (
+                                        <div key={i} className="flex items-start gap-2">
+                                            <input className={inputCls + ' w-40'} value={c.title} onChange={e => patchItem('academic_cards', i, { title: e.target.value })} placeholder="Título" />
+                                            <textarea rows={2} className={inputCls + ' flex-1'} value={c.text} onChange={e => patchItem('academic_cards', i, { text: e.target.value })} placeholder="Descrição" />
+                                            <button onClick={() => removeItem('academic_cards', i)} className="p-2 text-zinc-500 hover:text-red-400"><Trash2 className="w-4 h-4" /></button>
+                                        </div>
+                                    ))}
+                                    <button onClick={() => addItem<AcademicCard>('academic_cards', { title: '', text: '' })} className="text-xs text-emerald-400 hover:text-emerald-300 flex items-center gap-1"><Plus className="w-3 h-3" /> Adicionar card</button>
+                                </div>
+                            </Labeled>
+                            <Labeled label="Rotina — timeline (horário → atividade)" hint="Ex.: 05:30 → Treino. Vira uma linha do tempo do dia.">
+                                <div className="space-y-2">
+                                    {form.routine_timeline.map((r, i) => (
+                                        <div key={i} className="flex items-center gap-2">
+                                            <input className={inputCls + ' w-24'} value={r.time} onChange={e => patchItem('routine_timeline', i, { time: e.target.value })} placeholder="05:30" />
+                                            <input className={inputCls + ' flex-1'} value={r.label} onChange={e => patchItem('routine_timeline', i, { label: e.target.value })} placeholder="Atividade" />
+                                            <button onClick={() => removeItem('routine_timeline', i)} className="p-2 text-zinc-500 hover:text-red-400"><Trash2 className="w-4 h-4" /></button>
+                                        </div>
+                                    ))}
+                                    <button onClick={() => addItem<RoutineStep>('routine_timeline', { time: '', label: '' })} className="text-xs text-emerald-400 hover:text-emerald-300 flex items-center gap-1"><Plus className="w-3 h-3" /> Adicionar etapa</button>
+                                </div>
+                            </Labeled>
 
                             {/* Fotos */}
                             <GroupTitle>Fotos</GroupTitle>
@@ -390,9 +448,18 @@ export default function PartnershipsTab() {
                                         {form.photos.map((ph, i) => (
                                             <div key={i} className="rounded-xl border border-zinc-700/50 bg-zinc-800/30 overflow-hidden">
                                                 <div className="aspect-video bg-zinc-800"><img src={ph.url} alt="" className="w-full h-full object-cover" /></div>
-                                                <div className="p-2 flex items-center gap-2">
-                                                    <input className={inputCls + ' text-xs py-1'} value={ph.caption} onChange={e => patchItem('photos', i, { caption: e.target.value })} placeholder="Legenda (opcional)" />
-                                                    <button onClick={() => removeItem('photos', i)} className="p-1.5 text-zinc-500 hover:text-red-400"><Trash2 className="w-4 h-4" /></button>
+                                                <div className="p-2 space-y-1.5">
+                                                    <div className="flex items-center gap-2">
+                                                        <input className={inputCls + ' text-xs py-1'} value={ph.caption} onChange={e => patchItem('photos', i, { caption: e.target.value })} placeholder="Legenda (opcional)" />
+                                                        <button onClick={() => removeItem('photos', i)} className="p-1.5 text-zinc-500 hover:text-red-400"><Trash2 className="w-4 h-4" /></button>
+                                                    </div>
+                                                    <select className={inputCls + ' text-xs py-1'} value={ph.section || 'gallery'} onChange={e => patchItem('photos', i, { section: e.target.value })}>
+                                                        <option value="gallery">Galeria (fim)</option>
+                                                        <option value="results">Resultados</option>
+                                                        <option value="why_partner">Por que o parceiro</option>
+                                                        <option value="potential">Por que agora / potencial</option>
+                                                        <option value="closing">Fechamento</option>
+                                                    </select>
                                                 </div>
                                             </div>
                                         ))}
@@ -414,6 +481,19 @@ export default function PartnershipsTab() {
                                     </div>
                                 ))}
                                 <button onClick={() => setForm(f => ({ ...f, family_commitments: [...f.family_commitments, ''] }))} className="text-xs text-emerald-400 hover:text-emerald-300 flex items-center gap-1"><Plus className="w-3 h-3" /> Adicionar compromisso</button>
+                            </div>
+
+                            {/* Entregas ano letivo */}
+                            <GroupTitle>Entregas do ano letivo</GroupTitle>
+                            <Labeled label="Título"><input className={inputCls} value={form.deliverables_title} onChange={e => set('deliverables_title', e.target.value)} placeholder="O que o Marista receberá durante um ano letivo" /></Labeled>
+                            <div className="space-y-2">
+                                {form.deliverables.map((d, i) => (
+                                    <div key={i} className="flex items-center gap-2">
+                                        <input className={inputCls + ' flex-1'} value={d} onChange={e => setForm(f => ({ ...f, deliverables: f.deliverables.map((x, k) => k === i ? e.target.value : x) }))} placeholder="Ex: 40+ reels ao longo do ano" />
+                                        <button onClick={() => setForm(f => ({ ...f, deliverables: f.deliverables.filter((_, k) => k !== i) }))} className="p-2 text-zinc-500 hover:text-red-400"><Trash2 className="w-4 h-4" /></button>
+                                    </div>
+                                ))}
+                                <button onClick={() => setForm(f => ({ ...f, deliverables: [...f.deliverables, ''] }))} className="text-xs text-emerald-400 hover:text-emerald-300 flex items-center gap-1"><Plus className="w-3 h-3" /> Adicionar entrega</button>
                             </div>
 
                             {/* Costs */}
@@ -528,6 +608,9 @@ export default function PartnershipsTab() {
                             <div className="grid grid-cols-1 gap-4">
                                 <Labeled label="Título do fechamento"><input className={inputCls} value={form.closing_title} onChange={e => set('closing_title', e.target.value)} /></Labeled>
                                 <Labeled label="Texto do fechamento"><textarea rows={2} className={inputCls} value={form.closing_body} onChange={e => set('closing_body', e.target.value)} /></Labeled>
+                                <Labeled label="Foto de fechamento (URL)" hint="Uma foto forte do Henrique para o final. Suba na seção Fotos acima e cole aqui a URL.">
+                                    <input className={inputCls} value={form.closing_image_url} onChange={e => set('closing_image_url', e.target.value)} placeholder="https://..." />
+                                </Labeled>
                             </div>
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                 <Labeled label="Nome do contato"><input className={inputCls} value={form.contact_name} onChange={e => set('contact_name', e.target.value)} /></Labeled>
