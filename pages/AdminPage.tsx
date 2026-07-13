@@ -20,7 +20,7 @@ import {
     ExternalLink,
     Newspaper,
     Activity,
-    Clock, MapPin, ShoppingBag, BarChart3
+    Clock, MapPin, ShoppingBag, BarChart3, Handshake
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { supabase, Post } from '../lib/supabase';
@@ -31,6 +31,7 @@ import HomeCardsTab from '../components/admin/HomeCardsTab';
 import AffiliateProductsTab from '../components/admin/AffiliateProductsTab';
 import EventLogsTab from '../components/admin/EventLogsTab';
 import AdsTab from '../components/admin/AdsTab';
+import PartnershipsTab from '../components/admin/PartnershipsTab';
 import { Target } from 'lucide-react';
 
 // Mock posts for development
@@ -61,7 +62,7 @@ const mockPosts: Post[] = [
     },
 ];
 
-type Tab = 'dashboard' | 'blog' | 'home_config' | 'products' | 'journey' | 'tracking' | 'event_logs' | 'ads' | 'settings';
+type Tab = 'dashboard' | 'blog' | 'home_config' | 'products' | 'journey' | 'parcerias' | 'tracking' | 'event_logs' | 'ads' | 'settings';
 
 function Sidebar({
     activeTab,
@@ -80,6 +81,7 @@ function Sidebar({
         { id: 'home_config' as Tab, label: 'Home Config', icon: Home },
         { id: 'products' as Tab, label: 'Produtos', icon: ShoppingBag },
         { id: 'journey' as Tab, label: 'Jornada', icon: MapPin },
+        { id: 'parcerias' as Tab, label: 'Parcerias', icon: Handshake },
         { id: 'tracking' as Tab, label: 'Tracking & SEO', icon: Activity },
         { id: 'event_logs' as Tab, label: 'Eventos', icon: BarChart3 },
         { id: 'ads' as Tab, label: 'Meta Ads', icon: Target },
@@ -2250,6 +2252,7 @@ export default function AdminPage() {
                             )}
                             {activeTab === 'products' && <AffiliateProductsTab />}
                             {activeTab === 'journey' && <JourneyTab />}
+                            {activeTab === 'parcerias' && <PartnershipsTab />}
                             {activeTab === 'tracking' && <TrackingTab />}
                             {activeTab === 'event_logs' && <EventLogsTab />}
                             {activeTab === 'ads' && <AdsTab />}

@@ -5,7 +5,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="facebook-domain-verification" content="jb4xluwb3ry0mfqofw4uw86dlszijx" />
-  <title>Media Kit Henrique Fujimoto</title>
+  <title>Henrique Fujimoto · Judoca — Acompanhe a jornada</title>
 
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -14,6 +14,10 @@
     href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;700&family=Space+Grotesk:wght@300;400;500;600;700&family=Lexend:wght@100..900&display=swap"
     rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+    rel="stylesheet" />
+  <!-- Home redesign typography: Hanken Grotesk (UI/headlines) + Fraunces (italic serif accent) -->
+  <link
+    href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400;1,500&family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500;1,9..144,600&display=swap"
     rel="stylesheet" />
 
   <!-- Tailwind CSS -->
@@ -26,6 +30,20 @@
           colors: {
             background: '#09090b',
             primary: '#22c55e',
+            // Home redesign palette — premium dark + lime accent
+            night: '#0a0b0d',
+            'night-2': '#0f1113',
+            coal: '#141619',
+            'coal-2': '#1b1e22',
+            line: '#282c31',
+            lime: '#c6f24e',
+            'lime-dim': '#a9d92f',
+            'lime-soft': '#e6f7a8',
+            // legacy tokens kept for safety (repointed to the new dark scale)
+            ink: '#0a0b0d',
+            'ink-2': '#141619',
+            'ink-3': '#1b1e22',
+            'ink-line': '#282c31',
             "app-primary": "#1152d4",
             "app-primary-dark": "#0a3aa0",
             "app-primary-light": "#dce6fc",
@@ -46,6 +64,11 @@
             sans: ['Space Grotesk', 'sans-serif'],
             display: ['Oswald', 'sans-serif'],
             'app-display': ['Lexend', 'sans-serif'],
+            // Home redesign type system
+            grotesk: ['Hanken Grotesk', 'system-ui', 'sans-serif'],
+            editorial: ['Fraunces', 'Georgia', 'serif'],
+            ui: ['Hanken Grotesk', 'system-ui', 'sans-serif'],
+            impact: ['Hanken Grotesk', 'system-ui', 'sans-serif'],
           }
         }
       }
@@ -78,6 +101,19 @@
     .no-scrollbar {
       -ms-overflow-style: none;
       scrollbar-width: none;
+    }
+
+    /* Home redesign: smooth anchor scrolling + branded selection */
+    html { scroll-behavior: smooth; }
+    ::selection { background: #c6f24e; color: #0a0b0d; }
+
+    /* Kinetic marquee (CSS-driven so it can pause under reduced motion) */
+    @keyframes tatame-marquee { from { transform: translate3d(0,0,0); } to { transform: translate3d(-50%,0,0); } }
+    .animate-marquee { animation: tatame-marquee 32s linear infinite; }
+
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      .animate-marquee { animation: none; }
     }
   </style>
 </head>

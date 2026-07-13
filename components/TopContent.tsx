@@ -28,7 +28,7 @@ const ContentCard: React.FC<TopContentItem> = ({
             href={permalink}
             target="_blank"
             rel="noopener noreferrer"
-            className="snap-center shrink-0 w-[240px] h-[380px] relative rounded-xl overflow-hidden group border border-white/5 bg-zinc-900 block"
+            className="snap-center shrink-0 w-[240px] h-[380px] relative rounded-2xl overflow-hidden group border border-white/[0.07] bg-coal block transition-all hover:border-lime/25"
         >
             <div
                 className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-110 opacity-80 group-hover:opacity-100"
@@ -37,22 +37,22 @@ const ContentCard: React.FC<TopContentItem> = ({
             <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/95"></div>
 
             {/* Top Right Stats */}
-            <div className="absolute top-3 right-3 bg-black/50 backdrop-blur-md border border-white/10 px-2 py-1 rounded-md flex items-center gap-3">
+            <div className="absolute top-3 right-3 bg-black/50 backdrop-blur-md border border-white/15 px-2 py-1 rounded-full flex items-center gap-3">
                 <div className="flex items-center gap-1">
                     <Heart size={12} className="text-white fill-white" />
-                    <span className="text-xs font-bold text-white">{formatNum(like_count)}</span>
+                    <span className="font-grotesk text-xs font-semibold text-white">{formatNum(like_count)}</span>
                 </div>
                 {comments_count > 0 && (
                     <div className="flex items-center gap-1">
                         <MessageCircle size={12} className="text-white fill-white" />
-                        <span className="text-xs font-bold text-white">{formatNum(comments_count)}</span>
+                        <span className="font-grotesk text-xs font-semibold text-white">{formatNum(comments_count)}</span>
                     </div>
                 )}
             </div>
 
             <div className="absolute bottom-4 left-4 right-4">
-                <p className="text-white font-bold leading-tight line-clamp-2 text-sm drop-shadow-md mb-2">{title}</p>
-                <p className="text-primary text-[10px] font-bold tracking-wide uppercase flex items-center gap-1">
+                <p className="mb-2 font-grotesk font-semibold leading-tight line-clamp-2 text-sm text-white drop-shadow-md">{title}</p>
+                <p className="flex items-center gap-1 font-grotesk text-[10px] font-semibold uppercase tracking-wide text-lime">
                     {media_type === 'VIDEO' && <Play size={10} fill="currentColor" />}
                     {typeLabel}
                 </p>
@@ -60,8 +60,8 @@ const ContentCard: React.FC<TopContentItem> = ({
 
             {/* Hover Icon */}
             <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 backdrop-blur-[1px]">
-                <div className="w-12 h-12 rounded-full bg-instagram-gradient text-white flex items-center justify-center shadow-lg transform scale-75 group-hover:scale-100 transition-transform">
-                    <Play size={20} className="fill-white ml-1" />
+                <div className="w-12 h-12 rounded-full bg-lime text-night flex items-center justify-center shadow-lg transform scale-75 group-hover:scale-100 transition-transform">
+                    <Play size={20} className="fill-night ml-1" />
                 </div>
             </div>
         </a>
@@ -89,7 +89,7 @@ const TopContent: React.FC = () => {
     if (loading) {
         return (
             <section className="py-8 pl-6 h-[400px] flex items-center justify-center">
-                <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+                <div className="w-8 h-8 border-2 border-lime border-t-transparent rounded-full animate-spin"></div>
             </section>
         );
     }
@@ -99,14 +99,14 @@ const TopContent: React.FC = () => {
     return (
         <section className="py-8 pl-6">
             <div className="mb-5 pr-6 flex items-center justify-between">
-                <h3 className="text-xl font-bold uppercase tracking-tight text-white">Conteúdo em Alta</h3>
+                <h3 className="font-grotesk text-xl font-semibold tracking-tight text-white">Conteúdo em alta</h3>
                 <a
                     href="https://instagram.com/henriquefujimoto"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-xs font-bold text-primary cursor-pointer hover:underline tracking-wide"
+                    className="font-grotesk text-xs font-semibold text-lime cursor-pointer hover:text-lime-dim tracking-wide"
                 >
-                    VER NO INSTAGRAM
+                    Ver no Instagram
                 </a>
             </div>
 

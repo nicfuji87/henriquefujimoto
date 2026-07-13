@@ -155,3 +155,62 @@ export async function getAggregatedMetrics(days: number): Promise<AggregatedMetr
         audience_country
     };
 }
+
+export interface MediaKitMetrics {
+    monthsOfData: number;
+    isFullYear: boolean;         // true when we actually have ~12 months of data
+    monthlyAvgReach: number;
+    annualReach: number;         // real 12-month sum if full year, else projection (monthly avg × 12)
+    monthlyAvgInteractions: number;
+    annualInteractions: number;
+    totalFollowers: number;
+    monthlyFollowerGain: number;      // avg new followers per month (real trend)
+    projectedFollowers12mo: number;   // current + monthly gain × 12
+}
+
+/**
+ * Metrics tailored for the partnership media kit: monthly average + annual figure.
+ * When less than a full year of daily data exists, the "annual" number is a
+ * projection based on the monthly average (isFullYear=false) — the UI labels it as such.
+ */
+export async function getMediaKitMetrics(): Promise<MediaKitMetrics | null> {
+    const start = new Date();
+    start.setDate(start.getDate() - 365);
+    const startStr = start.toISOString().split('T')[0];
+
+    const { data, error } = await supabase
+        .from('daily_metrics')
+        .select('reach_daily, impressions_daily, followers_count')
+        .gte('date', startStr)
+        .order('date', { ascending: true });
+
+    if (error || !data || data.length === 0) return null;
+
+    const days = data.length;
+    const months = days / 30.44;
+    const totalReach = data.reduce((s, d) => s + (d.reach_daily || 0), 0);
+    // impressions_daily actually stores total interactions (see getAggregatedMetrics)
+    const totalInteractions = data.reduce((s, d) => s + (d.impressions_daily || 0), 0);
+    const monthlyAvgReach = months > 0 ? totalReach / months : 0;
+    const monthlyAvgInteractions = months > 0 ? totalInteractions / months : 0;
+    const isFullYear = months >= 11.5;
+
+    // Follower growth trend (linear): followers DO grow steadily, unlike reach.
+    const followerVals = data.map(d => d.followers_count || 0).filter(v => v > 0);
+    const firstF = followerVals[0] || 0;
+    const totalFollowers = followerVals[followerVals.length - 1] || 0;
+    const monthlyFollowerGain = months > 0 ? Math.max(0, Math.round((totalFollowers - firstF) / months)) : 0;
+    const projectedFollowers12mo = totalFollowers + monthlyFollowerGain * 12;
+
+    return {
+        monthsOfData: months,
+        isFullYear,
+        monthlyAvgReach: Math.round(monthlyAvgReach),
+        annualReach: Math.round(isFullYear ? totalReach : monthlyAvgReach * 12),
+        monthlyAvgInteractions: Math.round(monthlyAvgInteractions),
+        annualInteractions: Math.round(isFullYear ? totalInteractions : monthlyAvgInteractions * 12),
+        totalFollowers,
+        monthlyFollowerGain,
+        projectedFollowers12mo,
+    };
+}

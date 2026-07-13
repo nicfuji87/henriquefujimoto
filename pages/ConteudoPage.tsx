@@ -58,9 +58,9 @@ const MILESTONE_ICONS = [
 
 function StatCard({ value, label }: { value: string; label: string }) {
     return (
-        <div className="bg-white/[0.03] border border-white/[0.06] rounded-xl p-4 text-center">
-            <div className="text-2xl font-black text-primary mb-1">{value}</div>
-            <div className="text-[10px] font-bold uppercase tracking-widest text-gray-500">{label}</div>
+        <div className="rounded-2xl border border-white/[0.07] bg-coal p-4 text-center transition-all hover:border-lime/25">
+            <div className="mb-1 font-grotesk text-xl font-semibold text-white sm:text-2xl">{value}</div>
+            <div className="font-grotesk text-[11px] font-medium uppercase tracking-wide text-white/45">{label}</div>
         </div>
     );
 }
@@ -103,14 +103,14 @@ function MediaModal({ media, onClose }: { media: SelectedMedia; onClose: () => v
             >
                 {/* Header row */}
                 <div className="flex items-center justify-between mb-3">
-                    <p className="text-white text-sm font-bold">{media.title}</p>
+                    <p className="font-grotesk text-sm font-semibold text-white">{media.title}</p>
                     <div className="flex items-center gap-3">
                         {total > 1 && (
-                            <span className="text-gray-400 text-xs">{currentIdx + 1} / {total}</span>
+                            <span className="font-grotesk text-xs text-white/55">{currentIdx + 1} / {total}</span>
                         )}
                         <button
                             onClick={onClose}
-                            className="w-8 h-8 bg-white/10 border border-white/10 rounded-full flex items-center justify-center text-white hover:bg-white/20 transition-colors"
+                            className="w-8 h-8 bg-white/10 border border-white/15 rounded-full flex items-center justify-center text-white hover:bg-white/20 transition-colors"
                         >
                             <X className="w-4 h-4" />
                         </button>
@@ -124,7 +124,7 @@ function MediaModal({ media, onClose }: { media: SelectedMedia; onClose: () => v
                         <button
                             onClick={() => setCurrentIdx(i => Math.max(i - 1, 0))}
                             disabled={currentIdx === 0}
-                            className="absolute left-0 z-10 -translate-x-12 w-10 h-10 bg-white/10 border border-white/10 rounded-full flex items-center justify-center text-white hover:bg-white/20 disabled:opacity-30 transition-all"
+                            className="absolute left-0 z-10 -translate-x-12 w-10 h-10 bg-white/10 border border-white/15 rounded-full flex items-center justify-center text-white hover:bg-white/20 disabled:opacity-30 transition-all"
                         >
                             <ChevronLeft className="w-5 h-5" />
                         </button>
@@ -144,13 +144,13 @@ function MediaModal({ media, onClose }: { media: SelectedMedia; onClose: () => v
                                     src={current.url}
                                     controls
                                     autoPlay
-                                    className="w-full max-h-[72vh] rounded-xl object-contain bg-black"
+                                    className="w-full max-h-[72vh] rounded-2xl object-contain bg-black"
                                 />
                             ) : (
                                 <img
                                     src={current.url}
                                     alt={current.caption || media.title}
-                                    className="w-full max-h-[72vh] rounded-xl object-contain"
+                                    className="w-full max-h-[72vh] rounded-2xl object-contain"
                                 />
                             )}
                         </motion.div>
@@ -161,7 +161,7 @@ function MediaModal({ media, onClose }: { media: SelectedMedia; onClose: () => v
                         <button
                             onClick={() => setCurrentIdx(i => Math.min(i + 1, total - 1))}
                             disabled={currentIdx === total - 1}
-                            className="absolute right-0 z-10 translate-x-12 w-10 h-10 bg-white/10 border border-white/10 rounded-full flex items-center justify-center text-white hover:bg-white/20 disabled:opacity-30 transition-all"
+                            className="absolute right-0 z-10 translate-x-12 w-10 h-10 bg-white/10 border border-white/15 rounded-full flex items-center justify-center text-white hover:bg-white/20 disabled:opacity-30 transition-all"
                         >
                             <ChevronRight className="w-5 h-5" />
                         </button>
@@ -172,7 +172,7 @@ function MediaModal({ media, onClose }: { media: SelectedMedia; onClose: () => v
                 {(current.caption || total > 1) && (
                     <div className="mt-3 text-center space-y-2">
                         {current.caption && (
-                            <p className="text-gray-400 text-sm">{current.caption}</p>
+                            <p className="font-grotesk text-sm text-white/55">{current.caption}</p>
                         )}
                         {total > 1 && (
                             <div className="flex justify-center gap-1.5">
@@ -180,7 +180,7 @@ function MediaModal({ media, onClose }: { media: SelectedMedia; onClose: () => v
                                     <button
                                         key={i}
                                         onClick={() => setCurrentIdx(i)}
-                                        className={`w-1.5 h-1.5 rounded-full transition-all ${i === currentIdx ? 'bg-primary scale-125' : 'bg-white/30 hover:bg-white/50'}`}
+                                        className={`w-1.5 h-1.5 rounded-full transition-all ${i === currentIdx ? 'bg-lime scale-125' : 'bg-white/30 hover:bg-white/50'}`}
                                     />
                                 ))}
                             </div>
@@ -230,10 +230,10 @@ export default function ConteudoPage() {
 
     if (loading) {
         return (
-            <main className="relative min-h-screen w-full overflow-x-hidden bg-background">
+            <main className="relative min-h-screen w-full overflow-x-hidden bg-night">
                 <SectionNav title="Conheça o Henrique" subtitle="A história por trás do atleta" />
                 <div className="flex items-center justify-center h-[60vh]">
-                    <Loader2 className="w-8 h-8 text-primary animate-spin" />
+                    <Loader2 className="w-8 h-8 text-lime animate-spin" />
                 </div>
             </main>
         );
@@ -241,9 +241,9 @@ export default function ConteudoPage() {
 
     if (!profile) {
         return (
-            <main className="relative min-h-screen w-full overflow-x-hidden bg-background">
+            <main className="relative min-h-screen w-full overflow-x-hidden bg-night">
                 <SectionNav title="Conheça o Henrique" subtitle="A história por trás do atleta" />
-                <div className="flex items-center justify-center h-[60vh] text-zinc-400">
+                <div className="flex items-center justify-center h-[60vh] font-grotesk text-white/55">
                     Conteúdo não disponível no momento.
                 </div>
                 <Footer />
@@ -253,7 +253,7 @@ export default function ConteudoPage() {
 
 
     return (
-        <main className="relative min-h-screen w-full overflow-x-hidden bg-background">
+        <main className="relative min-h-screen w-full overflow-x-hidden bg-night">
             <SectionNav title="Conheça o Henrique" subtitle="A história por trás do atleta" />
 
             {/* Media Modal */}
@@ -271,21 +271,20 @@ export default function ConteudoPage() {
                         animate={{ opacity: 1, y: 0 }}
                         className="text-center mb-10"
                     >
-                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs font-bold uppercase tracking-wider mb-6">
-                            <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
-                            A Jornada
-                        </div>
-                        <h2 className="font-display text-3xl md:text-5xl font-bold text-white mb-4 leading-tight">
+                        <p className="mb-4 font-grotesk text-[12px] font-semibold uppercase tracking-[0.16em] text-lime">
+                            A jornada
+                        </p>
+                        <h2 className="font-grotesk text-3xl md:text-5xl font-semibold text-white mb-4 leading-tight tracking-tight">
                             {profile.bio_title.includes(' ') ? (
                                 <>
                                     {profile.bio_title.split(' ').slice(0, -1).join(' ')}{' '}
-                                    <span className="text-primary">{profile.bio_title.split(' ').slice(-1)}</span>
+                                    <span className="font-editorial font-normal italic text-lime">{profile.bio_title.split(' ').slice(-1)}</span>
                                 </>
                             ) : (
-                                <span className="text-primary">{profile.bio_title}</span>
+                                <span className="font-editorial font-normal italic text-lime">{profile.bio_title}</span>
                             )}
                         </h2>
-                        <p className="text-gray-400 text-base md:text-lg max-w-2xl mx-auto leading-relaxed">
+                        <p className="max-w-2xl mx-auto font-grotesk text-base md:text-lg leading-relaxed text-white/70">
                             {profile.bio_description}
                         </p>
                     </motion.div>
@@ -317,14 +316,14 @@ export default function ConteudoPage() {
                             initial={{ opacity: 0 }}
                             whileInView={{ opacity: 1 }}
                             viewport={{ once: true }}
-                            className="text-xs font-bold uppercase tracking-[0.2em] text-gray-500 mb-8 text-center"
+                            className="mb-8 text-center font-grotesk text-[12px] font-semibold uppercase tracking-[0.16em] text-lime"
                         >
-                            Linha do Tempo
+                            Linha do tempo
                         </motion.h3>
 
                         <div className="relative">
                             {/* Vertical line */}
-                            <div className="absolute left-6 top-0 bottom-0 w-px bg-gradient-to-b from-primary/50 via-primary/20 to-transparent" />
+                            <div className="absolute left-6 top-0 bottom-0 w-px bg-gradient-to-b from-lime/50 via-lime/15 to-transparent" />
 
                             <div className="space-y-8">
                                 {profile.milestones.map((milestone, index) => {
@@ -343,17 +342,17 @@ export default function ConteudoPage() {
                                             className="relative pl-16"
                                         >
                                             {/* Timeline dot */}
-                                            <div className="absolute left-[14px] top-1 w-7 h-7 rounded-full bg-primary/10 border-2 border-primary/40 flex items-center justify-center">
-                                                <div className="text-primary">
+                                            <div className="absolute left-[14px] top-1 w-7 h-7 rounded-full bg-lime/12 border-2 border-lime/40 flex items-center justify-center">
+                                                <div className="text-lime">
                                                     {MILESTONE_ICONS[index % MILESTONE_ICONS.length]}
                                                 </div>
                                             </div>
 
                                             {/* Content */}
-                                            <div className="bg-white/[0.02] border border-white/[0.06] rounded-xl p-5">
-                                                <span className="text-primary text-xs font-bold uppercase tracking-widest">{milestone.year}</span>
-                                                <h4 className="text-white font-bold text-lg mt-1 mb-2">{milestone.title}</h4>
-                                                <p className="text-gray-400 text-sm leading-relaxed">{milestone.description}</p>
+                                            <div className="rounded-2xl border border-white/[0.07] bg-coal p-5 transition-all hover:border-lime/25">
+                                                <span className="font-grotesk text-xs font-semibold uppercase tracking-wide text-lime">{milestone.year}</span>
+                                                <h4 className="mt-1 mb-2 font-grotesk text-lg font-semibold text-white">{milestone.title}</h4>
+                                                <p className="font-grotesk text-sm leading-relaxed text-white/70">{milestone.description}</p>
 
                                                 {/* ── Media Gallery ── */}
                                                 {mediaItems.length > 0 && (
@@ -366,11 +365,11 @@ export default function ConteudoPage() {
                                                                     startIndex: 0,
                                                                     title: `${milestone.year} — ${milestone.title}`,
                                                                 })}
-                                                                className="relative group rounded-lg overflow-hidden border border-white/10 hover:border-primary/30 transition-all inline-block"
+                                                                className="relative group rounded-xl overflow-hidden border border-white/[0.07] hover:border-lime/30 transition-all inline-block"
                                                             >
                                                                 {mediaItems[0].type === 'video' ? (
                                                                     <div className="relative">
-                                                                        <video src={mediaItems[0].url} className="h-28 w-auto max-w-[220px] object-cover rounded-lg" muted />
+                                                                        <video src={mediaItems[0].url} className="h-28 w-auto max-w-[220px] object-cover rounded-xl" muted />
                                                                         <div className="absolute inset-0 bg-black/30 flex items-center justify-center group-hover:bg-black/10 transition-colors">
                                                                             <div className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center group-hover:scale-110 transition-transform">
                                                                                 <Play className="w-5 h-5 text-white fill-white ml-0.5" />
@@ -379,20 +378,20 @@ export default function ConteudoPage() {
                                                                     </div>
                                                                 ) : (
                                                                     <div className="relative">
-                                                                        <img src={mediaItems[0].url} alt={mediaItems[0].caption || milestone.title} className="h-28 w-auto max-w-[220px] object-cover rounded-lg group-hover:scale-105 transition-transform duration-300" />
-                                                                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors rounded-lg" />
+                                                                        <img src={mediaItems[0].url} alt={mediaItems[0].caption || milestone.title} className="h-28 w-auto max-w-[220px] object-cover rounded-xl group-hover:scale-105 transition-transform duration-300" />
+                                                                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors rounded-xl" />
                                                                     </div>
                                                                 )}
                                                                 {mediaItems[0].caption && (
-                                                                    <p className="text-[10px] text-gray-500 mt-1 text-left px-0.5">{mediaItems[0].caption}</p>
+                                                                    <p className="mt-1 px-0.5 text-left font-grotesk text-[10px] text-white/45">{mediaItems[0].caption}</p>
                                                                 )}
                                                             </button>
                                                         ) : (
                                                             // Multi-media grid
                                                             <div>
                                                                 <div className="flex items-center gap-1.5 mb-2">
-                                                                    <ImageIcon className="w-3 h-3 text-gray-500" />
-                                                                    <span className="text-[10px] text-gray-500 font-medium uppercase tracking-wider">{mediaItems.length} fotos/vídeos</span>
+                                                                    <ImageIcon className="w-3 h-3 text-white/45" />
+                                                                    <span className="font-grotesk text-[10px] font-medium uppercase tracking-wide text-white/45">{mediaItems.length} fotos/vídeos</span>
                                                                 </div>
                                                                 <div className="grid grid-cols-4 gap-1.5">
                                                                     {visibleItems.map((item, itemIdx) => (
@@ -403,10 +402,10 @@ export default function ConteudoPage() {
                                                                                 startIndex: itemIdx,
                                                                                 title: `${milestone.year} — ${milestone.title}`,
                                                                             })}
-                                                                            className="relative group aspect-square rounded-lg overflow-hidden border border-white/[0.06] hover:border-primary/30 transition-all"
+                                                                            className="relative group aspect-square rounded-xl overflow-hidden border border-white/[0.07] hover:border-lime/30 transition-all"
                                                                         >
                                                                             {item.type === 'video' ? (
-                                                                                <div className="w-full h-full bg-zinc-800 flex items-center justify-center">
+                                                                                <div className="w-full h-full bg-coal-2 flex items-center justify-center">
                                                                                     <video src={item.url} className="absolute inset-0 w-full h-full object-cover opacity-60" muted />
                                                                                     <Film className="w-4 h-4 text-white relative z-10 drop-shadow" />
                                                                                 </div>
@@ -416,7 +415,7 @@ export default function ConteudoPage() {
                                                                             {/* Overflow badge on last visible */}
                                                                             {itemIdx === SHOW_LIMIT - 1 && overflow > 0 && (
                                                                                 <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
-                                                                                    <span className="text-white font-bold text-sm">+{overflow}</span>
+                                                                                    <span className="font-grotesk text-sm font-semibold text-white">+{overflow}</span>
                                                                                 </div>
                                                                             )}
                                                                         </button>
@@ -445,15 +444,15 @@ export default function ConteudoPage() {
                             initial={{ opacity: 0, y: 20 }}
                             whileInView={{ opacity: 1, y: 0 }}
                             viewport={{ once: true }}
-                            className="bg-gradient-to-br from-primary/5 via-transparent to-amber-500/5 border border-white/[0.06] rounded-2xl p-8 text-center"
+                            className="rounded-3xl border border-white/[0.07] bg-coal p-8 text-center"
                         >
                             <span className="text-4xl mb-4 block">🥋</span>
-                            <h3 className="text-xl font-bold text-white mb-3">Valores que guiam o Henrique</h3>
+                            <h3 className="mb-3 font-grotesk text-xl font-semibold text-white">Valores que guiam o Henrique</h3>
                             <div className="flex flex-wrap justify-center gap-3 mt-4">
                                 {profile.values_list.map((value, index) => (
                                     <span
                                         key={index}
-                                        className="px-4 py-1.5 bg-white/[0.04] border border-white/[0.08] rounded-full text-sm text-gray-300 font-medium"
+                                        className="rounded-full border border-white/[0.08] bg-white/5 px-4 py-1.5 font-grotesk text-sm font-medium text-white/80"
                                     >
                                         {value}
                                     </span>
@@ -471,9 +470,9 @@ export default function ConteudoPage() {
                         href="https://instagram.com/henriquefujimoto"
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center gap-3 px-6 py-3 bg-white/[0.03] border border-white/[0.06] rounded-full text-white font-medium hover:border-pink-500/30 hover:bg-pink-500/5 transition-all"
+                        className="inline-flex items-center gap-3 rounded-full border border-white/15 bg-white/5 px-6 py-3 font-grotesk text-sm font-semibold text-white transition-all hover:border-lime/40 hover:bg-white/10"
                     >
-                        <Instagram className="w-5 h-5 text-pink-400" />
+                        <Instagram className="w-5 h-5 text-lime" />
                         Acompanhe no Instagram
                     </a>
                 </div>

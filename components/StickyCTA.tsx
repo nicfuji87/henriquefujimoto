@@ -15,18 +15,15 @@ const StickyCTA: React.FC = () => {
   };
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 p-4 pb-8 bg-gradient-to-t from-background via-background/95 to-transparent backdrop-blur-[2px]">
+    <div className="fixed bottom-0 left-0 right-0 z-50 p-4 pb-8 bg-gradient-to-t from-night via-night/95 to-transparent backdrop-blur-[2px]">
       <motion.button
         onClick={handleClick}
         whileHover={{ scale: 1.02, y: -2 }}
         whileTap={{ scale: 0.98 }}
-        className="w-full relative overflow-hidden group bg-primary text-black font-black tracking-wide text-lg py-4 rounded-xl shadow-[0_0_30px_rgba(34,197,94,0.3)] transition-all hover:shadow-[0_0_40px_rgba(34,197,94,0.5)] border border-white/20"
+        className="w-full inline-flex items-center justify-center gap-2 rounded-full bg-lime px-6 py-4 font-grotesk text-base font-semibold text-night shadow-[0_12px_40px_-8px_rgba(198,242,78,0.5)] transition-colors hover:bg-lime-dim"
       >
-        <div className="absolute inset-0 bg-white/30 translate-y-full group-hover:translate-y-0 transition-transform duration-300 skew-y-12"></div>
-        <span className="relative flex items-center justify-center gap-2">
-          <span>{config.cta_text?.toUpperCase() || 'APOIAR O ATLETA'}</span>
-          <MessageCircle className="w-6 h-6 fill-black" />
-        </span>
+        <span>{config.cta_text || 'Apoiar o atleta'}</span>
+        <MessageCircle className="w-5 h-5" />
       </motion.button>
     </div>
   );

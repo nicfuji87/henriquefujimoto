@@ -15,9 +15,9 @@ export default function ApoiarPage() {
     }, []);
 
     return (
-        <main className="relative min-h-screen w-full overflow-x-hidden bg-background">
+        <main className="relative min-h-screen w-full overflow-x-hidden bg-night">
             <SectionNav title="Apoie o Henrique" subtitle="Faça parte dessa jornada" />
-            <div className="pt-4 pb-10 flex flex-col gap-10">
+            <div>
                 <WhySupport />
                 <HowToSupport />
                 <AffiliateProducts />

@@ -98,15 +98,12 @@ const BrazilMap: React.FC<BrazilMapProps> = ({ cityData }) => {
         const val = stateData[code] || 0;
         if (val === 0) return 'rgba(255,255,255,0.04)';
         const intensity = Math.max(0.15, val / maxVal);
-        // Gradient from teal to gold based on intensity
-        const r = Math.round(20 + intensity * 220);
-        const g = Math.round(200 - intensity * 30);
-        const b = Math.round(120 - intensity * 80);
-        return `rgba(${r},${g},${b},${0.4 + intensity * 0.6})`;
+        // Sequential lime: faint (low) → solid #c6f24e (high)
+        return `rgba(198,242,78,${0.18 + intensity * 0.82})`;
     };
 
     const getStrokeColor = (code: string) => {
-        if (code === hoveredState) return '#fbbf24';
+        if (code === hoveredState) return '#c6f24e';
         return stateData[code] ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.08)';
     };
 
@@ -123,11 +120,11 @@ const BrazilMap: React.FC<BrazilMapProps> = ({ cityData }) => {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.2 }}
-            className="bg-white/5 backdrop-blur-sm border border-white/10 p-6 rounded-2xl col-span-1 md:col-span-2"
+            className="col-span-1 rounded-3xl border border-white/[0.07] bg-coal p-6 transition-all hover:border-lime/25 md:col-span-2"
         >
-            <h4 className="text-white font-bold mb-6 flex items-center gap-2">
-                <span className="w-2 h-6 bg-amber-500 rounded-full"></span>
-                Seguidores por Estado
+            <h4 className="mb-6 flex items-center gap-2 font-grotesk font-semibold text-white">
+                <span className="h-6 w-1.5 rounded-full bg-lime"></span>
+                Seguidores por estado
             </h4>
 
             <div className="flex flex-col md:flex-row items-center gap-6">
@@ -186,22 +183,22 @@ const BrazilMap: React.FC<BrazilMapProps> = ({ cityData }) => {
                     {/* Tooltip */}
                     {hoveredState && stateData[hoveredState] && (
                         <div
-                            className="absolute pointer-events-none z-30 bg-gray-900/95 border border-white/20 px-3 py-2 rounded-lg shadow-xl backdrop-blur-sm"
+                            className="absolute pointer-events-none z-30 rounded-2xl border border-white/[0.07] bg-coal px-3 py-2 shadow-xl"
                             style={{
                                 left: Math.min(tooltipPos.x + 10, 280),
                                 top: tooltipPos.y - 40,
                             }}
                         >
-                            <p className="text-white text-xs font-bold">{stateCodeToName[hoveredState] || hoveredState}</p>
-                            <p className="text-amber-400 text-sm font-bold">{Math.round((stateData[hoveredState] / totalState) * 100)}% da audiência</p>
+                            <p className="font-grotesk text-xs font-semibold text-white">{stateCodeToName[hoveredState] || hoveredState}</p>
+                            <p className="font-grotesk text-sm font-semibold text-lime">{Math.round((stateData[hoveredState] / totalState) * 100)}% da audiência</p>
                         </div>
                     )}
                 </div>
 
                 {/* State Ranking */}
                 <div className="flex-1 w-full space-y-2.5">
-                    <p className="text-xs text-gray-400 uppercase tracking-wider mb-3 font-medium">
-                        Top {sortedStates.length} Estados
+                    <p className="mb-3 font-grotesk text-[11px] font-medium uppercase tracking-wide text-white/45">
+                        Top {sortedStates.length} estados
                     </p>
                     {sortedStates.map(([code, val], i) => (
                         <div
@@ -210,22 +207,22 @@ const BrazilMap: React.FC<BrazilMapProps> = ({ cityData }) => {
                             onMouseEnter={() => setHoveredState(code)}
                             onMouseLeave={() => setHoveredState(null)}
                         >
-                            <div className="flex justify-between text-xs text-gray-300 mb-1">
-                                <span className="font-medium flex items-center gap-2">
-                                    <span className="text-gray-500 font-mono w-4">{i + 1}.</span>
+                            <div className="mb-1 flex justify-between font-grotesk text-xs text-white/70">
+                                <span className="flex items-center gap-2 font-medium">
+                                    <span className="w-4 text-white/40">{i + 1}.</span>
                                     <span className={`w-2 h-2 rounded-full`} style={{ backgroundColor: getColor(code) }}></span>
                                     {stateCodeToName[code] || code}
                                 </span>
-                                <span className="font-mono text-amber-400 font-bold">{Math.round((Number(val) / totalState) * 100)}%</span>
+                                <span className="font-grotesk font-semibold text-lime">{Math.round((Number(val) / totalState) * 100)}%</span>
                             </div>
-                            <div className="h-1.5 w-full bg-gray-700/30 rounded-full overflow-hidden">
+                            <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/10">
                                 <motion.div
                                     initial={{ width: 0 }}
                                     whileInView={{ width: `${(val / maxVal) * 100}%` }}
                                     transition={{ duration: 0.8, delay: i * 0.08 }}
                                     className="h-full rounded-full"
                                     style={{
-                                        background: `linear-gradient(90deg, #f59e0b, #eab308)`
+                                        background: `linear-gradient(90deg, #a9d92f, #c6f24e)`
                                     }}
                                 />
                             </div>

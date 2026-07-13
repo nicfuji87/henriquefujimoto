@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { ShoppingBag, ExternalLink, Star, Heart } from 'lucide-react';
+import { ShoppingBag, ExternalLink, Star } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 
@@ -40,29 +40,22 @@ export default function AffiliateProducts() {
     if (loading || products.length === 0) return null;
 
     return (
-        <section className="py-6 px-4">
-            <div className="max-w-5xl mx-auto">
+        <section className="bg-night px-6 py-20 md:py-28">
+            <div className="max-w-6xl mx-auto">
                 {/* Section Header */}
                 <motion.div
-                    initial={{ opacity: 0 }}
-                    whileInView={{ opacity: 1 }}
-                    viewport={{ once: true }}
-                    className="text-center mb-8"
+                    initial={{ opacity: 0, y: 16 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true, margin: '-60px' }}
+                    transition={{ duration: 0.6 }}
+                    className="text-center mb-10"
                 >
-                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-bold uppercase tracking-wider mb-4">
-                        <ShoppingBag className="w-3 h-3" />
-                        Produtos que eu uso e recomendo
-                    </div>
-                    <h3 className="text-2xl md:text-3xl font-bold text-white">
-                        Meus Produtos Favoritos
-                    </h3>
-                    <p className="text-sm text-gray-400 mt-2 max-w-xl mx-auto">
-                        Esses são os produtos que uso no meu dia a dia de treino e competição. Ao comprar pelos links abaixo, além de garantir qualidade, você me ajuda diretamente na minha carreira — eu recebo uma comissão por cada compra!
+                    <h2 className="font-grotesk text-[2rem] font-semibold leading-[1.08] tracking-tight text-white sm:text-[2.75rem]">
+                        Meus produtos <span className="font-editorial font-normal italic text-lime">favoritos</span>
+                    </h2>
+                    <p className="mx-auto mt-5 max-w-xl font-grotesk text-base leading-relaxed text-white/60 sm:text-lg">
+                        Esses são os produtos que uso no meu dia a dia de treino e competição. Ao comprar pelos links abaixo, além de garantir qualidade, você me ajuda diretamente na minha carreira — eu recebo uma comissão por cada compra.
                     </p>
-                    <div className="inline-flex items-center gap-1.5 mt-3 px-3 py-1.5 rounded-lg bg-white/[0.03] border border-white/[0.06] text-[11px] text-gray-500">
-                        <Heart className="w-3 h-3 text-pink-400" />
-                        Cada compra é um apoio direto ao meu sonho olímpico
-                    </div>
                 </motion.div>
 
                 {/* Products Grid */}
@@ -73,14 +66,14 @@ export default function AffiliateProducts() {
                             <>
                                 {/* Badge */}
                                 {product.badge && (
-                                    <div className="absolute top-2 left-2 z-10 flex items-center gap-1 px-2 py-0.5 bg-emerald-500/90 backdrop-blur rounded-full text-[10px] font-bold text-white">
+                                    <div className="absolute top-3 left-3 z-10 flex items-center gap-1 px-2 py-0.5 bg-lime rounded-full font-grotesk text-[10px] font-semibold text-night">
                                         <Star className="w-2.5 h-2.5" />
                                         {product.badge}
                                     </div>
                                 )}
 
                                 {/* Image */}
-                                <div className="aspect-square bg-white/[0.02] flex items-center justify-center overflow-hidden">
+                                <div className="aspect-square bg-coal-2 flex items-center justify-center overflow-hidden">
                                     {product.image_url ? (
                                         <img
                                             src={product.image_url}
@@ -88,32 +81,29 @@ export default function AffiliateProducts() {
                                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                                         />
                                     ) : (
-                                        <ShoppingBag className="w-10 h-10 text-gray-700" />
+                                        <ShoppingBag className="w-10 h-10 text-white/15" />
                                     )}
                                 </div>
 
                                 {/* Info */}
-                                <div className="p-3">
-                                    <h4 className="text-sm font-semibold text-white line-clamp-2 leading-tight mb-1 group-hover:text-emerald-300 transition-colors">
+                                <div className="p-4">
+                                    <h4 className="font-grotesk text-sm font-semibold text-white line-clamp-2 leading-tight mb-1 group-hover:text-lime transition-colors">
                                         {product.name}
                                     </h4>
                                     {product.description && (
-                                        <p className="text-[11px] text-gray-500 line-clamp-2 mb-2">
+                                        <p className="font-grotesk text-[11px] text-white/45 line-clamp-2 mb-2">
                                             {product.description}
                                         </p>
                                     )}
-                                    <div className="flex items-center gap-1 text-emerald-400 text-[11px] font-bold group-hover:gap-2 transition-all">
-                                        {hasLandingPage ? 'Ver Detalhes' : 'Comprar'}
+                                    <div className="flex items-center gap-1 text-lime font-grotesk text-[11px] font-semibold group-hover:gap-2 transition-all">
+                                        {hasLandingPage ? 'Ver detalhes' : 'Comprar'}
                                         <ExternalLink className="w-3 h-3" />
                                     </div>
                                 </div>
-
-                                {/* Bottom accent */}
-                                <div className="absolute bottom-0 left-0 right-0 h-0.5 scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-left bg-gradient-to-r from-emerald-500 to-teal-400" />
                             </>
                         );
 
-                        const cardClasses = "group relative bg-white/[0.03] backdrop-blur-sm border border-white/[0.06] rounded-2xl overflow-hidden hover:border-emerald-500/30 transition-all duration-500 hover:shadow-[0_0_30px_rgba(16,185,129,0.06)]";
+                        const cardClasses = "group relative bg-coal border border-white/[0.07] rounded-3xl overflow-hidden transition-all duration-300 hover:border-lime/30";
 
                         if (hasLandingPage) {
                             return (

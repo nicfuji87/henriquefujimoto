@@ -47,15 +47,15 @@ const TrustWall: React.FC = () => {
   };
 
   return (
-    <section className="py-10 bg-black/20 border-y border-white/5">
-      <div className="px-6 mb-5">
-        <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-gray-500">Parceiros de Confiança</h3>
+    <section className="bg-night px-6 py-16 md:py-20">
+      <div className="mb-8">
+        <p className="font-grotesk text-[12px] font-semibold uppercase tracking-[0.16em] text-white/45">Parceiros de confiança</p>
       </div>
 
       {/* Marquee Container */}
       <div className="w-full overflow-hidden relative group">
-        <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-background to-transparent z-10 pointer-events-none"></div>
-        <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-background to-transparent z-10 pointer-events-none"></div>
+        <div className="absolute left-0 top-0 bottom-0 w-16 bg-gradient-to-r from-night to-transparent z-10 pointer-events-none"></div>
+        <div className="absolute right-0 top-0 bottom-0 w-16 bg-gradient-to-l from-night to-transparent z-10 pointer-events-none"></div>
 
         <motion.div
           className="flex gap-12 px-6 items-center w-max"
@@ -76,14 +76,14 @@ const TrustWall: React.FC = () => {
                 ) : (
                   /* If no logo, show initial circle + name */
                   <>
-                    <div className="h-10 w-10 bg-white rounded-full flex items-center justify-center text-black font-black text-xl">
+                    <div className="h-10 w-10 bg-white/10 rounded-full flex items-center justify-center text-white font-grotesk font-semibold text-lg">
                       {getInitials(partner.name)}
                     </div>
-                    <span className="text-xl font-bold text-white tracking-tighter">{partner.name}</span>
+                    <span className="font-grotesk text-lg font-semibold text-white/60">{partner.name}</span>
                   </>
                 );
 
-                const wrapperClass = "flex items-center gap-2 shrink-0 select-none grayscale hover:grayscale-0 transition-all opacity-60 hover:opacity-100 cursor-pointer";
+                const wrapperClass = "flex items-center gap-2 shrink-0 select-none grayscale hover:grayscale-0 transition-all duration-300 opacity-50 hover:opacity-100 cursor-pointer";
 
                 return partner.website_url ? (
                   <a

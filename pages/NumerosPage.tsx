@@ -12,7 +12,7 @@ export default function NumerosPage() {
     }, []);
 
     return (
-        <main className="relative min-h-screen w-full overflow-x-hidden bg-background">
+        <main className="relative min-h-screen w-full overflow-x-hidden bg-night">
             <SectionNav title="Números & Métricas" subtitle="Impacto e alcance do Henrique" />
             <div className="pt-4 pb-10 flex flex-col gap-10">
                 <ROIDashboard />
