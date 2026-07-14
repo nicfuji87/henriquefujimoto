@@ -66,6 +66,14 @@ interface Channel {
     name: string;
     detail: string;
 }
+interface ContrastRow {
+    typical: string;
+    henrique: string;
+}
+interface PartnershipRow {
+    marista: string;
+    family: string;
+}
 
 interface PartnershipProject {
     slug: string;
@@ -114,6 +122,10 @@ interface PartnershipProject {
     show_metrics: boolean;
     channels_note: string;
     channels: Channel[] | null;
+    ecosystem_contrast: ContrastRow[] | null;
+    partnership_table: PartnershipRow[] | null;
+    partnership_table_note: string;
+    pilot_note: string;
     // Photos
     photos: Photo[] | null;
     // Investment + scholarship
@@ -592,6 +604,11 @@ export default function PartnershipPage() {
                 if (project.channels_note) paragraph(project.channels_note, 9.5, [90, 90, 95]);
                 for (const c of channelsPdf) paragraph(`${c.name}: ${c.detail || ''}`, 9.5);
             }
+            const contrastPdf = Array.isArray(project.ecosystem_contrast) ? project.ecosystem_contrast.filter((r) => r && (r.typical || r.henrique)) : [];
+            if (contrastPdf.length > 0) {
+                paragraph('Atleta tipico da idade  vs.  Henrique:', 9.5, [90, 90, 95]);
+                for (const r of contrastPdf) paragraph(`- ${r.typical}  ->  ${r.henrique}`, 9.5);
+            }
         }
 
         // Costs table
@@ -641,10 +658,27 @@ export default function PartnershipPage() {
         paragraph(project.ask_body);
 
         // Deliverables — what the school receives over a school year
-        if (deliverablesPdf.length > 0) {
-            heading(project.deliverables_title || 'O que o Marista receberá durante um ano letivo');
-            paragraph('Entregas concretas ao longo do ano letivo:', 10);
+        if (deliverablesPdf.length > 0 || project.pilot_note) {
+            heading(project.deliverables_title || 'O que o Marista recebe na parceria');
             for (const d of deliverablesPdf) paragraph(`•  ${d}`, 10);
+            if (project.pilot_note) paragraph(project.pilot_note, 10, [90, 90, 95]);
+        }
+
+        // Balanced partnership
+        const partnershipPdf = Array.isArray(project.partnership_table) ? project.partnership_table.filter((r) => r && (r.marista || r.family)) : [];
+        if (partnershipPdf.length > 0) {
+            heading('Uma parceria equilibrada');
+            autoTable(doc, {
+                startY: y,
+                head: [['O Marista oferece', 'O Henrique e a familia oferecem']],
+                body: partnershipPdf.map((r) => [r.marista || '', r.family || '']),
+                margin: { left: margin, right: margin },
+                styles: { fontSize: 9, cellPadding: 5, textColor: [45, 45, 50] },
+                headStyles: { fillColor: [18, 20, 23], textColor: [255, 255, 255], fontStyle: 'bold' },
+                theme: 'grid',
+            });
+            y = (doc as any).lastAutoTable.finalY + 14;
+            if (project.partnership_table_note) paragraph(project.partnership_table_note, 9, [120, 120, 125]);
         }
 
         // Institutional
@@ -787,6 +821,12 @@ export default function PartnershipPage() {
     ];
 
     const channels = Array.isArray(p.channels) ? p.channels.filter((c) => c && c.name) : [];
+    const ecosystemContrast = Array.isArray(p.ecosystem_contrast)
+        ? p.ecosystem_contrast.filter((r) => r && (r.typical || r.henrique))
+        : [];
+    const partnershipTable = Array.isArray(p.partnership_table)
+        ? p.partnership_table.filter((r) => r && (r.marista || r.family))
+        : [];
 
     return (
         <div className="min-h-screen bg-night">
@@ -1251,6 +1291,29 @@ export default function PartnershipPage() {
                             )}
                         </motion.div>
                     )}
+
+                    {ecosystemContrast.length > 0 && (
+                        <motion.div
+                            {...reveal}
+                            transition={{ duration: 0.6, delay: 0.15 }}
+                            className="mt-4 overflow-hidden rounded-3xl border border-white/[0.07] bg-coal"
+                        >
+                            <div className="grid grid-cols-2 border-b border-white/[0.07] text-center">
+                                <div className="p-3 font-grotesk text-[10px] font-semibold uppercase tracking-[0.12em] text-white/45 sm:p-4 sm:text-[11px]">
+                                    Atleta típico da idade
+                                </div>
+                                <div className="border-l border-white/[0.07] p-3 font-grotesk text-[10px] font-semibold uppercase tracking-[0.12em] text-lime sm:p-4 sm:text-[11px]">
+                                    Henrique
+                                </div>
+                            </div>
+                            {ecosystemContrast.map((r, i) => (
+                                <div key={i} className="grid grid-cols-2 border-b border-white/[0.05] last:border-0">
+                                    <div className="p-3 font-grotesk text-[13px] leading-snug text-white/50 sm:p-4 sm:text-sm">{r.typical}</div>
+                                    <div className="border-l border-white/[0.07] p-3 font-grotesk text-[13px] font-medium leading-snug text-white sm:p-4 sm:text-sm">{r.henrique}</div>
+                                </div>
+                            ))}
+                        </motion.div>
+                    )}
                 </Section>
             )}
 
@@ -1371,7 +1434,7 @@ export default function PartnershipPage() {
             </Section>
 
             {/* ---- What the school receives over a school year ---- */}
-            {deliverables.length > 0 && (
+            {(deliverables.length > 0 || p.pilot_note) && (
                 <Section>
                     <Heading>
                         {p.deliverables_title || 'O que o Marista receberá durante um ano letivo'}
@@ -1398,6 +1461,43 @@ export default function PartnershipPage() {
                             </motion.div>
                         ))}
                     </div>
+                    {p.pilot_note && (
+                        <motion.div
+                            {...reveal}
+                            transition={{ duration: 0.6, delay: 0.1 }}
+                            className="mt-6 rounded-2xl border border-lime/20 bg-lime/[0.05] p-5 font-grotesk text-sm leading-relaxed text-white/75 sm:text-base"
+                        >
+                            {p.pilot_note}
+                        </motion.div>
+                    )}
+                </Section>
+            )}
+
+            {/* ---- Balanced partnership (Marista offers x family offers) ---- */}
+            {partnershipTable.length > 0 && (
+                <Section>
+                    <Heading>
+                        Uma parceria <span className="font-editorial font-normal italic text-lime">equilibrada</span>
+                    </Heading>
+                    <div className="mt-8 overflow-hidden rounded-3xl border border-white/[0.07] bg-coal">
+                        <div className="grid grid-cols-2 border-b border-white/[0.07]">
+                            <div className="p-4 font-grotesk text-[10px] font-semibold uppercase tracking-[0.12em] text-lime sm:p-5 sm:text-[11px]">
+                                O Marista oferece
+                            </div>
+                            <div className="border-l border-white/[0.07] p-4 font-grotesk text-[10px] font-semibold uppercase tracking-[0.12em] text-white/70 sm:p-5 sm:text-[11px]">
+                                O Henrique e a família oferecem
+                            </div>
+                        </div>
+                        {partnershipTable.map((r, i) => (
+                            <div key={i} className="grid grid-cols-2 border-b border-white/[0.05] last:border-0">
+                                <div className="p-4 font-grotesk text-[13px] leading-snug text-white/80 sm:p-5 sm:text-sm">{r.marista}</div>
+                                <div className="border-l border-white/[0.07] p-4 font-grotesk text-[13px] leading-snug text-white/80 sm:p-5 sm:text-sm">{r.family}</div>
+                            </div>
+                        ))}
+                    </div>
+                    {p.partnership_table_note && (
+                        <p className="mt-5 max-w-2xl font-grotesk text-sm leading-relaxed text-white/50">{p.partnership_table_note}</p>
+                    )}
                 </Section>
             )}
 

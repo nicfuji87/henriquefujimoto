@@ -18,6 +18,8 @@ interface AcademicCard { title: string; text: string; }
 interface RoutineStep { time: string; label: string; }
 interface RoutineDay { day: string; blocks: { time: string; label: string }[]; }
 interface Channel { name: string; detail: string; }
+interface ContrastRow { typical: string; henrique: string; }
+interface PartnershipRow { marista: string; family: string; }
 
 interface Project {
     id?: string;
@@ -37,6 +39,10 @@ interface Project {
     show_metrics: boolean;
     channels_note: string;
     channels: Channel[];
+    ecosystem_contrast: ContrastRow[];
+    partnership_table: PartnershipRow[];
+    partnership_table_note: string;
+    pilot_note: string;
     costs: Cost[];
     costs_note: string;
     scholarship_label: string;
@@ -89,6 +95,7 @@ const EMPTY: Project = {
     hero_kicker: '', hero_title: '', hero_subtitle: '', intro: '',
     why_now_title: '', why_now_body: '', comms_title: '', comms_body: '', show_metrics: true,
     channels_note: '', channels: [],
+    ecosystem_contrast: [], partnership_table: [], partnership_table_note: '', pilot_note: '',
     costs: [], costs_note: '', scholarship_label: '', scholarship_monthly: 0, scholarship_body: '', ask_body: '',
     counterparts: [], institutional: [], timeline: [], timeline_note: '',
     family_letter: '', family_letter_signature: '', custom_sections: [],
@@ -365,6 +372,18 @@ export default function PartnershipsTab() {
                                         <button onClick={() => addItem<Channel>('channels', { name: '', detail: '' })} className="text-xs text-emerald-400 hover:text-emerald-300 flex items-center gap-1"><Plus className="w-3 h-3" /> Adicionar canal</button>
                                     </div>
                                 </Labeled>
+                                <Labeled label="Contraste: atleta típico × Henrique" hint="Vira a tabela de comparação na seção de comunicação.">
+                                    <div className="space-y-2">
+                                        {form.ecosystem_contrast.map((r, i) => (
+                                            <div key={i} className="flex items-start gap-2">
+                                                <input className={inputCls + ' flex-1'} value={r.typical} onChange={e => patchItem('ecosystem_contrast', i, { typical: e.target.value })} placeholder="Atleta típico..." />
+                                                <input className={inputCls + ' flex-1'} value={r.henrique} onChange={e => patchItem('ecosystem_contrast', i, { henrique: e.target.value })} placeholder="Henrique..." />
+                                                <button onClick={() => removeItem('ecosystem_contrast', i)} className="p-2 text-zinc-500 hover:text-red-400"><Trash2 className="w-4 h-4" /></button>
+                                            </div>
+                                        ))}
+                                        <button onClick={() => addItem<ContrastRow>('ecosystem_contrast', { typical: '', henrique: '' })} className="text-xs text-emerald-400 hover:text-emerald-300 flex items-center gap-1"><Plus className="w-3 h-3" /> Adicionar linha</button>
+                                    </div>
+                                </Labeled>
                             </div>
 
                             {/* Resumo executivo & federação */}
@@ -538,6 +557,23 @@ export default function PartnershipsTab() {
                                 ))}
                                 <button onClick={() => setForm(f => ({ ...f, deliverables: [...f.deliverables, ''] }))} className="text-xs text-emerald-400 hover:text-emerald-300 flex items-center gap-1"><Plus className="w-3 h-3" /> Adicionar entrega</button>
                             </div>
+                            <Labeled label="Projeto-piloto (nota)" hint="Ex.: começar com um piloto de 12 meses, que pode virar programa.">
+                                <textarea rows={2} className={inputCls} value={form.pilot_note} onChange={e => set('pilot_note', e.target.value)} />
+                            </Labeled>
+
+                            {/* Parceria equilibrada */}
+                            <GroupTitle>Parceria equilibrada (Marista × família)</GroupTitle>
+                            <div className="space-y-2">
+                                {form.partnership_table.map((r, i) => (
+                                    <div key={i} className="flex items-start gap-2">
+                                        <input className={inputCls + ' flex-1'} value={r.marista} onChange={e => patchItem('partnership_table', i, { marista: e.target.value })} placeholder="O Marista oferece..." />
+                                        <input className={inputCls + ' flex-1'} value={r.family} onChange={e => patchItem('partnership_table', i, { family: e.target.value })} placeholder="Henrique e família oferecem..." />
+                                        <button onClick={() => removeItem('partnership_table', i)} className="p-2 text-zinc-500 hover:text-red-400"><Trash2 className="w-4 h-4" /></button>
+                                    </div>
+                                ))}
+                                <button onClick={() => addItem<PartnershipRow>('partnership_table', { marista: '', family: '' })} className="text-xs text-emerald-400 hover:text-emerald-300 flex items-center gap-1"><Plus className="w-3 h-3" /> Adicionar linha</button>
+                            </div>
+                            <Labeled label="Observação da tabela"><input className={inputCls} value={form.partnership_table_note} onChange={e => set('partnership_table_note', e.target.value)} /></Labeled>
 
                             {/* Costs */}
                             <GroupTitle>Custos de formação</GroupTitle>
