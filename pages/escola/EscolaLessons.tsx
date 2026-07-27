@@ -70,7 +70,7 @@ export default function EscolaLessons() {
     if (!canViewLessons(role)) return <Navigate to="/escola" replace />;
 
     if (loading) {
-        return <div className="py-24 text-center" style={{ color: 'var(--ink-soft)' }}>
+        return <div className="py-24 text-center" style={{ color: 'var(--fg-soft)' }}>
             <span className="material-symbols-outlined text-[32px] animate-spin">progress_activity</span>
         </div>;
     }
@@ -78,8 +78,8 @@ export default function EscolaLessons() {
     return (
         <div className="escola-enter space-y-5">
             <div>
-                <h1 className="text-[26px] font-extrabold leading-tight">Diário de <span className="escola-mark">aula</span></h1>
-                <p className="text-[13px] mt-1" style={{ color: 'var(--ink-soft)' }}>
+                <h1 className="text-[26px] font-semibold leading-tight">Diário de <span className="escola-mark">aula</span></h1>
+                <p className="text-[13px] mt-1" style={{ color: 'var(--fg-soft)' }}>
                     Atividades desenvolvidas em cada atendimento e como o Henrique respondeu.
                 </p>
             </div>
@@ -93,7 +93,7 @@ export default function EscolaLessons() {
                         {(['green', 'yellow', 'red'] as const).map(k => thermometer[k] > 0 && (
                             <div key={k} style={{
                                 width: `${(thermometer[k] / thermometer.total) * 100}%`,
-                                background: k === 'green' ? '#22c55e' : k === 'yellow' ? '#eab308' : '#ef4444',
+                                background: k === 'green' ? 'var(--ok)' : k === 'yellow' ? 'var(--warn)' : 'var(--danger)',
                             }} />
                         ))}
                     </div>
@@ -102,7 +102,7 @@ export default function EscolaLessons() {
                             <span key={k} className="text-[12px] font-bold flex items-center gap-1">
                                 <span>{PERFORMANCE[k].emoji}</span>
                                 <span>{thermometer[k]}</span>
-                                <span style={{ color: 'var(--ink-soft)' }}>{PERFORMANCE[k].label}</span>
+                                <span style={{ color: 'var(--fg-soft)' }}>{PERFORMANCE[k].label}</span>
                             </span>
                         ))}
                     </div>
@@ -155,11 +155,11 @@ export default function EscolaLessons() {
                                     className="w-full flex items-center gap-3 p-3 rounded-xl text-left transition-all"
                                     style={form.performance === k
                                         ? { background: v.bg, border: `1.5px solid ${v.color}` }
-                                        : { background: 'var(--paper)', border: '1px solid var(--line)' }}>
+                                        : { background: 'var(--surface-2)', border: '1px solid var(--line)' }}>
                                     <span className="text-[17px]">{v.emoji}</span>
                                     <span>
-                                        <span className="block text-[14px] font-extrabold">{v.label}</span>
-                                        <span className="block text-[12px]" style={{ color: 'var(--ink-soft)' }}>{v.desc}</span>
+                                        <span className="block text-[14px] font-semibold">{v.label}</span>
+                                        <span className="block text-[12px]" style={{ color: 'var(--fg-soft)' }}>{v.desc}</span>
                                     </span>
                                 </button>
                             ))}
@@ -171,10 +171,10 @@ export default function EscolaLessons() {
                         <div className="flex gap-2">
                             {[1, 2, 3, 4, 5].map(n => (
                                 <button key={n} type="button" onClick={() => setForm({ ...form, engagement: n })}
-                                    className="flex-1 py-2.5 rounded-xl text-[15px] font-extrabold transition-all"
+                                    className="flex-1 py-2.5 rounded-xl text-[15px] font-semibold transition-all"
                                     style={form.engagement === n
-                                        ? { background: 'var(--ink)', color: 'var(--paper)' }
-                                        : { background: 'var(--paper)', color: 'var(--ink-soft)', border: '1px solid var(--line)' }}>
+                                        ? { background: 'var(--accent)', color: 'var(--accent-ink)' }
+                                        : { background: 'var(--surface-2)', color: 'var(--fg-soft)', border: '1px solid var(--line)' }}>
                                     {n}
                                 </button>
                             ))}
@@ -203,7 +203,7 @@ export default function EscolaLessons() {
 
             {lessons.length === 0 ? (
                 <div className="escola-card-soft p-6 text-center">
-                    <span className="material-symbols-outlined text-[30px]" style={{ color: 'var(--ink-soft)' }}>auto_stories</span>
+                    <span className="material-symbols-outlined text-[30px]" style={{ color: 'var(--fg-soft)' }}>auto_stories</span>
                     <p className="font-bold mt-1">Nenhuma aula registrada ainda</p>
                 </div>
             ) : (
@@ -215,21 +215,21 @@ export default function EscolaLessons() {
                             <li key={lesson.id} className="escola-card-soft p-4"
                                 style={{ borderLeft: `4px solid ${perf.color}` }}>
                                 <div className="flex items-center gap-2 flex-wrap">
-                                    <span className="text-[13px] font-extrabold">{formatDate(lesson.date)}</span>
+                                    <span className="text-[13px] font-semibold">{formatDate(lesson.date)}</span>
                                     {subject && (
-                                        <span className="text-[10px] font-extrabold px-1.5 py-0.5 rounded-md"
+                                        <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-md"
                                             style={{ background: `${subject.color}1a`, color: subject.color }}>
                                             {subject.name}
                                         </span>
                                     )}
                                     {lesson.duration_min && (
-                                        <span className="text-[12px]" style={{ color: 'var(--ink-soft)' }}>{lesson.duration_min} min</span>
+                                        <span className="text-[12px]" style={{ color: 'var(--fg-soft)' }}>{lesson.duration_min} min</span>
                                     )}
                                     <span className="text-[12px] font-bold ml-auto flex items-center gap-1" style={{ color: perf.color }}>
                                         {perf.emoji} {perf.label}
                                     </span>
                                     {writable && (
-                                        <button onClick={() => handleDelete(lesson.id)} style={{ color: 'var(--ink-soft)' }}>
+                                        <button onClick={() => handleDelete(lesson.id)} style={{ color: 'var(--fg-soft)' }}>
                                             <span className="material-symbols-outlined text-[18px]">delete</span>
                                         </button>
                                     )}
@@ -243,7 +243,7 @@ export default function EscolaLessons() {
                                         <span className="flex gap-0.5 ml-1">
                                             {[1, 2, 3, 4, 5].map(n => (
                                                 <span key={n} className="w-4 h-1.5 rounded-full"
-                                                    style={{ background: n <= (lesson.engagement || 0) ? 'var(--ink)' : 'var(--line)' }} />
+                                                    style={{ background: n <= (lesson.engagement || 0) ? 'var(--accent)' : 'var(--line)' }} />
                                             ))}
                                         </span>
                                     </div>
@@ -251,7 +251,7 @@ export default function EscolaLessons() {
 
                                 {lesson.notes && (
                                     <p className="text-[13px] mt-2.5 p-2.5 rounded-lg leading-snug"
-                                        style={{ background: 'var(--paper)', borderLeft: '3px solid var(--pen)' }}>
+                                        style={{ background: 'var(--surface-2)', borderLeft: '3px solid var(--accent)' }}>
                                         <span className="escola-label block mb-0.5">Observação</span>
                                         {lesson.notes}
                                     </p>
@@ -259,7 +259,7 @@ export default function EscolaLessons() {
 
                                 {lesson.homework && (
                                     <p className="text-[13px] mt-2 p-2.5 rounded-lg leading-snug"
-                                        style={{ background: '#fffbeb', borderLeft: '3px solid var(--marker)' }}>
+                                        style={{ background: 'rgba(251,191,36,.08)', borderLeft: '3px solid var(--accent)' }}>
                                         <span className="escola-label block mb-0.5">Ficou de casa</span>
                                         {lesson.homework}
                                     </p>

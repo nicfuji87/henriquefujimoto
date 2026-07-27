@@ -77,7 +77,7 @@ export default function EscolaGrades() {
     };
 
     if (loading) {
-        return <div className="py-24 text-center" style={{ color: 'var(--ink-soft)' }}>
+        return <div className="py-24 text-center" style={{ color: 'var(--fg-soft)' }}>
             <span className="material-symbols-outlined text-[32px] animate-spin">progress_activity</span>
         </div>;
     }
@@ -85,8 +85,8 @@ export default function EscolaGrades() {
     return (
         <div className="escola-enter space-y-5">
             <div>
-                <h1 className="text-[26px] font-extrabold leading-tight">Notas & <span className="escola-mark">evolução</span></h1>
-                <p className="text-[13px] mt-1" style={{ color: 'var(--ink-soft)' }}>
+                <h1 className="text-[26px] font-semibold leading-tight">Notas & <span className="escola-mark">evolução</span></h1>
+                <p className="text-[13px] mt-1" style={{ color: 'var(--fg-soft)' }}>
                     Notas convertidas para escala 0–10, com peso, para dar pra comparar tudo.
                 </p>
             </div>
@@ -95,12 +95,12 @@ export default function EscolaGrades() {
             <div className="escola-card p-5 flex items-center gap-5">
                 <div>
                     <p className="escola-label">Média geral</p>
-                    <p className="text-[44px] font-extrabold leading-none mt-1"
-                        style={{ color: average === null ? 'var(--ink-soft)' : average >= PASS_MARK ? '#15803d' : '#b91c1c' }}>
+                    <p className="text-[44px] font-semibold leading-none mt-1"
+                        style={{ color: average === null ? 'var(--fg-soft)' : average >= PASS_MARK ? 'var(--ok)' : 'var(--danger)' }}>
                         {average !== null ? average.toFixed(1).replace('.', ',') : '—'}
                     </p>
                 </div>
-                <div className="flex-1 text-[13px] leading-snug" style={{ color: 'var(--ink-soft)' }}>
+                <div className="flex-1 text-[13px] leading-snug" style={{ color: 'var(--fg-soft)' }}>
                     {average === null
                         ? 'Lance a primeira nota para começar o acompanhamento.'
                         : average >= PASS_MARK
@@ -186,20 +186,25 @@ export default function EscolaGrades() {
                     <div style={{ width: '100%', height: 190 }}>
                         <ResponsiveContainer>
                             <LineChart data={termChart} margin={{ top: 5, right: 8, left: -22, bottom: 0 }}>
-                                <CartesianGrid stroke="#e6ddcd" vertical={false} />
-                                <XAxis dataKey="term" tick={{ fontSize: 12, fontWeight: 700, fill: '#6b6459' }} axisLine={false} tickLine={false} />
-                                <YAxis domain={[0, 10]} ticks={[0, 2, 4, 6, 8, 10]} tick={{ fontSize: 11, fill: '#6b6459' }} axisLine={false} tickLine={false} />
+                                <CartesianGrid stroke="#282c31" vertical={false} />
+                                <XAxis dataKey="term" tick={{ fontSize: 12, fontWeight: 600, fill: '#8b9099' }} axisLine={false} tickLine={false} />
+                                <YAxis domain={[0, 10]} ticks={[0, 2, 4, 6, 8, 10]} tick={{ fontSize: 11, fill: '#8b9099' }} axisLine={false} tickLine={false} />
                                 <Tooltip
                                     formatter={(v: number) => [String(v).replace('.', ','), 'Média']}
-                                    contentStyle={{ borderRadius: 12, border: '1.5px solid #17140f', fontSize: 13, fontWeight: 700 }}
+                                    contentStyle={{
+                                        borderRadius: 14, border: '1px solid #282c31', background: '#141619',
+                                        fontSize: 13, fontWeight: 600, color: '#ffffff',
+                                    }}
+                                    labelStyle={{ color: 'rgba(255,255,255,.55)' }}
+                                    cursor={{ stroke: '#282c31' }}
                                 />
-                                <ReferenceLine y={PASS_MARK} stroke="#b91c1c" strokeDasharray="4 4" />
-                                <Line type="monotone" dataKey="media" stroke="#2b4eff" strokeWidth={3}
-                                    dot={{ r: 5, fill: '#2b4eff' }} activeDot={{ r: 7 }} />
+                                <ReferenceLine y={PASS_MARK} stroke="#f87171" strokeDasharray="4 4" />
+                                <Line type="monotone" dataKey="media" stroke="#c6f24e" strokeWidth={3}
+                                    dot={{ r: 5, fill: '#c6f24e' }} activeDot={{ r: 7 }} />
                             </LineChart>
                         </ResponsiveContainer>
                     </div>
-                    <p className="text-[11px] mt-1" style={{ color: 'var(--ink-soft)' }}>
+                    <p className="text-[11px] mt-1" style={{ color: 'var(--fg-soft)' }}>
                         Linha tracejada = média de aprovação ({PASS_MARK},0)
                     </p>
                 </section>
@@ -210,7 +215,7 @@ export default function EscolaGrades() {
                 <h2 className="escola-label mb-2">Por matéria</h2>
                 {bySubject.length === 0 ? (
                     <div className="escola-card-soft p-6 text-center">
-                        <span className="material-symbols-outlined text-[30px]" style={{ color: 'var(--ink-soft)' }}>trending_up</span>
+                        <span className="material-symbols-outlined text-[30px]" style={{ color: 'var(--fg-soft)' }}>trending_up</span>
                         <p className="font-bold mt-1">Nenhuma nota lançada ainda</p>
                     </div>
                 ) : (
@@ -226,25 +231,25 @@ export default function EscolaGrades() {
                                             <span className="material-symbols-outlined text-[20px]">{subject.icon}</span>
                                         </span>
                                         <span className="flex-1 min-w-0">
-                                            <span className="block text-[15px] font-extrabold">{subject.name}</span>
-                                            <span className="block text-[12px]" style={{ color: 'var(--ink-soft)' }}>
+                                            <span className="block text-[15px] font-semibold">{subject.name}</span>
+                                            <span className="block text-[12px]" style={{ color: 'var(--fg-soft)' }}>
                                                 {list.length} nota{list.length === 1 ? '' : 's'}
                                             </span>
                                         </span>
                                         {trend !== null && Math.abs(trend) >= 0.05 && (
-                                            <span className="flex items-center text-[12px] font-extrabold"
-                                                style={{ color: trend > 0 ? '#15803d' : '#b91c1c' }}>
+                                            <span className="flex items-center text-[12px] font-semibold"
+                                                style={{ color: trend > 0 ? 'var(--ok)' : 'var(--danger)' }}>
                                                 <span className="material-symbols-outlined text-[17px]">
                                                     {trend > 0 ? 'trending_up' : 'trending_down'}
                                                 </span>
                                                 {trend > 0 ? '+' : ''}{trend.toFixed(1).replace('.', ',')}
                                             </span>
                                         )}
-                                        <span className="text-[22px] font-extrabold tabular-nums"
-                                            style={{ color: (avg ?? 0) >= PASS_MARK ? '#15803d' : '#b91c1c' }}>
+                                        <span className="text-[22px] font-semibold tabular-nums"
+                                            style={{ color: (avg ?? 0) >= PASS_MARK ? 'var(--ok)' : 'var(--danger)' }}>
                                             {avg !== null ? avg.toFixed(1).replace('.', ',') : '—'}
                                         </span>
-                                        <span className="material-symbols-outlined text-[20px]" style={{ color: 'var(--ink-soft)' }}>
+                                        <span className="material-symbols-outlined text-[20px]" style={{ color: 'var(--fg-soft)' }}>
                                             {open ? 'expand_less' : 'expand_more'}
                                         </span>
                                     </button>
@@ -253,19 +258,19 @@ export default function EscolaGrades() {
                                         <ul className="px-4 pb-4 space-y-2" style={{ borderTop: '1px solid var(--line)' }}>
                                             {[...list].reverse().map(g => (
                                                 <li key={g.id} className="flex items-start gap-3 pt-3">
-                                                    <span className="text-[17px] font-extrabold tabular-nums shrink-0 w-12"
-                                                        style={{ color: (Number(g.score) / (g.max_score || 10)) * 10 >= PASS_MARK ? '#15803d' : '#b91c1c' }}>
+                                                    <span className="text-[17px] font-semibold tabular-nums shrink-0 w-12"
+                                                        style={{ color: (Number(g.score) / (g.max_score || 10)) * 10 >= PASS_MARK ? 'var(--ok)' : 'var(--danger)' }}>
                                                         {Number(g.score).toFixed(1).replace('.', ',')}
                                                     </span>
                                                     <span className="flex-1 min-w-0">
                                                         <span className="block text-[13px] font-bold">
                                                             {g.title || 'Avaliação'}
-                                                            <span className="font-normal" style={{ color: 'var(--ink-soft)' }}>
+                                                            <span className="font-normal" style={{ color: 'var(--fg-soft)' }}>
                                                                 {' '}/ {Number(g.max_score).toFixed(0)}
                                                                 {Number(g.weight) !== 1 ? ` · peso ${g.weight}` : ''}
                                                             </span>
                                                         </span>
-                                                        <span className="block text-[12px]" style={{ color: 'var(--ink-soft)' }}>
+                                                        <span className="block text-[12px]" style={{ color: 'var(--fg-soft)' }}>
                                                             {g.term} · {formatDate(g.date)}
                                                         </span>
                                                         {g.notes && (
@@ -273,7 +278,7 @@ export default function EscolaGrades() {
                                                         )}
                                                     </span>
                                                     {writable && (
-                                                        <button onClick={() => handleDelete(g.id)} style={{ color: 'var(--ink-soft)' }}>
+                                                        <button onClick={() => handleDelete(g.id)} style={{ color: 'var(--fg-soft)' }}>
                                                             <span className="material-symbols-outlined text-[18px]">delete</span>
                                                         </button>
                                                     )}

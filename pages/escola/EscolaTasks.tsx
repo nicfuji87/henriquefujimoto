@@ -99,7 +99,7 @@ export default function EscolaTasks() {
     };
 
     if (loading) {
-        return <div className="py-24 text-center" style={{ color: 'var(--ink-soft)' }}>
+        return <div className="py-24 text-center" style={{ color: 'var(--fg-soft)' }}>
             <span className="material-symbols-outlined text-[32px] animate-spin">progress_activity</span>
         </div>;
     }
@@ -109,8 +109,8 @@ export default function EscolaTasks() {
     return (
         <div className="escola-enter space-y-5">
             <div>
-                <h1 className="text-[26px] font-extrabold leading-tight">Atividades <span className="escola-mark">a desenvolver</span></h1>
-                <p className="text-[13px] mt-1" style={{ color: 'var(--ink-soft)' }}>
+                <h1 className="text-[26px] font-semibold leading-tight">Atividades <span className="escola-mark">a desenvolver</span></h1>
+                <p className="text-[13px] mt-1" style={{ color: 'var(--fg-soft)' }}>
                     O que a professora deixou para fazer entre uma aula e outra.
                 </p>
             </div>
@@ -151,10 +151,10 @@ export default function EscolaTasks() {
                         <div className="flex gap-2">
                             {Object.entries(PRIORITIES).map(([k, v]) => (
                                 <button key={k} type="button" onClick={() => setForm({ ...form, priority: k })}
-                                    className="flex-1 py-2 rounded-xl text-[13px] font-extrabold transition-all"
+                                    className="flex-1 py-2 rounded-xl text-[13px] font-semibold transition-all"
                                     style={form.priority === k
-                                        ? { background: v.color, color: '#fff' }
-                                        : { background: 'var(--paper)', color: 'var(--ink-soft)', border: '1px solid var(--line)' }}>
+                                        ? { background: `${v.color}22`, color: v.color, border: `1px solid ${v.color}` }
+                                        : { background: 'var(--surface-2)', color: 'var(--fg-soft)', border: '1px solid var(--line)' }}>
                                     {v.label}
                                 </button>
                             ))}
@@ -194,7 +194,7 @@ export default function EscolaTasks() {
 
             {list.length === 0 ? (
                 <div className="escola-card-soft p-6 text-center">
-                    <span className="material-symbols-outlined text-[30px]" style={{ color: 'var(--ink-soft)' }}>
+                    <span className="material-symbols-outlined text-[30px]" style={{ color: 'var(--fg-soft)' }}>
                         {tab === 'pending' ? 'task_alt' : 'inbox'}
                     </span>
                     <p className="font-bold mt-1">
@@ -209,11 +209,11 @@ export default function EscolaTasks() {
                         const subject = subjectOf(task.subject_id);
                         return (
                             <li key={task.id} className="escola-card-soft p-4"
-                                style={late ? { borderColor: '#fecaca', background: '#fffbfb' } : {}}>
+                                style={late ? { borderColor: 'rgba(248,113,113,.35)', background: 'rgba(248,113,113,.05)' } : {}}>
                                 <div className="flex items-start gap-3">
                                     <button onClick={() => handleToggle(task)} className="shrink-0 mt-0.5">
                                         <span className="material-symbols-outlined text-[24px]"
-                                            style={{ color: task.status === 'done' ? '#15803d' : late ? '#b91c1c' : 'var(--ink-soft)' }}>
+                                            style={{ color: task.status === 'done' ? 'var(--ok)' : late ? 'var(--danger)' : 'var(--fg-soft)' }}>
                                             {task.status === 'done' ? 'check_circle' : 'radio_button_unchecked'}
                                         </span>
                                     </button>
@@ -221,30 +221,30 @@ export default function EscolaTasks() {
                                     <div className="flex-1 min-w-0">
                                         <div className="flex items-center gap-2 flex-wrap">
                                             {subject && (
-                                                <span className="text-[10px] font-extrabold px-1.5 py-0.5 rounded-md"
+                                                <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-md"
                                                     style={{ background: `${subject.color}1a`, color: subject.color }}>
                                                     {subject.name}
                                                 </span>
                                             )}
                                             {task.priority === 'high' && task.status !== 'done' && (
-                                                <span className="text-[10px] font-extrabold px-1.5 py-0.5 rounded-md"
-                                                    style={{ background: '#fee2e2', color: '#b91c1c' }}>PRIORIDADE</span>
+                                                <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-md"
+                                                    style={{ background: 'rgba(248,113,113,.16)', color: 'var(--danger)' }}>PRIORIDADE</span>
                                             )}
                                         </div>
 
-                                        <p className={`text-[15px] font-extrabold leading-snug mt-1 ${task.status === 'done' ? 'line-through opacity-55' : ''}`}>
+                                        <p className={`text-[15px] font-semibold leading-snug mt-1 ${task.status === 'done' ? 'line-through opacity-55' : ''}`}>
                                             {task.title}
                                         </p>
 
                                         {task.description && (
-                                            <p className="text-[13px] mt-1 leading-snug" style={{ color: 'var(--ink-soft)' }}>
+                                            <p className="text-[13px] mt-1 leading-snug" style={{ color: 'var(--fg-soft)' }}>
                                                 {task.description}
                                             </p>
                                         )}
 
                                         {task.due_date && task.status !== 'done' && (
                                             <p className="text-[12px] font-bold mt-1.5"
-                                                style={{ color: late ? '#b91c1c' : dueIn !== null && dueIn <= 1 ? '#a16207' : 'var(--ink-soft)' }}>
+                                                style={{ color: late ? 'var(--danger)' : dueIn !== null && dueIn <= 1 ? 'var(--warn)' : 'var(--fg-soft)' }}>
                                                 {late ? `Atrasada · era ${formatDate(task.due_date)}`
                                                     : dueIn === 0 ? 'Entregar hoje'
                                                         : dueIn === 1 ? 'Entregar amanhã'
@@ -253,7 +253,7 @@ export default function EscolaTasks() {
                                         )}
 
                                         {task.status === 'done' && task.difficulty && (
-                                            <p className="text-[12px] font-bold mt-1.5" style={{ color: 'var(--ink-soft)' }}>
+                                            <p className="text-[12px] font-bold mt-1.5" style={{ color: 'var(--fg-soft)' }}>
                                                 {DIFFICULTY.find(d => d.value === task.difficulty)?.emoji}{' '}
                                                 {DIFFICULTY.find(d => d.value === task.difficulty)?.label}
                                             </p>
@@ -261,7 +261,7 @@ export default function EscolaTasks() {
 
                                         {task.student_note && (
                                             <p className="text-[13px] mt-2 p-2.5 rounded-lg leading-snug"
-                                                style={{ background: 'var(--paper)', borderLeft: '3px solid var(--pen)' }}>
+                                                style={{ background: 'var(--surface-2)', borderLeft: '3px solid var(--accent)' }}>
                                                 <span className="escola-label block mb-0.5">Recado do Henrique</span>
                                                 {task.student_note}
                                             </p>
@@ -269,7 +269,7 @@ export default function EscolaTasks() {
                                     </div>
 
                                     {writable && (
-                                        <button onClick={() => handleDelete(task)} className="shrink-0" style={{ color: 'var(--ink-soft)' }}>
+                                        <button onClick={() => handleDelete(task)} className="shrink-0" style={{ color: 'var(--fg-soft)' }}>
                                             <span className="material-symbols-outlined text-[19px]">delete</span>
                                         </button>
                                     )}
@@ -294,10 +294,10 @@ export default function EscolaTasks() {
 function TabButton({ active, onClick, label }: { active: boolean; onClick: () => void; label: string }) {
     return (
         <button onClick={onClick}
-            className="flex-1 py-2.5 rounded-xl text-[13px] font-extrabold transition-all"
+            className="flex-1 py-2.5 rounded-xl text-[13px] font-semibold transition-all"
             style={active
-                ? { background: 'var(--ink)', color: 'var(--paper)' }
-                : { background: 'var(--paper-2)', color: 'var(--ink-soft)', border: '1px solid var(--line)' }}>
+                ? { background: 'var(--accent)', color: 'var(--accent-ink)' }
+                : { background: 'var(--surface)', color: 'var(--fg-soft)', border: '1px solid var(--line)' }}>
             {label}
         </button>
     );
@@ -314,10 +314,10 @@ function FeedbackSheet({ task, onCancel, onSubmit }: {
 
     return (
         <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-4"
-            style={{ background: 'rgba(23,20,15,.45)' }} onClick={onCancel}>
+            style={{ background: 'rgba(10,11,13,.75)', backdropFilter: 'blur(4px)' }} onClick={onCancel}>
             <div className="escola-card w-full max-w-md p-5 escola-enter" onClick={e => e.stopPropagation()}>
                 <p className="escola-label">Tarefa concluída</p>
-                <p className="text-[17px] font-extrabold leading-snug mt-1 mb-4">{task.title}</p>
+                <p className="text-[17px] font-semibold leading-snug mt-1 mb-4">{task.title}</p>
 
                 <p className="escola-label mb-2">Como foi pra você?</p>
                 <div className="flex gap-1.5 mb-4">
@@ -325,10 +325,10 @@ function FeedbackSheet({ task, onCancel, onSubmit }: {
                         <button key={d.value} onClick={() => setDifficulty(d.value)}
                             className="flex-1 py-2.5 rounded-xl flex flex-col items-center gap-0.5 transition-all"
                             style={difficulty === d.value
-                                ? { background: 'var(--marker)', border: '1.5px solid var(--ink)' }
-                                : { background: 'var(--paper)', border: '1px solid var(--line)' }}>
+                                ? { background: 'rgba(198,242,78,.14)', border: '1px solid var(--accent)' }
+                                : { background: 'var(--surface-2)', border: '1px solid var(--line)' }}>
                             <span className="text-[20px]">{d.emoji}</span>
-                            <span className="text-[9px] font-extrabold leading-tight text-center">{d.label}</span>
+                            <span className="text-[9px] font-semibold leading-tight text-center">{d.label}</span>
                         </button>
                     ))}
                 </div>
@@ -339,8 +339,8 @@ function FeedbackSheet({ task, onCancel, onSubmit }: {
                     onChange={e => setNote(e.target.value)} />
 
                 <div className="flex gap-2 mt-4">
-                    <button onClick={onCancel} className="flex-1 py-3 rounded-full font-extrabold"
-                        style={{ background: 'var(--paper)', border: '1px solid var(--line)' }}>
+                    <button onClick={onCancel} className="flex-1 py-3 rounded-full font-semibold"
+                        style={{ background: 'var(--surface-2)', border: '1px solid var(--line)' }}>
                         Cancelar
                     </button>
                     <button onClick={() => onSubmit(difficulty, note)} className="escola-btn flex-[2] py-3">

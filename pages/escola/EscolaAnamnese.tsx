@@ -86,7 +86,7 @@ export default function EscolaAnamnesePage() {
     };
 
     if (loading) {
-        return <div className="py-24 text-center" style={{ color: 'var(--ink-soft)' }}>
+        return <div className="py-24 text-center" style={{ color: 'var(--fg-soft)' }}>
             <span className="material-symbols-outlined text-[32px] animate-spin">progress_activity</span>
         </div>;
     }
@@ -100,8 +100,8 @@ export default function EscolaAnamnesePage() {
     return (
         <div className="escola-enter space-y-5">
             <div>
-                <h1 className="text-[26px] font-extrabold leading-tight">Ficha de <span className="escola-mark">acompanhamento</span></h1>
-                <p className="text-[13px] mt-1" style={{ color: 'var(--ink-soft)' }}>
+                <h1 className="text-[26px] font-semibold leading-tight">Ficha de <span className="escola-mark">acompanhamento</span></h1>
+                <p className="text-[13px] mt-1" style={{ color: 'var(--fg-soft)' }}>
                     {editable
                         ? 'Preencha com calma — é o que orienta o trabalho da professora.'
                         : 'Preenchida pela família. Somente leitura.'}
@@ -109,23 +109,23 @@ export default function EscolaAnamnesePage() {
             </div>
 
             {/* Recado de abertura da ficha original */}
-            <div className="escola-card p-5 escola-ruled" style={{ backgroundColor: '#fffdf7' }}>
-                <p className="escola-serif italic text-[15px] leading-[32px]">
+            <div className="escola-card p-5" style={{ borderLeft: '3px solid var(--accent)' }}>
+                <p className="escola-serif italic text-[15px] leading-relaxed" style={{ color: 'rgba(255,255,255,.75)' }}>
                     “Querida família, estamos prestes a iniciar nossa parceria em prol do bem-estar e melhor
                     desenvolvimento acadêmico do seu bem mais precioso. É importante que eu conheça um pouco
                     mais sobre ele para trabalhar de forma mais assertiva. Desde já, agradeço imensamente a
                     confiança e parceria. Conte sempre comigo.”
                 </p>
-                <p className="text-right text-[13px] font-extrabold mt-2">— Profª Andréa</p>
+                <p className="text-right text-[13px] font-semibold mt-2">— Profª Andréa</p>
             </div>
 
             {SECTIONS.map(section => (
                 <section key={section.title} className="escola-card p-5">
                     <div className="flex items-center gap-2 mb-4">
-                        <span className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'var(--marker)' }}>
+                        <span className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'rgba(198,242,78,.12)', color: 'var(--accent)' }}>
                             <span className="material-symbols-outlined text-[18px]">{section.icon}</span>
                         </span>
-                        <h2 className="text-[16px] font-extrabold">{section.title}</h2>
+                        <h2 className="text-[16px] font-semibold">{section.title}</h2>
                     </div>
 
                     <div className="space-y-4">
@@ -136,7 +136,7 @@ export default function EscolaAnamnesePage() {
                                     <label className="escola-label block mb-1.5">{field.label}</label>
                                     {!editable ? (
                                         <p className="text-[14px] leading-snug p-3 rounded-xl"
-                                            style={{ background: 'var(--paper)', color: value ? 'var(--ink)' : 'var(--ink-soft)' }}>
+                                            style={{ background: 'var(--surface-2)', color: value ? 'var(--fg)' : 'var(--fg-soft)' }}>
                                             {value || 'Não informado'}
                                         </p>
                                     ) : field.type === 'long' ? (
@@ -164,7 +164,7 @@ export default function EscolaAnamnesePage() {
                 </div>
             )}
 
-            <p className="text-[12px] text-center" style={{ color: 'var(--ink-soft)' }}>
+            <p className="text-[12px] text-center" style={{ color: 'var(--fg-soft)' }}>
                 Última atualização: {new Date(data.updated_at).toLocaleString('pt-BR')}
             </p>
         </div>

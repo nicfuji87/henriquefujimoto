@@ -76,7 +76,7 @@ export default function EscolaExams() {
     };
 
     if (loading) {
-        return <div className="py-24 text-center" style={{ color: 'var(--ink-soft)' }}>
+        return <div className="py-24 text-center" style={{ color: 'var(--fg-soft)' }}>
             <span className="material-symbols-outlined text-[32px] animate-spin">progress_activity</span>
         </div>;
     }
@@ -85,8 +85,8 @@ export default function EscolaExams() {
         <div className="escola-enter space-y-5">
             <div className="flex items-end justify-between gap-3">
                 <div>
-                    <h1 className="text-[26px] font-extrabold leading-tight">Provas & <span className="escola-mark">plano de estudo</span></h1>
-                    <p className="text-[13px] mt-1" style={{ color: 'var(--ink-soft)' }}>
+                    <h1 className="text-[26px] font-semibold leading-tight">Provas & <span className="escola-mark">plano de estudo</span></h1>
+                    <p className="text-[13px] mt-1" style={{ color: 'var(--fg-soft)' }}>
                         Ao cadastrar uma prova, o plano é montado de trás pra frente automaticamente.
                     </p>
                 </div>
@@ -148,15 +148,15 @@ export default function EscolaExams() {
                     </div>
 
                     {preview.length > 0 && (
-                        <div className="rounded-xl p-3.5" style={{ background: 'var(--paper)', border: '1px dashed var(--ink-soft)' }}>
+                        <div className="rounded-xl p-3.5" style={{ background: 'var(--surface-2)', border: '1px dashed var(--fg-soft)' }}>
                             <p className="escola-label mb-2">Plano que será criado</p>
                             <ul className="space-y-1.5">
                                 {preview.map(p => (
                                     <li key={p.sort_order} className="text-[13px] flex items-center gap-2">
-                                        <span className="font-extrabold px-1.5 py-0.5 rounded-md text-[11px]"
-                                            style={{ background: 'var(--marker)' }}>D-{p.days_before}</span>
+                                        <span className="font-semibold px-1.5 py-0.5 rounded-md text-[11px]"
+                                            style={{ background: 'var(--accent)', color: 'var(--accent-ink)' }}>D-{p.days_before}</span>
                                         <span className="font-semibold">{formatDate(p.date)}</span>
-                                        <span style={{ color: 'var(--ink-soft)' }}>{p.label}</span>
+                                        <span style={{ color: 'var(--fg-soft)' }}>{p.label}</span>
                                     </li>
                                 ))}
                             </ul>
@@ -171,7 +171,7 @@ export default function EscolaExams() {
 
             {upcoming.length === 0 ? (
                 <div className="escola-card-soft p-6 text-center">
-                    <span className="material-symbols-outlined text-[30px]" style={{ color: 'var(--ink-soft)' }}>event_note</span>
+                    <span className="material-symbols-outlined text-[30px]" style={{ color: 'var(--fg-soft)' }}>event_note</span>
                     <p className="font-bold mt-1">Nenhuma prova à frente</p>
                 </div>
             ) : (
@@ -195,7 +195,7 @@ export default function EscolaExams() {
             {past.length > 0 && (
                 <div>
                     <button onClick={() => setShowPast(v => !v)}
-                        className="text-[13px] font-extrabold flex items-center gap-1" style={{ color: 'var(--ink-soft)' }}>
+                        className="text-[13px] font-semibold flex items-center gap-1" style={{ color: 'var(--fg-soft)' }}>
                         <span className="material-symbols-outlined text-[18px]">{showPast ? 'expand_less' : 'expand_more'}</span>
                         Provas já realizadas ({past.length})
                     </button>
@@ -203,17 +203,17 @@ export default function EscolaExams() {
                         <div className="space-y-2 mt-3">
                             {past.map(exam => (
                                 <div key={exam.id} className="escola-card-soft p-3.5 flex items-center gap-3">
-                                    <span className="material-symbols-outlined text-[20px]" style={{ color: 'var(--ink-soft)' }}>
+                                    <span className="material-symbols-outlined text-[20px]" style={{ color: 'var(--fg-soft)' }}>
                                         {EXAM_KINDS[exam.kind]?.icon || 'quiz'}
                                     </span>
                                     <div className="flex-1 min-w-0">
-                                        <p className="text-[14px] font-extrabold truncate">{exam.title}</p>
-                                        <p className="text-[12px]" style={{ color: 'var(--ink-soft)' }}>
+                                        <p className="text-[14px] font-semibold truncate">{exam.title}</p>
+                                        <p className="text-[12px]" style={{ color: 'var(--fg-soft)' }}>
                                             {subjectOf(exam.subject_id)?.name || '—'} · {formatDate(exam.date)}
                                         </p>
                                     </div>
                                     {writable && (
-                                        <button onClick={() => handleDelete(exam)} style={{ color: 'var(--ink-soft)' }}>
+                                        <button onClick={() => handleDelete(exam)} style={{ color: 'var(--fg-soft)' }}>
                                             <span className="material-symbols-outlined text-[19px]">delete</span>
                                         </button>
                                     )}
@@ -247,27 +247,29 @@ function ExamCard({ exam, subject, blocks, today, writable, onToggle, onDelete, 
             <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
                     <div className="flex items-center gap-1.5 mb-1">
-                        <span className="material-symbols-outlined text-[17px]" style={{ color: subject?.color || 'var(--ink-soft)' }}>
+                        <span className="material-symbols-outlined text-[17px]" style={{ color: subject?.color || 'var(--fg-soft)' }}>
                             {EXAM_KINDS[exam.kind]?.icon || 'quiz'}
                         </span>
-                        <span className="escola-label" style={{ color: subject?.color || 'var(--ink-soft)' }}>
+                        <span className="escola-label" style={{ color: subject?.color || 'var(--fg-soft)' }}>
                             {subject?.name || 'Sem matéria'}
                         </span>
                     </div>
-                    <p className="text-[18px] font-extrabold leading-tight">{exam.title}</p>
-                    <p className="text-[13px] mt-0.5" style={{ color: 'var(--ink-soft)' }}>{formatDate(exam.date)}</p>
+                    <p className="text-[18px] font-semibold leading-tight">{exam.title}</p>
+                    <p className="text-[13px] mt-0.5" style={{ color: 'var(--fg-soft)' }}>{formatDate(exam.date)}</p>
                 </div>
                 <div className="text-center shrink-0 px-3 py-2 rounded-2xl"
-                    style={{ background: days <= 2 ? '#fee2e2' : 'var(--marker)' }}>
-                    <p className="text-[26px] font-extrabold leading-none">{days}</p>
-                    <p className="text-[10px] font-extrabold tracking-wide">
+                    style={days <= 2
+                        ? { background: 'rgba(248,113,113,.16)', color: 'var(--danger)' }
+                        : { background: 'var(--accent)', color: 'var(--accent-ink)' }}>
+                    <p className="text-[26px] font-semibold leading-none">{days}</p>
+                    <p className="text-[10px] font-semibold tracking-wide">
                         {days === 0 ? 'HOJE' : days === 1 ? 'DIA' : 'DIAS'}
                     </p>
                 </div>
             </div>
 
             {exam.content && (
-                <p className="text-[13px] mt-3 p-3 rounded-xl leading-snug" style={{ background: 'var(--paper)' }}>
+                <p className="text-[13px] mt-3 p-3 rounded-xl leading-snug" style={{ background: 'var(--surface-2)' }}>
                     <span className="escola-label block mb-1">Conteúdo</span>
                     {exam.content}
                 </p>
@@ -277,7 +279,7 @@ function ExamCard({ exam, subject, blocks, today, writable, onToggle, onDelete, 
                 <div className="mt-4">
                     <div className="flex items-center justify-between mb-2.5">
                         <span className="escola-label">Plano regressivo</span>
-                        <span className="text-[12px] font-extrabold">{done}/{blocks.length} feitos</span>
+                        <span className="text-[12px] font-semibold">{done}/{blocks.length} feitos</span>
                     </div>
                     <ul className="space-y-2">
                         {blocks.map(b => {
@@ -287,26 +289,26 @@ function ExamCard({ exam, subject, blocks, today, writable, onToggle, onDelete, 
                                     <button onClick={() => onToggle(b)}
                                         className="w-full flex items-start gap-3 p-3 rounded-xl text-left transition-colors"
                                         style={{
-                                            background: b.done ? '#f0fdf4' : late ? '#fef2f2' : 'var(--paper)',
-                                            border: `1px solid ${b.done ? '#bbf7d0' : late ? '#fecaca' : 'var(--line)'}`,
+                                            background: b.done ? 'rgba(198,242,78,.07)' : late ? 'rgba(248,113,113,.07)' : 'var(--surface-2)',
+                                            border: `1px solid ${b.done ? 'rgba(198,242,78,.35)' : late ? 'rgba(248,113,113,.35)' : 'var(--line)'}`,
                                         }}>
                                         <span className="material-symbols-outlined text-[21px] shrink-0"
-                                            style={{ color: b.done ? '#15803d' : late ? '#b91c1c' : 'var(--ink-soft)' }}>
+                                            style={{ color: b.done ? 'var(--ok)' : late ? 'var(--danger)' : 'var(--fg-soft)' }}>
                                             {b.done ? 'check_circle' : 'radio_button_unchecked'}
                                         </span>
                                         <span className="flex-1 min-w-0">
                                             <span className="flex items-center gap-2">
-                                                <span className="text-[10px] font-extrabold px-1.5 py-0.5 rounded-md"
-                                                    style={{ background: 'var(--ink)', color: 'var(--paper)' }}>D-{b.days_before}</span>
-                                                <span className={`text-[14px] font-extrabold ${b.done ? 'line-through opacity-60' : ''}`}>{b.label}</span>
+                                                <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-md"
+                                                    style={{ background: 'var(--accent)', color: 'var(--accent-ink)' }}>D-{b.days_before}</span>
+                                                <span className={`text-[14px] font-semibold ${b.done ? 'line-through opacity-60' : ''}`}>{b.label}</span>
                                             </span>
                                             {b.focus && (
-                                                <span className="block text-[12px] mt-0.5 leading-snug" style={{ color: 'var(--ink-soft)' }}>
+                                                <span className="block text-[12px] mt-0.5 leading-snug" style={{ color: 'var(--fg-soft)' }}>
                                                     {b.focus}
                                                 </span>
                                             )}
                                             <span className="block text-[11px] font-bold mt-0.5"
-                                                style={{ color: late ? '#b91c1c' : 'var(--ink-soft)' }}>
+                                                style={{ color: late ? 'var(--danger)' : 'var(--fg-soft)' }}>
                                                 {formatDate(b.date)}{late ? ' · passou da data' : ''}
                                             </span>
                                         </span>
@@ -317,18 +319,18 @@ function ExamCard({ exam, subject, blocks, today, writable, onToggle, onDelete, 
                     </ul>
                 </div>
             ) : (
-                <p className="text-[13px] mt-3" style={{ color: 'var(--ink-soft)' }}>
+                <p className="text-[13px] mt-3" style={{ color: 'var(--fg-soft)' }}>
                     Sem plano de estudo (prova cadastrada em cima da hora).
                 </p>
             )}
 
             {writable && (
                 <div className="flex items-center gap-4 mt-4 pt-3" style={{ borderTop: '1px solid var(--line)' }}>
-                    <button onClick={onRegenerate} className="text-[12px] font-extrabold flex items-center gap-1" style={{ color: 'var(--pen)' }}>
+                    <button onClick={onRegenerate} className="text-[12px] font-semibold flex items-center gap-1" style={{ color: 'var(--accent)' }}>
                         <span className="material-symbols-outlined text-[16px]">refresh</span>
                         refazer plano a partir de hoje
                     </button>
-                    <button onClick={onDelete} className="text-[12px] font-extrabold ml-auto" style={{ color: '#b91c1c' }}>
+                    <button onClick={onDelete} className="text-[12px] font-semibold ml-auto" style={{ color: 'var(--danger)' }}>
                         excluir
                     </button>
                 </div>

@@ -39,12 +39,14 @@ export default function EscolaLogin() {
 
             <div className={`w-full max-w-md escola-enter ${shake ? 'escola-shake' : ''}`}>
                 <div className="text-center mb-8">
-                    <div className="inline-flex w-16 h-16 rounded-2xl items-center justify-center mb-4"
-                        style={{ background: 'var(--ink)', color: 'var(--marker)', boxShadow: '4px 4px 0 var(--marker)' }}>
+                    <div className="inline-flex w-16 h-16 rounded-2xl items-center justify-center mb-5"
+                        style={{ background: 'var(--accent)', color: 'var(--accent-ink)', boxShadow: '0 0 60px rgba(198,242,78,.25)' }}>
                         <span className="material-symbols-outlined text-[32px]">school</span>
                     </div>
-                    <h1 className="text-3xl font-extrabold tracking-tight">Estudos do Henrique</h1>
-                    <p className="escola-serif italic text-[17px] mt-1" style={{ color: 'var(--ink-soft)' }}>
+                    <h1 className="text-3xl font-semibold tracking-tight leading-tight">
+                        Estudos do <span className="escola-mark">Henrique</span>
+                    </h1>
+                    <p className="text-[15px] mt-2" style={{ color: 'var(--fg-soft)' }}>
                         acompanhamento pedagógico
                     </p>
                 </div>
@@ -59,14 +61,14 @@ export default function EscolaLogin() {
                                 className="escola-card w-full flex items-center gap-3.5 p-4 text-left"
                             >
                                 <span className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0"
-                                    style={{ background: 'var(--marker)' }}>
+                                    style={{ background: 'rgba(198,242,78,.12)', color: 'var(--accent)' }}>
                                     <span className="material-symbols-outlined text-[22px]">{p.icon}</span>
                                 </span>
                                 <span className="flex-1">
-                                    <span className="block font-extrabold text-[16px]">{p.name}</span>
-                                    <span className="block text-[13px]" style={{ color: 'var(--ink-soft)' }}>{p.desc}</span>
+                                    <span className="block font-semibold text-[16px]">{p.name}</span>
+                                    <span className="block text-[13px]" style={{ color: 'var(--fg-soft)' }}>{p.desc}</span>
                                 </span>
-                                <span className="material-symbols-outlined" style={{ color: 'var(--ink-soft)' }}>chevron_right</span>
+                                <span className="material-symbols-outlined" style={{ color: 'var(--fg-soft)' }}>chevron_right</span>
                             </button>
                         ))}
                     </div>
@@ -76,19 +78,19 @@ export default function EscolaLogin() {
                             type="button"
                             onClick={() => { setProfile(null); setPassword(''); setError(''); }}
                             className="flex items-center gap-1 text-[13px] font-bold mb-5"
-                            style={{ color: 'var(--ink-soft)' }}
+                            style={{ color: 'var(--fg-soft)' }}
                         >
                             <span className="material-symbols-outlined text-[18px]">arrow_back</span>
                             trocar de perfil
                         </button>
 
                         <div className="flex items-center gap-3 mb-5">
-                            <span className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ background: 'var(--marker)' }}>
+                            <span className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ background: 'rgba(198,242,78,.12)', color: 'var(--accent)' }}>
                                 <span className="material-symbols-outlined text-[24px]">{selected?.icon}</span>
                             </span>
                             <div>
-                                <p className="font-extrabold text-[17px] leading-tight">{selected?.name}</p>
-                                <p className="text-[13px]" style={{ color: 'var(--ink-soft)' }}>{selected?.desc}</p>
+                                <p className="font-semibold text-[17px] leading-tight">{selected?.name}</p>
+                                <p className="text-[13px]" style={{ color: 'var(--fg-soft)' }}>{selected?.desc}</p>
                             </div>
                         </div>
 
@@ -104,7 +106,7 @@ export default function EscolaLogin() {
                         />
 
                         {error && (
-                            <p className="mt-3 text-[13px] font-bold flex items-center gap-1.5" style={{ color: '#b91c1c' }}>
+                            <p className="mt-3 text-[13px] font-bold flex items-center gap-1.5" style={{ color: 'var(--danger)' }}>
                                 <span className="material-symbols-outlined text-[18px]">error</span>
                                 {error}
                             </p>
@@ -116,7 +118,7 @@ export default function EscolaLogin() {
                     </form>
                 )}
 
-                <p className="text-center text-[12px] mt-6" style={{ color: 'var(--ink-soft)' }}>
+                <p className="text-center text-[12px] mt-6" style={{ color: 'var(--fg-soft)' }}>
                     Área privada · dados de acompanhamento escolar
                 </p>
             </div>

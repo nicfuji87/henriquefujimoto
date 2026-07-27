@@ -111,9 +111,9 @@ export interface EscolaAnamnese {
 // ============================================================
 
 export const PERFORMANCE: Record<string, { label: string; color: string; bg: string; emoji: string; desc: string }> = {
-    green: { label: 'Mandou bem', color: '#15803d', bg: '#dcfce7', emoji: '🟢', desc: 'Entendeu e resolveu sozinho' },
-    yellow: { label: 'Quase lá', color: '#a16207', bg: '#fef9c3', emoji: '🟡', desc: 'Entendeu com ajuda, precisa treinar' },
-    red: { label: 'Precisa retomar', color: '#b91c1c', bg: '#fee2e2', emoji: '🔴', desc: 'Conteúdo ainda não fixou' },
+    green: { label: 'Mandou bem', color: '#c6f24e', bg: 'rgba(198,242,78,.12)', emoji: '🟢', desc: 'Entendeu e resolveu sozinho' },
+    yellow: { label: 'Quase lá', color: '#fbbf24', bg: 'rgba(251,191,36,.12)', emoji: '🟡', desc: 'Entendeu com ajuda, precisa treinar' },
+    red: { label: 'Precisa retomar', color: '#f87171', bg: 'rgba(248,113,113,.14)', emoji: '🔴', desc: 'Conteúdo ainda não fixou' },
 };
 
 export const EXAM_KINDS: Record<string, { label: string; icon: string }> = {
@@ -125,9 +125,9 @@ export const EXAM_KINDS: Record<string, { label: string; icon: string }> = {
 };
 
 export const PRIORITIES: Record<string, { label: string; color: string }> = {
-    low: { label: 'Tranquila', color: '#64748b' },
-    normal: { label: 'Normal', color: '#2563eb' },
-    high: { label: 'Prioridade', color: '#dc2626' },
+    low: { label: 'Tranquila', color: '#6b7280' },
+    normal: { label: 'Normal', color: '#c6f24e' },
+    high: { label: 'Prioridade', color: '#f87171' },
 };
 
 export const TERMS = ['1º Bimestre', '2º Bimestre', '3º Bimestre', '4º Bimestre'];

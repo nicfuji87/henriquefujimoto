@@ -34,60 +34,71 @@ export default function EscolaLayout() {
     return (
         <div className="min-h-screen font-sans antialiased escola-root">
             <style>{`
+                /* Identidade "Tatame": preto premium + acento lime, igual ao site público. */
                 .escola-root {
-                    --paper: #fbf7ef;
-                    --paper-2: #ffffff;
-                    --ink: #17140f;
-                    --ink-soft: #6b6459;
-                    --line: #e6ddcd;
-                    --pen: #2b4eff;
-                    --marker: #ffd84d;
-                    background: var(--paper);
-                    color: var(--ink);
+                    --bg: #0a0b0d;
+                    --surface: #141619;
+                    --surface-2: #1b1e22;
+                    --line: #282c31;
+                    --fg: #ffffff;
+                    --fg-soft: rgba(255,255,255,.55);
+                    --accent: #c6f24e;
+                    --accent-dim: #a9d92f;
+                    --accent-ink: #0a0b0d;
+                    --ok: #c6f24e;
+                    --warn: #fbbf24;
+                    --danger: #f87171;
+                    background: var(--bg);
+                    color: var(--fg);
                     font-family: 'Hanken Grotesk', system-ui, sans-serif;
                 }
                 .escola-root .material-symbols-outlined { font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
                 .escola-serif { font-family: 'Fraunces', Georgia, serif; }
-                /* folha de caderno pautada */
-                .escola-ruled {
-                    background-image: repeating-linear-gradient(to bottom, transparent 0 31px, var(--line) 31px 32px);
-                }
                 .escola-card {
-                    background: var(--paper-2);
-                    border: 1.5px solid var(--ink);
-                    border-radius: 18px;
-                    box-shadow: 3px 3px 0 var(--ink);
+                    background: var(--surface);
+                    border: 1px solid rgba(255,255,255,.07);
+                    border-radius: 24px;
                 }
                 .escola-card-soft {
-                    background: var(--paper-2);
-                    border: 1px solid var(--line);
-                    border-radius: 16px;
+                    background: var(--surface);
+                    border: 1px solid rgba(255,255,255,.07);
+                    border-radius: 20px;
+                    transition: border-color .2s ease;
                 }
+                .escola-card-soft:hover { border-color: rgba(255,255,255,.15); }
+                /* Destaque editorial: itálico serifado em lime, como nos títulos do site. */
                 .escola-mark {
-                    background: linear-gradient(to bottom, transparent 55%, var(--marker) 55%);
-                    padding: 0 2px;
+                    font-family: 'Fraunces', Georgia, serif;
+                    font-style: italic;
+                    font-weight: 400;
+                    color: var(--accent);
                 }
                 .escola-btn {
-                    background: var(--ink);
-                    color: var(--paper);
+                    background: var(--accent);
+                    color: var(--accent-ink);
                     border-radius: 999px;
-                    font-weight: 800;
-                    transition: transform .12s ease;
+                    font-weight: 600;
+                    transition: background .2s ease, transform .12s ease;
                 }
+                .escola-btn:hover { background: var(--accent-dim); }
                 .escola-btn:active { transform: scale(0.97); }
-                .escola-btn:disabled { opacity: .4; }
+                .escola-btn:disabled { opacity: .35; }
                 .escola-input {
-                    background: var(--paper-2);
-                    border: 1.5px solid var(--line);
-                    border-radius: 12px;
-                    padding: 10px 12px;
+                    background: var(--surface-2);
+                    border: 1px solid var(--line);
+                    border-radius: 14px;
+                    padding: 11px 13px;
                     width: 100%;
-                    color: var(--ink);
+                    color: var(--fg);
                     font-size: 15px;
                     outline: none;
                 }
-                .escola-input:focus { border-color: var(--pen); box-shadow: 0 0 0 3px rgba(43,78,255,.12); }
-                .escola-label { font-size: 12px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-soft); }
+                .escola-input::placeholder { color: rgba(255,255,255,.3); }
+                .escola-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(198,242,78,.14); }
+                /* O seletor de data do Chrome vem preto sobre preto no dark. */
+                .escola-input::-webkit-calendar-picker-indicator { filter: invert(1) opacity(.6); }
+                .escola-input option { background: var(--surface-2); color: var(--fg); }
+                .escola-label { font-size: 11px; font-weight: 600; letter-spacing: .16em; text-transform: uppercase; color: var(--fg-soft); }
                 @keyframes escolaIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
                 .escola-enter { animation: escolaIn .35s ease-out both; }
                 @media (prefers-reduced-motion: reduce) {
@@ -97,15 +108,17 @@ export default function EscolaLayout() {
 
             <div className="mx-auto w-full max-w-2xl min-h-screen flex flex-col">
                 {!isLogin && (
-                    <header className="sticky top-0 z-40 px-4 pt-4 pb-3" style={{ background: 'var(--paper)', borderBottom: '1px solid var(--line)' }}>
+                    <header className="sticky top-0 z-40 px-4 pt-4 pb-3"
+                        style={{ background: 'rgba(10,11,13,.9)', backdropFilter: 'blur(12px)', borderBottom: '1px solid var(--line)' }}>
                         <div className="flex items-center justify-between gap-3">
-                            <button onClick={() => navigate('/escola')} className="flex items-center gap-2.5 text-left">
-                                <span className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: 'var(--ink)', color: 'var(--marker)' }}>
+                            <button onClick={() => { navigate('/escola'); }} className="flex items-center gap-2.5 text-left">
+                                <span className="w-9 h-9 rounded-xl flex items-center justify-center"
+                                    style={{ background: 'var(--accent)', color: 'var(--accent-ink)' }}>
                                     <span className="material-symbols-outlined text-[20px]">school</span>
                                 </span>
                                 <span>
-                                    <span className="block text-[15px] font-extrabold leading-tight">Estudos do Henrique</span>
-                                    <span className="block text-[11px] font-semibold" style={{ color: 'var(--ink-soft)' }}>
+                                    <span className="block text-[15px] font-semibold leading-tight">Estudos do Henrique</span>
+                                    <span className="block text-[11px] font-semibold" style={{ color: 'var(--fg-soft)' }}>
                                         {name || (role ? ROLE_LABEL[role] : '')}
                                     </span>
                                 </span>
@@ -113,7 +126,7 @@ export default function EscolaLayout() {
                             <button
                                 onClick={handleLogout}
                                 className="w-9 h-9 rounded-xl flex items-center justify-center"
-                                style={{ border: '1px solid var(--line)', color: 'var(--ink-soft)' }}
+                                style={{ border: '1px solid var(--line)', color: 'var(--fg-soft)' }}
                                 title="Sair"
                             >
                                 <span className="material-symbols-outlined text-[20px]">logout</span>
@@ -128,9 +141,13 @@ export default function EscolaLayout() {
 
                 {!isLogin && (
                     <nav className="fixed bottom-0 w-full max-w-2xl px-3 pb-4 pt-2 z-50"
-                        style={{ background: 'linear-gradient(to top, var(--paper) 65%, transparent)' }}>
+                        style={{ background: 'linear-gradient(to top, var(--bg) 65%, transparent)' }}>
                         <div className="flex justify-around items-center rounded-2xl p-1.5"
-                            style={{ background: 'var(--ink)', boxShadow: '0 8px 30px rgba(0,0,0,.18)' }}>
+                            style={{
+                                background: 'rgba(20,22,25,.92)',
+                                backdropFilter: 'blur(16px)',
+                                border: '1px solid rgba(255,255,255,.08)',
+                            }}>
                             {nav.map(item => (
                                 <NavItem
                                     key={item.path}
@@ -156,11 +173,11 @@ function NavItem({ icon, label, active, onClick }: {
             onClick={onClick}
             className="flex flex-1 flex-col items-center justify-center gap-0.5 py-2 rounded-xl transition-all"
             style={active
-                ? { background: 'var(--marker)', color: '#17140f' }
-                : { color: 'rgba(251,247,239,.45)' }}
+                ? { background: 'var(--accent)', color: 'var(--accent-ink)' }
+                : { color: 'rgba(255,255,255,.4)' }}
         >
             <span className="material-symbols-outlined text-[21px]">{icon}</span>
-            <span className="text-[10px] font-extrabold tracking-wide">{label}</span>
+            <span className="text-[10px] font-semibold tracking-wide">{label}</span>
         </button>
     );
 }

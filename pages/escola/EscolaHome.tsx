@@ -59,7 +59,7 @@ export default function EscolaHome() {
     };
 
     if (loading) {
-        return <div className="py-24 text-center" style={{ color: 'var(--ink-soft)' }}>
+        return <div className="py-24 text-center" style={{ color: 'var(--fg-soft)' }}>
             <span className="material-symbols-outlined text-[32px] animate-spin">progress_activity</span>
         </div>;
     }
@@ -71,7 +71,7 @@ export default function EscolaHome() {
         <div className="escola-enter space-y-5">
             <div>
                 <p className="escola-label">{formatDateLong(today)}</p>
-                <h1 className="text-[26px] font-extrabold leading-tight mt-1">
+                <h1 className="text-[26px] font-semibold leading-tight mt-1">
                     {role === 'aluno' ? <>Bora estudar, <span className="escola-mark">Henrique</span>?</>
                         : role === 'professora' ? <>Olá, <span className="escola-mark">professora</span></>
                             : <>Acompanhamento <span className="escola-mark">de hoje</span></>}
@@ -84,14 +84,14 @@ export default function EscolaHome() {
                     <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0">
                             <p className="escola-label">Próxima {EXAM_KINDS[nextExam.kind]?.label.toLowerCase() || 'prova'}</p>
-                            <p className="text-[19px] font-extrabold leading-tight mt-1 truncate">{nextExam.title}</p>
-                            <p className="text-[13px] font-semibold mt-0.5" style={{ color: subjectOf(nextExam.subject_id)?.color || 'var(--ink-soft)' }}>
+                            <p className="text-[19px] font-semibold leading-tight mt-1 truncate">{nextExam.title}</p>
+                            <p className="text-[13px] font-semibold mt-0.5" style={{ color: subjectOf(nextExam.subject_id)?.color || 'var(--fg-soft)' }}>
                                 {subjectOf(nextExam.subject_id)?.name || 'Sem matéria'} · {formatDate(nextExam.date)}
                             </p>
                         </div>
-                        <div className="text-center shrink-0 px-3 py-2 rounded-2xl" style={{ background: 'var(--marker)' }}>
-                            <p className="text-[30px] font-extrabold leading-none">{daysToExam}</p>
-                            <p className="text-[10px] font-extrabold tracking-wide">
+                        <div className="text-center shrink-0 px-3 py-2 rounded-2xl" style={{ background: 'var(--accent)', color: 'var(--accent-ink)' }}>
+                            <p className="text-[30px] font-semibold leading-none">{daysToExam}</p>
+                            <p className="text-[10px] font-semibold tracking-wide">
                                 {daysToExam === 0 ? 'É HOJE!' : daysToExam === 1 ? 'DIA' : 'DIAS'}
                             </p>
                         </div>
@@ -101,14 +101,14 @@ export default function EscolaHome() {
                         <div className="mt-4">
                             <div className="flex items-center justify-between mb-2">
                                 <span className="escola-label">Plano de estudo</span>
-                                <span className="text-[12px] font-extrabold">{doneCount}/{nextExamBlocks.length}</span>
+                                <span className="text-[12px] font-semibold">{doneCount}/{nextExamBlocks.length}</span>
                             </div>
                             <div className="h-2.5 rounded-full overflow-hidden" style={{ background: 'var(--line)' }}>
                                 <div className="h-full rounded-full transition-all"
-                                    style={{ width: `${(doneCount / nextExamBlocks.length) * 100}%`, background: 'var(--pen)' }} />
+                                    style={{ width: `${(doneCount / nextExamBlocks.length) * 100}%`, background: 'var(--accent)' }} />
                             </div>
                             <button onClick={() => navigate('/escola/provas')}
-                                className="mt-3 text-[13px] font-extrabold flex items-center gap-1" style={{ color: 'var(--pen)' }}>
+                                className="mt-3 text-[13px] font-semibold flex items-center gap-1" style={{ color: 'var(--accent)' }}>
                                 ver o plano completo
                                 <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
                             </button>
@@ -117,9 +117,9 @@ export default function EscolaHome() {
                 </div>
             ) : (
                 <div className="escola-card-soft p-5 text-center">
-                    <span className="material-symbols-outlined text-[28px]" style={{ color: 'var(--ink-soft)' }}>event_available</span>
+                    <span className="material-symbols-outlined text-[28px]" style={{ color: 'var(--fg-soft)' }}>event_available</span>
                     <p className="font-bold mt-1">Nenhuma prova marcada</p>
-                    <button onClick={() => navigate('/escola/provas')} className="text-[13px] font-extrabold mt-1" style={{ color: 'var(--pen)' }}>
+                    <button onClick={() => navigate('/escola/provas')} className="text-[13px] font-semibold mt-1" style={{ color: 'var(--accent)' }}>
                         cadastrar uma prova
                     </button>
                 </div>
@@ -130,7 +130,7 @@ export default function EscolaHome() {
                 <h2 className="escola-label mb-2">Para hoje</h2>
                 {todayBlocks.length === 0 && todayTasks.length === 0 && lateTasks.length === 0 ? (
                     <div className="escola-card-soft p-4 flex items-center gap-3">
-                        <span className="material-symbols-outlined text-[22px]" style={{ color: '#15803d' }}>check_circle</span>
+                        <span className="material-symbols-outlined text-[22px]" style={{ color: 'var(--ok)' }}>check_circle</span>
                         <p className="text-[14px] font-semibold">Nada pendente para hoje. Dia livre pro tatame.</p>
                     </div>
                 ) : (
@@ -139,10 +139,10 @@ export default function EscolaHome() {
                             <button key={b.id} onClick={() => toggleBlock(b)}
                                 className="escola-card-soft w-full p-3.5 flex items-center gap-3 text-left">
                                 <span className="w-6 h-6 rounded-md shrink-0 flex items-center justify-center"
-                                    style={{ border: '2px solid var(--pen)' }} />
+                                    style={{ border: '2px solid var(--accent)' }} />
                                 <span className="flex-1 min-w-0">
-                                    <span className="block text-[14px] font-extrabold truncate">{b.label}</span>
-                                    <span className="block text-[12px]" style={{ color: 'var(--ink-soft)' }}>
+                                    <span className="block text-[14px] font-semibold truncate">{b.label}</span>
+                                    <span className="block text-[12px]" style={{ color: 'var(--fg-soft)' }}>
                                         Estudo · {exams.find(e => e.id === b.exam_id)?.title}
                                     </span>
                                 </span>
@@ -152,12 +152,12 @@ export default function EscolaHome() {
                             <button key={t.id} onClick={() => navigate('/escola/tarefas')}
                                 className="escola-card-soft w-full p-3.5 flex items-center gap-3 text-left">
                                 <span className="material-symbols-outlined text-[20px] shrink-0"
-                                    style={{ color: t.due_date && t.due_date < today ? '#b91c1c' : 'var(--ink-soft)' }}>
+                                    style={{ color: t.due_date && t.due_date < today ? 'var(--danger)' : 'var(--fg-soft)' }}>
                                     {t.due_date && t.due_date < today ? 'priority_high' : 'radio_button_unchecked'}
                                 </span>
                                 <span className="flex-1 min-w-0">
-                                    <span className="block text-[14px] font-extrabold truncate">{t.title}</span>
-                                    <span className="block text-[12px]" style={{ color: 'var(--ink-soft)' }}>
+                                    <span className="block text-[14px] font-semibold truncate">{t.title}</span>
+                                    <span className="block text-[12px]" style={{ color: 'var(--fg-soft)' }}>
                                         {subjectOf(t.subject_id)?.name || 'Tarefa'}
                                         {t.due_date && t.due_date < today ? ' · atrasada' : ''}
                                     </span>
@@ -172,17 +172,17 @@ export default function EscolaHome() {
             <section className="grid grid-cols-2 gap-3">
                 <button onClick={() => navigate('/escola/notas')} className="escola-card-soft p-4 text-left">
                     <p className="escola-label">Média geral</p>
-                    <p className="text-[28px] font-extrabold leading-tight mt-1">
+                    <p className="text-[28px] font-semibold leading-tight mt-1">
                         {average !== null ? average.toFixed(1).replace('.', ',') : '—'}
                     </p>
-                    <p className="text-[12px]" style={{ color: 'var(--ink-soft)' }}>
+                    <p className="text-[12px]" style={{ color: 'var(--fg-soft)' }}>
                         {grades.length} nota{grades.length === 1 ? '' : 's'} lançada{grades.length === 1 ? '' : 's'}
                     </p>
                 </button>
                 <button onClick={() => navigate('/escola/tarefas')} className="escola-card-soft p-4 text-left">
                     <p className="escola-label">Tarefas abertas</p>
-                    <p className="text-[28px] font-extrabold leading-tight mt-1">{pendingTasks.length}</p>
-                    <p className="text-[12px]" style={{ color: lateTasks.length ? '#b91c1c' : 'var(--ink-soft)' }}>
+                    <p className="text-[28px] font-semibold leading-tight mt-1">{pendingTasks.length}</p>
+                    <p className="text-[12px]" style={{ color: lateTasks.length ? 'var(--danger)' : 'var(--fg-soft)' }}>
                         {lateTasks.length ? `${lateTasks.length} atrasada${lateTasks.length === 1 ? '' : 's'}` : 'nenhuma atrasada'}
                     </p>
                 </button>
@@ -195,8 +195,8 @@ export default function EscolaHome() {
                     <button onClick={() => navigate('/escola/diario')} className="escola-card-soft w-full p-4 text-left">
                         <div className="flex items-center gap-2 mb-1.5">
                             <span className="text-[15px]">{PERFORMANCE[lessons[0].performance]?.emoji}</span>
-                            <span className="text-[13px] font-extrabold">{formatDate(lessons[0].date)}</span>
-                            <span className="text-[13px] font-semibold" style={{ color: subjectOf(lessons[0].subject_id)?.color || 'var(--ink-soft)' }}>
+                            <span className="text-[13px] font-semibold">{formatDate(lessons[0].date)}</span>
+                            <span className="text-[13px] font-semibold" style={{ color: subjectOf(lessons[0].subject_id)?.color || 'var(--fg-soft)' }}>
                                 {subjectOf(lessons[0].subject_id)?.name || ''}
                             </span>
                         </div>
@@ -209,14 +209,14 @@ export default function EscolaHome() {
             <section className="grid grid-cols-2 gap-3">
                 {canViewLessons(role) && (
                     <button onClick={() => navigate('/escola/diario')} className="escola-card-soft p-4 flex items-center gap-2.5">
-                        <span className="material-symbols-outlined text-[22px]" style={{ color: 'var(--pen)' }}>auto_stories</span>
-                        <span className="text-[13px] font-extrabold text-left">Diário de aula</span>
+                        <span className="material-symbols-outlined text-[22px]" style={{ color: 'var(--accent)' }}>auto_stories</span>
+                        <span className="text-[13px] font-semibold text-left">Diário de aula</span>
                     </button>
                 )}
                 {canViewAnamnese(role) && (
                     <button onClick={() => navigate('/escola/anamnese')} className="escola-card-soft p-4 flex items-center gap-2.5">
-                        <span className="material-symbols-outlined text-[22px]" style={{ color: 'var(--pen)' }}>description</span>
-                        <span className="text-[13px] font-extrabold text-left">Ficha do aluno</span>
+                        <span className="material-symbols-outlined text-[22px]" style={{ color: 'var(--accent)' }}>description</span>
+                        <span className="text-[13px] font-semibold text-left">Ficha do aluno</span>
                     </button>
                 )}
             </section>
