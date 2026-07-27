@@ -260,6 +260,14 @@ export default function EscolaHome() {
 
             {/* Atalhos */}
             <section className="grid grid-cols-2 gap-3">
+                <button onClick={() => navigate('/escola/rotina')} className="escola-card-soft p-4 flex items-center gap-2.5">
+                    <span className="material-symbols-outlined text-[22px]" style={{ color: 'var(--accent)' }}>calendar_view_week</span>
+                    <span className="text-[13px] font-semibold text-left">Agenda da semana</span>
+                </button>
+                <button onClick={() => navigate('/escola/biblioteca')} className="escola-card-soft p-4 flex items-center gap-2.5">
+                    <span className="material-symbols-outlined text-[22px]" style={{ color: 'var(--accent)' }}>folder_copy</span>
+                    <span className="text-[13px] font-semibold text-left">Materiais</span>
+                </button>
                 {canViewLessons(role) && (
                     <button onClick={() => navigate('/escola/diario')} className="escola-card-soft p-4 flex items-center gap-2.5">
                         <span className="material-symbols-outlined text-[22px]" style={{ color: 'var(--accent)' }}>auto_stories</span>

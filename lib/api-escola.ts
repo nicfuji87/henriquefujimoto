@@ -85,6 +85,7 @@ export interface EscolaTask {
     title: string;
     subject_id: string | null;
     exam_id: string | null;
+    library_id: string | null;
     description: string | null;
     due_date: string | null;
     priority: string;

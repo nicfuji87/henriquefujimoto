@@ -30,16 +30,17 @@ export default function EscolaLayout() {
 
     const nav = [
         { path: '/escola', icon: 'home', label: 'Início' },
-        { path: '/escola/rotina', icon: 'calendar_view_week', label: 'Semana' },
         { path: '/escola/tarefas', icon: 'checklist', label: 'Tarefas' },
+        { path: '/escola/biblioteca', icon: 'folder_copy', label: 'Materiais' },
         { path: '/escola/provas', icon: 'event_note', label: 'Provas' },
         { path: '/escola/notas', icon: 'trending_up', label: 'Notas' },
     ];
 
-    /** O que não coube na barra de baixo entra no menu "Mais". */
+    /** O que não coube na barra de baixo entra no menu "Mais".
+     *  A agenda da semana sai da barra porque o dia de hoje já abre na tela inicial. */
     const moreItems = [
+        { path: '/escola/rotina', icon: 'calendar_view_week', label: 'Agenda da semana' },
         ...(canViewLessons(role) ? [{ path: '/escola/diario', icon: 'auto_stories', label: 'Diário de aula' }] : []),
-        { path: '/escola/biblioteca', icon: 'folder_copy', label: 'Biblioteca de materiais' },
         ...(canViewAnamnese(role) ? [{ path: '/escola/anamnese', icon: 'description', label: 'Ficha do aluno' }] : []),
     ];
 

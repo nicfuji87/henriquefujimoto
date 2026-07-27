@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
-    daysBetween, escolaApi, EscolaExam, EscolaSubject, EscolaTask,
+    daysBetween, escolaApi, EscolaExam, EscolaLibraryItem, EscolaSubject, EscolaTask,
     formatDate, PRIORITIES, todayISO,
 } from '../../lib/api-escola';
 import { canWrite, getEscolaRole } from '../../lib/escola-auth';
@@ -17,10 +18,13 @@ export default function EscolaTasks() {
     const role = getEscolaRole();
     const writable = canWrite(role);
     const today = todayISO();
+    const navigate = useNavigate();
 
     const [subjects, setSubjects] = useState<EscolaSubject[]>([]);
     const [exams, setExams] = useState<EscolaExam[]>([]);
+    const [library, setLibrary] = useState<EscolaLibraryItem[]>([]);
     const [tasks, setTasks] = useState<EscolaTask[]>([]);
+    const [openingFile, setOpeningFile] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
     const [tab, setTab] = useState<'pending' | 'done'>('pending');
     const [showForm, setShowForm] = useState(false);
@@ -28,14 +32,23 @@ export default function EscolaTasks() {
     const [feedbackFor, setFeedbackFor] = useState<EscolaTask | null>(null);
 
     const [form, setForm] = useState({
-        title: '', subject_id: '', description: '', due_date: '', priority: 'normal', exam_id: '',
+        title: '', subject_id: '', description: '', due_date: '', priority: 'normal',
+        exam_id: '', library_id: '',
     });
 
     const load = async () => {
-        const [s, e, t] = await Promise.all([
-            escolaApi.getSubjects(), escolaApi.getExams(), escolaApi.getTasks(),
+        const [s, e, t, l] = await Promise.all([
+            escolaApi.getSubjects(), escolaApi.getExams(), escolaApi.getTasks(), escolaApi.getLibrary(),
         ]);
-        setSubjects(s); setExams(e); setTasks(t); setLoading(false);
+        setSubjects(s); setExams(e); setTasks(t); setLibrary(l); setLoading(false);
+    };
+
+    /** Abre o material anexado à tarefa por link temporário. */
+    const openMaterial = async (item: EscolaLibraryItem) => {
+        setOpeningFile(item.id);
+        const url = await escolaApi.getLibraryFileUrl(item.file_path);
+        setOpeningFile(null);
+        if (url) window.open(url, '_blank', 'noopener');
     };
 
     useEffect(() => { load(); }, []);
@@ -61,13 +74,17 @@ export default function EscolaTasks() {
             title: form.title,
             subject_id: form.subject_id || null,
             exam_id: form.exam_id || null,
+            library_id: form.library_id || null,
             description: form.description || null,
             due_date: form.due_date || null,
             priority: form.priority,
             created_by: role === 'professora' ? 'professora' : 'familia',
         });
         setSaving(false);
-        setForm({ title: '', subject_id: '', description: '', due_date: '', priority: 'normal', exam_id: '' });
+        setForm({
+            title: '', subject_id: '', description: '', due_date: '', priority: 'normal',
+            exam_id: '', library_id: '',
+        });
         setShowForm(false);
         load();
     };
@@ -168,6 +185,27 @@ export default function EscolaTasks() {
                             onChange={e => setForm({ ...form, description: e.target.value })} />
                     </div>
 
+                    <div>
+                        <label className="escola-label block mb-1.5">Material da biblioteca</label>
+                        {library.length === 0 ? (
+                            <button type="button" onClick={() => navigate('/escola/biblioteca')}
+                                className="text-[13px] font-semibold flex items-center gap-1" style={{ color: 'var(--accent)' }}>
+                                <span className="material-symbols-outlined text-[17px]">upload_file</span>
+                                subir um material primeiro
+                            </button>
+                        ) : (
+                            <select className="escola-input" value={form.library_id}
+                                onChange={e => setForm({ ...form, library_id: e.target.value })}>
+                                <option value="">Nenhum</option>
+                                {library.map(l => (
+                                    <option key={l.id} value={l.id}>
+                                        {l.title}{l.needs_print && !l.printed ? ' (falta imprimir)' : ''}
+                                    </option>
+                                ))}
+                            </select>
+                        )}
+                    </div>
+
                     {exams.filter(e => e.date >= today).length > 0 && (
                         <div>
                             <label className="escola-label block mb-1.5">Ligada a alguma prova?</label>
@@ -241,6 +279,29 @@ export default function EscolaTasks() {
                                                 {task.description}
                                             </p>
                                         )}
+
+                                        {(() => {
+                                            const material = library.find(l => l.id === task.library_id);
+                                            if (!material) return null;
+                                            return (
+                                                <button onClick={() => openMaterial(material)}
+                                                    className="mt-2 w-full flex items-center gap-2.5 p-2.5 rounded-lg text-left"
+                                                    style={{ background: 'var(--surface-2)', border: '1px solid var(--line)' }}>
+                                                    <span className="material-symbols-outlined text-[19px] shrink-0" style={{ color: 'var(--accent)' }}>
+                                                        {openingFile === material.id ? 'progress_activity' : 'description'}
+                                                    </span>
+                                                    <span className="flex-1 min-w-0">
+                                                        <span className="block text-[13px] font-semibold truncate">{material.title}</span>
+                                                        <span className="block text-[11px]" style={{ color: 'var(--fg-soft)' }}>
+                                                            {material.needs_print && !material.printed ? 'falta imprimir' : 'abrir material'}
+                                                        </span>
+                                                    </span>
+                                                    <span className="material-symbols-outlined text-[17px]" style={{ color: 'var(--fg-soft)' }}>
+                                                        open_in_new
+                                                    </span>
+                                                </button>
+                                            );
+                                        })()}
 
                                         {task.due_date && task.status !== 'done' && (
                                             <p className="text-[12px] font-bold mt-1.5"
