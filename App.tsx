@@ -46,6 +46,16 @@ import GymCalendar from './pages/gym/GymCalendar';
 import GymPhase from './pages/gym/GymPhase';
 import GymGrip from './pages/gym/GymGrip';
 
+// Escola Module (acompanhamento pedagógico)
+import EscolaLayout from './components/escola/EscolaLayout';
+import EscolaLogin from './pages/escola/EscolaLogin';
+import EscolaHome from './pages/escola/EscolaHome';
+import EscolaTasks from './pages/escola/EscolaTasks';
+import EscolaExams from './pages/escola/EscolaExams';
+import EscolaGrades from './pages/escola/EscolaGrades';
+import EscolaLessons from './pages/escola/EscolaLessons';
+import EscolaAnamnese from './pages/escola/EscolaAnamnese';
+
 // Nutri Module
 import NutriLayout from './components/nutri/NutriLayout';
 import NutriLogin from './pages/nutri/NutriLogin';
@@ -127,6 +137,17 @@ function AppRoutes() {
         <Route path="/nutri" element={<NutriDashboard />} />
         <Route path="/nutri/meals" element={<NutriMeals />} />
         <Route path="/nutri/analytics" element={<NutriAnalytics />} />
+      </Route>
+
+      {/* Escola Module Routes */}
+      <Route element={<EscolaLayout />}>
+        <Route path="/escola/login" element={<EscolaLogin />} />
+        <Route path="/escola" element={<EscolaHome />} />
+        <Route path="/escola/tarefas" element={<EscolaTasks />} />
+        <Route path="/escola/provas" element={<EscolaExams />} />
+        <Route path="/escola/notas" element={<EscolaGrades />} />
+        <Route path="/escola/diario" element={<EscolaLessons />} />
+        <Route path="/escola/anamnese" element={<EscolaAnamnese />} />
       </Route>
     </Routes>
     </>
