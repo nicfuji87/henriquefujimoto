@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useNavigate } from 'react-router-dom';
 import { escolaApi, EscolaAnamnese as Anamnese } from '../../lib/api-escola';
 import { canEditAnamnese, canViewAnamnese, getEscolaRole } from '../../lib/escola-auth';
 
@@ -35,7 +35,6 @@ const SECTIONS: { title: string; icon: string; fields: { key: keyof Anamnese; la
         title: 'Sobre a criança',
         icon: 'favorite',
         fields: [
-            { key: 'routine', label: 'A rotina da criança', type: 'long' },
             { key: 'school_history', label: 'Trajetória escolar até o momento', type: 'long' },
             { key: 'favorite_activities', label: 'O que mais gosta de fazer', type: 'long' },
             { key: 'socioemotional', label: 'Aspectos socioemocionais — humor, o que deixa triste, feliz, irritada', type: 'long' },
@@ -56,6 +55,7 @@ const SECTIONS: { title: string; icon: string; fields: { key: keyof Anamnese; la
 export default function EscolaAnamnesePage() {
     const role = getEscolaRole();
     const editable = canEditAnamnese(role);
+    const navigate = useNavigate();
 
     const [data, setData] = useState<Anamnese | null>(null);
     const [loading, setLoading] = useState(true);
@@ -118,6 +118,21 @@ export default function EscolaAnamnesePage() {
                 </p>
                 <p className="text-right text-[13px] font-semibold mt-2">— Profª Andréa</p>
             </div>
+
+            {/* A rotina saiu do campo de texto e virou a agenda semanal. */}
+            <button onClick={() => navigate('/escola/rotina')} className="escola-card-soft w-full p-4 flex items-center gap-3 text-left">
+                <span className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+                    style={{ background: 'rgba(198,242,78,.12)', color: 'var(--accent)' }}>
+                    <span className="material-symbols-outlined text-[21px]">calendar_view_week</span>
+                </span>
+                <span className="flex-1">
+                    <span className="block text-[15px] font-semibold">A rotina da criança</span>
+                    <span className="block text-[12px]" style={{ color: 'var(--fg-soft)' }}>
+                        Escola, treinos e aulas na agenda da semana
+                    </span>
+                </span>
+                <span className="material-symbols-outlined" style={{ color: 'var(--fg-soft)' }}>chevron_right</span>
+            </button>
 
             {SECTIONS.map(section => (
                 <section key={section.title} className="escola-card p-5">

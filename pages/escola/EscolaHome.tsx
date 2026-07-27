@@ -1,9 +1,9 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-    daysBetween, escolaApi, EscolaExam, EscolaGrade, EscolaLesson, EscolaStudyBlock,
-    EscolaSubject, EscolaTask, EXAM_KINDS, formatDate, formatDateLong, PERFORMANCE,
-    todayISO, weightedAverage,
+    daysBetween, escolaApi, EscolaExam, EscolaGrade, EscolaLesson, EscolaRoutineBlock,
+    EscolaStudyBlock, EscolaSubject, EscolaTask, EXAM_KINDS, formatDate, formatDateLong,
+    PERFORMANCE, ROUTINE_KINDS, shortTime, todayISO, toMinutes, weightedAverage,
 } from '../../lib/api-escola';
 import { canViewAnamnese, canViewLessons, getEscolaRole } from '../../lib/escola-auth';
 
@@ -18,18 +18,20 @@ export default function EscolaHome() {
     const [tasks, setTasks] = useState<EscolaTask[]>([]);
     const [lessons, setLessons] = useState<EscolaLesson[]>([]);
     const [grades, setGrades] = useState<EscolaGrade[]>([]);
+    const [routine, setRoutine] = useState<EscolaRoutineBlock[]>([]);
     const [loading, setLoading] = useState(true);
 
     const load = async () => {
-        const [s, e, b, t, l, g] = await Promise.all([
+        const [s, e, b, t, l, g, r] = await Promise.all([
             escolaApi.getSubjects(),
             escolaApi.getExams(),
             escolaApi.getStudyBlocks(),
             escolaApi.getTasks(),
             canViewLessons(role) ? escolaApi.getLessons(5) : Promise.resolve([]),
             escolaApi.getGrades(),
+            escolaApi.getRoutine(),
         ]);
-        setSubjects(s); setExams(e); setBlocks(b); setTasks(t); setLessons(l); setGrades(g);
+        setSubjects(s); setExams(e); setBlocks(b); setTasks(t); setLessons(l); setGrades(g); setRoutine(r);
         setLoading(false);
     };
 
@@ -52,6 +54,17 @@ export default function EscolaHome() {
     const lateTasks = useMemo(() => pendingTasks.filter(t => t.due_date && t.due_date < today), [pendingTasks, today]);
     const todayTasks = useMemo(() => pendingTasks.filter(t => t.due_date === today), [pendingTasks, today]);
     const average = useMemo(() => weightedAverage(grades), [grades]);
+
+    /** Compromissos fixos de hoje, com o próximo destacado. */
+    const todayRoutine = useMemo(() => {
+        const weekday = new Date().getDay();
+        return routine
+            .filter(r => r.weekday === weekday)
+            .sort((a, b) => a.start_time.localeCompare(b.start_time));
+    }, [routine]);
+
+    const nowMinutes = new Date().getHours() * 60 + new Date().getMinutes();
+    const nextRoutine = todayRoutine.find(r => toMinutes(r.end_time) > nowMinutes);
 
     const toggleBlock = async (b: EscolaStudyBlock) => {
         setBlocks(prev => prev.map(x => x.id === b.id ? { ...x, done: !x.done } : x));
@@ -125,9 +138,47 @@ export default function EscolaHome() {
                 </div>
             )}
 
+            {/* Agenda fixa de hoje */}
+            {todayRoutine.length > 0 && (
+                <section>
+                    <div className="flex items-center justify-between mb-2">
+                        <h2 className="escola-label">Agenda de hoje</h2>
+                        <button onClick={() => navigate('/escola/rotina')} className="text-[12px] font-semibold" style={{ color: 'var(--accent)' }}>
+                            ver a semana
+                        </button>
+                    </div>
+                    <div className="escola-card-soft p-3 flex gap-2 overflow-x-auto no-scrollbar">
+                        {todayRoutine.map(r => {
+                            const kind = ROUTINE_KINDS[r.kind] || ROUTINE_KINDS.outro;
+                            const past = toMinutes(r.end_time) <= nowMinutes;
+                            const isNext = nextRoutine?.id === r.id;
+                            return (
+                                <div key={r.id} className="shrink-0 rounded-xl px-3 py-2"
+                                    style={{
+                                        minWidth: 108,
+                                        background: isNext ? `${kind.color}1f` : 'var(--surface-2)',
+                                        border: `1px solid ${isNext ? kind.color : 'var(--line)'}`,
+                                        opacity: past ? 0.4 : 1,
+                                    }}>
+                                    <p className="text-[11px] font-semibold" style={{ color: kind.color }}>
+                                        {shortTime(r.start_time)}–{shortTime(r.end_time)}
+                                    </p>
+                                    <p className="text-[13px] font-semibold leading-tight mt-0.5">{r.title}</p>
+                                    {isNext && (
+                                        <p className="text-[10px] font-semibold mt-0.5" style={{ color: 'var(--fg-soft)' }}>
+                                            {toMinutes(r.start_time) <= nowMinutes ? 'agora' : 'a seguir'}
+                                        </p>
+                                    )}
+                                </div>
+                            );
+                        })}
+                    </div>
+                </section>
+            )}
+
             {/* Para hoje */}
             <section>
-                <h2 className="escola-label mb-2">Para hoje</h2>
+                <h2 className="escola-label mb-2">Tarefas e estudo de hoje</h2>
                 {todayBlocks.length === 0 && todayTasks.length === 0 && lateTasks.length === 0 ? (
                     <div className="escola-card-soft p-4 flex items-center gap-3">
                         <span className="material-symbols-outlined text-[22px]" style={{ color: 'var(--ok)' }}>check_circle</span>
@@ -141,7 +192,9 @@ export default function EscolaHome() {
                                 <span className="w-6 h-6 rounded-md shrink-0 flex items-center justify-center"
                                     style={{ border: '2px solid var(--accent)' }} />
                                 <span className="flex-1 min-w-0">
-                                    <span className="block text-[14px] font-semibold truncate">{b.label}</span>
+                                    <span className="block text-[14px] font-semibold truncate">
+                                        {b.start_time ? `${shortTime(b.start_time)}–${shortTime(b.end_time)} · ` : ''}{b.label}
+                                    </span>
                                     <span className="block text-[12px]" style={{ color: 'var(--fg-soft)' }}>
                                         Estudo · {exams.find(e => e.id === b.exam_id)?.title}
                                     </span>

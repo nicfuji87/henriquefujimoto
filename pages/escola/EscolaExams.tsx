@@ -1,9 +1,20 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import {
-    buildStudyPlan, daysBetween, escolaApi, EscolaExam, EscolaStudyBlock, EscolaSubject,
-    EXAM_KINDS, formatDate, TERMS, todayISO,
+    buildStudyPlan, daysBetween, escolaApi, EscolaExam, EscolaRoutineBlock, EscolaStudyBlock,
+    EscolaSubject, EXAM_KINDS, formatDate, parseISO, shortTime, TERMS, todayISO, WEEKDAYS,
 } from '../../lib/api-escola';
 import { canWrite, getEscolaRole } from '../../lib/escola-auth';
+
+/** Como o horário do bloco foi escolhido, em texto para a professora. */
+const windowLabel = (kind: string | null): string => {
+    if (kind === 'estudo') return 'no horário de estudo que ele já tem';
+    if (kind === 'livre') return 'na folga entre os compromissos do dia';
+    if (kind === 'cheio') return 'dia cheio — precisa encaixar na mão';
+    return '';
+};
+
+const windowColor = (kind: string | null): string =>
+    kind === 'cheio' ? 'var(--danger)' : 'var(--fg-soft)';
 
 export default function EscolaExams() {
     const role = getEscolaRole();
@@ -13,6 +24,7 @@ export default function EscolaExams() {
     const [subjects, setSubjects] = useState<EscolaSubject[]>([]);
     const [exams, setExams] = useState<EscolaExam[]>([]);
     const [blocks, setBlocks] = useState<EscolaStudyBlock[]>([]);
+    const [routine, setRoutine] = useState<EscolaRoutineBlock[]>([]);
     const [loading, setLoading] = useState(true);
     const [showForm, setShowForm] = useState(false);
     const [showPast, setShowPast] = useState(false);
@@ -23,10 +35,10 @@ export default function EscolaExams() {
     });
 
     const load = async () => {
-        const [s, e, b] = await Promise.all([
-            escolaApi.getSubjects(), escolaApi.getExams(), escolaApi.getStudyBlocks(),
+        const [s, e, b, r] = await Promise.all([
+            escolaApi.getSubjects(), escolaApi.getExams(), escolaApi.getStudyBlocks(), escolaApi.getRoutine(),
         ]);
-        setSubjects(s); setExams(e); setBlocks(b); setLoading(false);
+        setSubjects(s); setExams(e); setBlocks(b); setRoutine(r); setLoading(false);
     };
 
     useEffect(() => { load(); }, []);
@@ -37,7 +49,10 @@ export default function EscolaExams() {
     const past = useMemo(() => exams.filter(e => e.date < today).reverse(), [exams, today]);
 
     /** Prévia do plano enquanto a professora preenche a data — mostra o que será gerado. */
-    const preview = useMemo(() => form.date ? buildStudyPlan(form.date) : [], [form.date]);
+    const preview = useMemo(
+        () => form.date ? buildStudyPlan(form.date, today, routine) : [],
+        [form.date, today, routine]
+    );
 
     const handleCreate = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -150,13 +165,24 @@ export default function EscolaExams() {
                     {preview.length > 0 && (
                         <div className="rounded-xl p-3.5" style={{ background: 'var(--surface-2)', border: '1px dashed var(--fg-soft)' }}>
                             <p className="escola-label mb-2">Plano que será criado</p>
-                            <ul className="space-y-1.5">
+                            <ul className="space-y-2">
                                 {preview.map(p => (
-                                    <li key={p.sort_order} className="text-[13px] flex items-center gap-2">
-                                        <span className="font-semibold px-1.5 py-0.5 rounded-md text-[11px]"
+                                    <li key={p.sort_order} className="text-[13px] flex items-start gap-2">
+                                        <span className="font-semibold px-1.5 py-0.5 rounded-md text-[11px] shrink-0"
                                             style={{ background: 'var(--accent)', color: 'var(--accent-ink)' }}>D-{p.days_before}</span>
-                                        <span className="font-semibold">{formatDate(p.date)}</span>
-                                        <span style={{ color: 'var(--fg-soft)' }}>{p.label}</span>
+                                        <span className="min-w-0">
+                                            <span className="block">
+                                                <span className="font-semibold">
+                                                    {WEEKDAYS.find(w => w.value === parseISO(p.date).getDay())?.short.toLowerCase()}{' '}
+                                                    {formatDate(p.date)}
+                                                    {p.start_time ? ` · ${p.start_time}–${p.end_time}` : ''}
+                                                </span>
+                                                <span style={{ color: 'var(--fg-soft)' }}> {p.label}</span>
+                                            </span>
+                                            <span className="block text-[11px]" style={{ color: windowColor(p.window_kind) }}>
+                                                {windowLabel(p.window_kind)}
+                                            </span>
+                                        </span>
                                     </li>
                                 ))}
                             </ul>
@@ -307,10 +333,19 @@ function ExamCard({ exam, subject, blocks, today, writable, onToggle, onDelete, 
                                                     {b.focus}
                                                 </span>
                                             )}
-                                            <span className="block text-[11px] font-bold mt-0.5"
+                                            <span className="block text-[11px] font-bold mt-1"
                                                 style={{ color: late ? 'var(--danger)' : 'var(--fg-soft)' }}>
-                                                {formatDate(b.date)}{late ? ' · passou da data' : ''}
+                                                <span className="material-symbols-outlined text-[13px] align-[-2px] mr-0.5">schedule</span>
+                                                {WEEKDAYS.find(w => w.value === parseISO(b.date).getDay())?.short.toLowerCase()}{' '}
+                                                {formatDate(b.date)}
+                                                {b.start_time ? ` · ${shortTime(b.start_time)}–${shortTime(b.end_time)}` : ''}
+                                                {late ? ' · passou da data' : ''}
                                             </span>
+                                            {b.window_kind && !late && (
+                                                <span className="block text-[11px]" style={{ color: windowColor(b.window_kind) }}>
+                                                    {windowLabel(b.window_kind)}
+                                                </span>
+                                            )}
                                         </span>
                                     </button>
                                 </li>

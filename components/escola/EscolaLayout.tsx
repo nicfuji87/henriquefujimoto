@@ -1,6 +1,9 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Navigate, Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { canViewLessons, escolaLogout, getEscolaName, getEscolaRole, isEscolaAuth, ROLE_LABEL } from '../../lib/escola-auth';
+import {
+    canViewAnamnese, canViewLessons, escolaLogout, getEscolaName, getEscolaRole,
+    isEscolaAuth, ROLE_LABEL,
+} from '../../lib/escola-auth';
 
 export default function EscolaLayout() {
     const isAuth = isEscolaAuth();
@@ -8,9 +11,11 @@ export default function EscolaLayout() {
     const name = getEscolaName();
     const location = useLocation();
     const navigate = useNavigate();
+    const [showMore, setShowMore] = useState(false);
 
     useEffect(() => {
         window.scrollTo(0, 0);
+        setShowMore(false);
     }, [location.pathname]);
 
     const isLogin = location.pathname === '/escola/login';
@@ -25,10 +30,17 @@ export default function EscolaLayout() {
 
     const nav = [
         { path: '/escola', icon: 'home', label: 'Início' },
+        { path: '/escola/rotina', icon: 'calendar_view_week', label: 'Semana' },
         { path: '/escola/tarefas', icon: 'checklist', label: 'Tarefas' },
         { path: '/escola/provas', icon: 'event_note', label: 'Provas' },
         { path: '/escola/notas', icon: 'trending_up', label: 'Notas' },
-        ...(canViewLessons(role) ? [{ path: '/escola/diario', icon: 'auto_stories', label: 'Diário' }] : []),
+    ];
+
+    /** O que não coube na barra de baixo entra no menu "Mais". */
+    const moreItems = [
+        ...(canViewLessons(role) ? [{ path: '/escola/diario', icon: 'auto_stories', label: 'Diário de aula' }] : []),
+        { path: '/escola/biblioteca', icon: 'folder_copy', label: 'Biblioteca de materiais' },
+        ...(canViewAnamnese(role) ? [{ path: '/escola/anamnese', icon: 'description', label: 'Ficha do aluno' }] : []),
     ];
 
     return (
@@ -157,8 +169,41 @@ export default function EscolaLayout() {
                                     onClick={() => { navigate(item.path); }}
                                 />
                             ))}
+                            <NavItem
+                                icon="more_horiz"
+                                label="Mais"
+                                active={moreItems.some(m => m.path === location.pathname)}
+                                onClick={() => setShowMore(true)}
+                            />
                         </div>
                     </nav>
+                )}
+
+                {showMore && (
+                    <div className="fixed inset-0 z-[70] flex items-end justify-center p-4"
+                        style={{ background: 'rgba(10,11,13,.75)', backdropFilter: 'blur(4px)' }}
+                        onClick={() => setShowMore(false)}>
+                        <div className="escola-card w-full max-w-md p-3 mb-2 escola-enter" onClick={e => e.stopPropagation()}>
+                            {moreItems.map(item => (
+                                <button key={item.path}
+                                    onClick={() => { setShowMore(false); navigate(item.path); }}
+                                    className="w-full flex items-center gap-3 p-3.5 rounded-xl text-left"
+                                    style={location.pathname === item.path ? { background: 'rgba(198,242,78,.10)' } : {}}>
+                                    <span className="material-symbols-outlined text-[21px]"
+                                        style={{ color: location.pathname === item.path ? 'var(--accent)' : 'var(--fg-soft)' }}>
+                                        {item.icon}
+                                    </span>
+                                    <span className="text-[15px] font-semibold">{item.label}</span>
+                                </button>
+                            ))}
+                            <button onClick={handleLogout}
+                                className="w-full flex items-center gap-3 p-3.5 rounded-xl text-left"
+                                style={{ color: 'var(--danger)' }}>
+                                <span className="material-symbols-outlined text-[21px]">logout</span>
+                                <span className="text-[15px] font-semibold">Sair</span>
+                            </button>
+                        </div>
+                    </div>
                 )}
             </div>
         </div>
@@ -171,13 +216,13 @@ function NavItem({ icon, label, active, onClick }: {
     return (
         <button
             onClick={onClick}
-            className="flex flex-1 flex-col items-center justify-center gap-0.5 py-2 rounded-xl transition-all"
+            className="flex flex-1 flex-col items-center justify-center gap-0.5 py-1.5 px-0.5 rounded-xl transition-all"
             style={active
                 ? { background: 'var(--accent)', color: 'var(--accent-ink)' }
                 : { color: 'rgba(255,255,255,.4)' }}
         >
-            <span className="material-symbols-outlined text-[21px]">{icon}</span>
-            <span className="text-[10px] font-semibold tracking-wide">{label}</span>
+            <span className="material-symbols-outlined text-[20px]">{icon}</span>
+            <span className="text-[9px] font-semibold tracking-wide">{label}</span>
         </button>
     );
 }

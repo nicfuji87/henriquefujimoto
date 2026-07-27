@@ -55,6 +55,8 @@ import EscolaExams from './pages/escola/EscolaExams';
 import EscolaGrades from './pages/escola/EscolaGrades';
 import EscolaLessons from './pages/escola/EscolaLessons';
 import EscolaAnamnese from './pages/escola/EscolaAnamnese';
+import EscolaRoutine from './pages/escola/EscolaRoutine';
+import EscolaLibrary from './pages/escola/EscolaLibrary';
 
 // Nutri Module
 import NutriLayout from './components/nutri/NutriLayout';
@@ -143,10 +145,12 @@ function AppRoutes() {
       <Route element={<EscolaLayout />}>
         <Route path="/escola/login" element={<EscolaLogin />} />
         <Route path="/escola" element={<EscolaHome />} />
+        <Route path="/escola/rotina" element={<EscolaRoutine />} />
         <Route path="/escola/tarefas" element={<EscolaTasks />} />
         <Route path="/escola/provas" element={<EscolaExams />} />
         <Route path="/escola/notas" element={<EscolaGrades />} />
         <Route path="/escola/diario" element={<EscolaLessons />} />
+        <Route path="/escola/biblioteca" element={<EscolaLibrary />} />
         <Route path="/escola/anamnese" element={<EscolaAnamnese />} />
       </Route>
     </Routes>
