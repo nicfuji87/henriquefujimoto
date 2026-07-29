@@ -198,6 +198,11 @@ export default function EscolaHome() {
                                     <span className="block text-[12px]" style={{ color: 'var(--fg-soft)' }}>
                                         Estudo · {exams.find(e => e.id === b.exam_id)?.title}
                                     </span>
+                                    {todayBlocks.filter(o => o.start_time === b.start_time).length > 1 && (
+                                        <span className="block text-[11px] font-semibold" style={{ color: 'var(--warn)' }}>
+                                            {todayBlocks.filter(o => o.start_time === b.start_time).length} matérias nessa mesma janela
+                                        </span>
+                                    )}
                                 </span>
                             </button>
                         ))}

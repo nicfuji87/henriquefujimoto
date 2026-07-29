@@ -4,6 +4,7 @@ import {
     EscolaSubject, EXAM_KINDS, formatDate, parseISO, shortTime, TERMS, todayISO, WEEKDAYS,
 } from '../../lib/api-escola';
 import { canWrite, getEscolaRole } from '../../lib/escola-auth';
+import ExamImport from '../../components/escola/ExamImport';
 
 /** Como o horário do bloco foi escolhido, em texto para a professora. */
 const windowLabel = (kind: string | null): string => {
@@ -27,8 +28,10 @@ export default function EscolaExams() {
     const [routine, setRoutine] = useState<EscolaRoutineBlock[]>([]);
     const [loading, setLoading] = useState(true);
     const [showForm, setShowForm] = useState(false);
+    const [showImport, setShowImport] = useState(false);
     const [showPast, setShowPast] = useState(false);
     const [saving, setSaving] = useState(false);
+    const [flash, setFlash] = useState('');
 
     const [form, setForm] = useState({
         title: '', subject_id: '', date: '', kind: 'prova', term: TERMS[0], content: '',
@@ -44,6 +47,20 @@ export default function EscolaExams() {
     useEffect(() => { load(); }, []);
 
     const subjectOf = (id: string | null) => subjects.find(s => s.id === id);
+
+    /**
+     * Em semana de globalizantes várias provas caem na mesma janela de estudo.
+     * Aqui mapeamos dia+horário -> quantas matérias dividem aquele bloco.
+     */
+    const sharedSlots = useMemo(() => {
+        const count: Record<string, number> = {};
+        for (const b of blocks) {
+            if (!b.start_time) continue;
+            const key = `${b.date}|${b.start_time}`;
+            count[key] = (count[key] || 0) + 1;
+        }
+        return count;
+    }, [blocks]);
 
     const upcoming = useMemo(() => exams.filter(e => e.date >= today), [exams, today]);
     const past = useMemo(() => exams.filter(e => e.date < today).reverse(), [exams, today]);
@@ -107,11 +124,41 @@ export default function EscolaExams() {
                 </div>
             </div>
 
-            {writable && (
-                <button onClick={() => setShowForm(v => !v)} className="escola-btn w-full py-3 flex items-center justify-center gap-2">
-                    <span className="material-symbols-outlined text-[20px]">{showForm ? 'close' : 'add'}</span>
-                    {showForm ? 'Cancelar' : 'Cadastrar prova'}
-                </button>
+            {flash && (
+                <p className="escola-card-soft p-3.5 text-[14px] font-semibold flex items-center gap-2"
+                    style={{ borderLeft: '3px solid var(--accent)' }}>
+                    <span className="material-symbols-outlined text-[20px]" style={{ color: 'var(--accent)' }}>check_circle</span>
+                    {flash}
+                </p>
+            )}
+
+            {writable && !showImport && (
+                <div className="grid grid-cols-2 gap-2.5">
+                    <button onClick={() => { setShowImport(true); setShowForm(false); }}
+                        className="escola-btn py-3 flex items-center justify-center gap-2">
+                        <span className="material-symbols-outlined text-[20px]">picture_as_pdf</span>
+                        Importar PDF
+                    </button>
+                    <button onClick={() => setShowForm(v => !v)}
+                        className="py-3 rounded-full font-semibold flex items-center justify-center gap-2"
+                        style={{ background: 'var(--surface)', border: '1px solid var(--line)', color: 'var(--fg)' }}>
+                        <span className="material-symbols-outlined text-[20px]">{showForm ? 'close' : 'add'}</span>
+                        {showForm ? 'Cancelar' : 'Uma prova'}
+                    </button>
+                </div>
+            )}
+
+            {showImport && (
+                <ExamImport
+                    subjects={subjects}
+                    onCancel={() => setShowImport(false)}
+                    onDone={(created) => {
+                        setShowImport(false);
+                        setFlash(`${created} prova${created === 1 ? '' : 's'} criada${created === 1 ? '' : 's'} a partir do PDF.`);
+                        setTimeout(() => setFlash(''), 6000);
+                        load();
+                    }}
+                />
             )}
 
             {showForm && (
@@ -210,6 +257,7 @@ export default function EscolaExams() {
                             blocks={blocks.filter(b => b.exam_id === exam.id).sort((a, b) => a.date.localeCompare(b.date))}
                             today={today}
                             writable={writable}
+                            sharedSlots={sharedSlots}
                             onToggle={toggleBlock}
                             onDelete={() => handleDelete(exam)}
                             onRegenerate={() => handleRegenerate(exam)}
@@ -256,6 +304,7 @@ export default function EscolaExams() {
 interface ExamCardProps {
     exam: EscolaExam;
     subject?: EscolaSubject;
+    sharedSlots: Record<string, number>;
     blocks: EscolaStudyBlock[];
     today: string;
     writable: boolean;
@@ -264,7 +313,7 @@ interface ExamCardProps {
     onRegenerate: () => void;
 }
 
-function ExamCard({ exam, subject, blocks, today, writable, onToggle, onDelete, onRegenerate }: ExamCardProps) {
+function ExamCard({ exam, subject, blocks, today, writable, sharedSlots, onToggle, onDelete, onRegenerate }: ExamCardProps) {
     const days = daysBetween(today, exam.date);
     const done = blocks.filter(b => b.done).length;
 
@@ -346,6 +395,17 @@ function ExamCard({ exam, subject, blocks, today, writable, onToggle, onDelete, 
                                                     {windowLabel(b.window_kind)}
                                                 </span>
                                             )}
+                                            {(() => {
+                                                const shared = b.start_time ? sharedSlots[`${b.date}|${b.start_time}`] || 0 : 0;
+                                                if (shared < 2) return null;
+                                                return (
+                                                    <span className="block text-[11px] font-semibold" style={{ color: 'var(--warn)' }}>
+                                                        {shared === 2
+                                                            ? 'janela dividida com outra matéria nesse dia'
+                                                            : `janela dividida com outras ${shared - 1} matérias nesse dia`}
+                                                    </span>
+                                                );
+                                            })()}
                                         </span>
                                     </button>
                                 </li>

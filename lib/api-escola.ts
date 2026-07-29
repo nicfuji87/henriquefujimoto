@@ -97,6 +97,20 @@ export interface EscolaTask {
     created_at: string;
 }
 
+/** Uma avaliação lida do PDF pela IA, ainda não gravada. */
+export interface ImportedExam {
+    subject_raw: string;
+    subject_match: string | null;
+    title: string;
+    date: string;
+    weekday_in_document: string | null;
+    time_slot: string | null;
+    kind: string;
+    content: string;
+    confidence: 'alta' | 'media' | 'baixa';
+    warnings: string[];
+}
+
 export interface EscolaLibraryItem {
     id: string;
     title: string;
@@ -153,6 +167,8 @@ export const PERFORMANCE: Record<string, { label: string; color: string; bg: str
 };
 
 export const EXAM_KINDS: Record<string, { label: string; icon: string }> = {
+    globalizante: { label: 'Globalizante', icon: 'workspace_premium' },
+    parcial: { label: 'Parcial', icon: 'quiz' },
     prova: { label: 'Prova', icon: 'quiz' },
     trabalho: { label: 'Trabalho', icon: 'assignment' },
     simulado: { label: 'Simulado', icon: 'fact_check' },
@@ -166,7 +182,21 @@ export const PRIORITIES: Record<string, { label: string; color: string }> = {
     high: { label: 'Prioridade', color: '#f87171' },
 };
 
-export const TERMS = ['1º Bimestre', '2º Bimestre', '3º Bimestre', '4º Bimestre'];
+/** O colégio do Henrique trabalha por trimestre; os bimestres ficam para quem precisar. */
+export const TERMS = [
+    '1º Trimestre', '2º Trimestre', '3º Trimestre',
+    '1º Bimestre', '2º Bimestre', '3º Bimestre', '4º Bimestre',
+];
+
+/** Converte o período como veio do PDF ("2.º trimestre") para uma opção da lista. */
+export const parseImportedTerm = (raw: string | null): string => {
+    if (!raw) return TERMS[0];
+    const clean = raw.toLowerCase().replace(/\s+/g, ' ');
+    const number = clean.match(/(\d)/)?.[1];
+    const unit = clean.includes('bimestre') ? 'Bimestre' : 'Trimestre';
+    const candidate = `${number}º ${unit}`;
+    return TERMS.includes(candidate) ? candidate : TERMS[0];
+};
 
 export const ROUTINE_KINDS: Record<string, { label: string; color: string; icon: string }> = {
     escola: { label: 'Escola', color: '#38bdf8', icon: 'school' },
@@ -507,6 +537,13 @@ export const escolaApi = {
         return data as EscolaExam;
     },
 
+    /** Cria a prova sem gerar plano (usado na importação, quando o usuário desmarca o plano). */
+    createExam: async (exam: Partial<EscolaExam>): Promise<EscolaExam | null> => {
+        const { data, error } = await supabase.from('escola_exams').insert([exam]).select().single();
+        if (error) { console.error(error); return null; }
+        return data as EscolaExam;
+    },
+
     deleteExam: async (id: string): Promise<boolean> => {
         const { error } = await supabase.from('escola_exams').delete().eq('id', id);
         if (error) { console.error(error); return false; }
@@ -632,6 +669,33 @@ export const escolaApi = {
         const { error } = await supabase.from('escola_tasks').delete().eq('id', id);
         if (error) { console.error(error); return false; }
         return true;
+    },
+
+    // ---------- Importação de provas por PDF ----------
+    /** Manda o texto do PDF para a IA e recebe as avaliações estruturadas (não grava nada). */
+    importExamsFromText: async (
+        text: string,
+        subjects: EscolaSubject[]
+    ): Promise<{ term: string | null; grade_level: string | null; exams: ImportedExam[] } | { error: string }> => {
+        const { data, error } = await supabase.functions.invoke('escola-import-exams', {
+            body: {
+                text,
+                reference_year: new Date().getFullYear(),
+                subjects: subjects.map(s => ({ id: s.id, name: s.name })),
+            },
+        });
+
+        if (error) {
+            console.error(error);
+            // A mensagem útil vem no corpo da resposta, não no error.message.
+            try {
+                const body = await (error as { context?: Response }).context?.json();
+                if (body?.error) return { error: body.error };
+            } catch { /* segue com a mensagem genérica */ }
+            return { error: 'Não consegui ler o documento. Tente de novo em instantes.' };
+        }
+        if (data?.error) return { error: data.error };
+        return { term: data?.term ?? null, grade_level: data?.grade_level ?? null, exams: data?.exams || [] };
     },
 
     // ---------- Biblioteca ----------
