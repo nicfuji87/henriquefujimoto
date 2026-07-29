@@ -569,6 +569,19 @@ export const escolaApi = {
         return true;
     },
 
+    /** Bloco de estudo criado à mão pela professora. */
+    saveStudyBlock: async (block: Partial<EscolaStudyBlock>): Promise<boolean> => {
+        const { error } = await supabase.from('escola_study_blocks').insert([block]);
+        if (error) { console.error(error); return false; }
+        return true;
+    },
+
+    deleteStudyBlock: async (id: string): Promise<boolean> => {
+        const { error } = await supabase.from('escola_study_blocks').delete().eq('id', id);
+        if (error) { console.error(error); return false; }
+        return true;
+    },
+
     /** Refaz o plano de uma prova a partir de hoje (útil quando a prova é remarcada). */
     regenerateStudyPlan: async (exam: EscolaExam): Promise<boolean> => {
         await supabase.from('escola_study_blocks').delete().eq('exam_id', exam.id);

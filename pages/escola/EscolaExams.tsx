@@ -11,6 +11,7 @@ const windowLabel = (kind: string | null): string => {
     if (kind === 'estudo') return 'no horário de estudo que ele já tem';
     if (kind === 'livre') return 'na folga entre os compromissos do dia';
     if (kind === 'cheio') return 'dia cheio — precisa encaixar na mão';
+    if (kind === 'professora') return 'horário definido pela professora';
     return '';
 };
 
@@ -34,7 +35,7 @@ export default function EscolaExams() {
     const [flash, setFlash] = useState('');
 
     const [form, setForm] = useState({
-        title: '', subject_id: '', date: '', kind: 'prova', term: TERMS[0], content: '',
+        title: '', subject_id: '', date: '', kind: 'prova', term: TERMS[0], content: '', withPlan: false,
     });
 
     const load = async () => {
@@ -75,17 +76,21 @@ export default function EscolaExams() {
         e.preventDefault();
         if (!form.title || !form.date) return;
         setSaving(true);
-        const created = await escolaApi.createExamWithPlan({
+        const payload = {
             title: form.title,
             subject_id: form.subject_id || null,
             date: form.date,
             kind: form.kind,
             term: form.term,
             content: form.content || null,
-        });
+        };
+        // O plano só nasce junto se a professora pedir.
+        const created = form.withPlan
+            ? await escolaApi.createExamWithPlan(payload)
+            : await escolaApi.createExam(payload);
         setSaving(false);
         if (created) {
-            setForm({ title: '', subject_id: '', date: '', kind: 'prova', term: TERMS[0], content: '' });
+            setForm({ title: '', subject_id: '', date: '', kind: 'prova', term: TERMS[0], content: '', withPlan: false });
             setShowForm(false);
             load();
         }
@@ -107,6 +112,20 @@ export default function EscolaExams() {
         load();
     };
 
+    const handleAddBlock = async (exam: EscolaExam, block: Partial<EscolaStudyBlock>) => {
+        await escolaApi.saveStudyBlock({
+            ...block,
+            exam_id: exam.id,
+            days_before: block.date ? daysBetween(block.date, exam.date) : 0,
+        });
+        load();
+    };
+
+    const handleDeleteBlock = async (id: string) => {
+        await escolaApi.deleteStudyBlock(id);
+        load();
+    };
+
     if (loading) {
         return <div className="py-24 text-center" style={{ color: 'var(--fg-soft)' }}>
             <span className="material-symbols-outlined text-[32px] animate-spin">progress_activity</span>
@@ -119,7 +138,7 @@ export default function EscolaExams() {
                 <div>
                     <h1 className="text-[26px] font-semibold leading-tight">Provas & <span className="escola-mark">plano de estudo</span></h1>
                     <p className="text-[13px] mt-1" style={{ color: 'var(--fg-soft)' }}>
-                        Ao cadastrar uma prova, o plano é montado de trás pra frente automaticamente.
+                        As provas entram por aqui; os blocos de estudo de cada uma quem define é a professora.
                     </p>
                 </div>
             </div>
@@ -209,7 +228,18 @@ export default function EscolaExams() {
                             onChange={e => setForm({ ...form, content: e.target.value })} />
                     </div>
 
-                    {preview.length > 0 && (
+                    <div className="p-3.5 rounded-xl" style={{ background: 'var(--surface-2)', border: '1px solid var(--line)' }}>
+                        <label className="flex items-center gap-2.5 text-[14px] font-semibold cursor-pointer">
+                            <input type="checkbox" checked={form.withPlan} className="w-4 h-4 rounded"
+                                onChange={e => setForm({ ...form, withPlan: e.target.checked })} />
+                            Já sugerir um plano de estudo
+                        </label>
+                        <p className="text-[12px] pl-7 mt-1" style={{ color: 'var(--fg-soft)' }}>
+                            Você monta os blocos de estudo depois, no cartão da prova.
+                        </p>
+                    </div>
+
+                    {form.withPlan && preview.length > 0 && (
                         <div className="rounded-xl p-3.5" style={{ background: 'var(--surface-2)', border: '1px dashed var(--fg-soft)' }}>
                             <p className="escola-label mb-2">Plano que será criado</p>
                             <ul className="space-y-2">
@@ -237,7 +267,7 @@ export default function EscolaExams() {
                     )}
 
                     <button type="submit" disabled={saving || !form.title || !form.date} className="escola-btn w-full py-3">
-                        {saving ? 'Salvando...' : 'Criar prova + plano'}
+                        {saving ? 'Salvando...' : form.withPlan ? 'Criar prova + plano' : 'Criar prova'}
                     </button>
                 </form>
             )}
@@ -258,6 +288,8 @@ export default function EscolaExams() {
                             today={today}
                             writable={writable}
                             sharedSlots={sharedSlots}
+                            onAddBlock={(b) => handleAddBlock(exam, b)}
+                            onDeleteBlock={handleDeleteBlock}
                             onToggle={toggleBlock}
                             onDelete={() => handleDelete(exam)}
                             onRegenerate={() => handleRegenerate(exam)}
@@ -301,10 +333,96 @@ export default function EscolaExams() {
     );
 }
 
+/** Bloco de estudo montado pela professora: dia, o que fazer e, se quiser, horário. */
+function StudyBlockForm({ examDate, today, onCancel, onSave }: {
+    examDate: string;
+    today: string;
+    onCancel: () => void;
+    onSave: (block: Partial<EscolaStudyBlock>) => void;
+}) {
+    const [form, setForm] = useState({
+        date: today, label: '', focus: '', start_time: '', end_time: '',
+    });
+    const [error, setError] = useState('');
+
+    const submit = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!form.label || !form.date) return;
+        if (form.date > examDate) {
+            setError('Esse dia é depois da prova.');
+            return;
+        }
+        if (form.start_time && form.end_time && form.end_time <= form.start_time) {
+            setError('O horário de término precisa ser depois do início.');
+            return;
+        }
+        onSave({
+            date: form.date,
+            label: form.label,
+            focus: form.focus || null,
+            start_time: form.start_time || null,
+            end_time: form.end_time || null,
+            window_kind: form.start_time ? 'professora' : null,
+            sort_order: 0,
+        });
+    };
+
+    return (
+        <form onSubmit={submit} className="mt-3 p-3.5 rounded-xl space-y-3"
+            style={{ background: 'var(--surface-2)', border: '1px solid var(--line)' }}>
+            <div>
+                <label className="escola-label block mb-1.5">O que ele vai fazer</label>
+                <input className="escola-input" value={form.label} placeholder="Ex.: Refazer a lista de ângulos"
+                    onChange={e => { setForm({ ...form, label: e.target.value }); setError(''); }} />
+            </div>
+
+            <div>
+                <label className="escola-label block mb-1.5">Dia</label>
+                <input type="date" className="escola-input" value={form.date} max={examDate}
+                    onChange={e => { setForm({ ...form, date: e.target.value }); setError(''); }} />
+            </div>
+
+            <div className="grid grid-cols-2 gap-2">
+                <div>
+                    <label className="escola-label block mb-1.5">Das (opcional)</label>
+                    <input type="time" className="escola-input" value={form.start_time}
+                        onChange={e => { setForm({ ...form, start_time: e.target.value }); setError(''); }} />
+                </div>
+                <div>
+                    <label className="escola-label block mb-1.5">Até</label>
+                    <input type="time" className="escola-input" value={form.end_time}
+                        onChange={e => { setForm({ ...form, end_time: e.target.value }); setError(''); }} />
+                </div>
+            </div>
+
+            <div>
+                <label className="escola-label block mb-1.5">Detalhe (opcional)</label>
+                <textarea className="escola-input" rows={2} value={form.focus}
+                    placeholder="Como fazer, o que revisar antes"
+                    onChange={e => setForm({ ...form, focus: e.target.value })} />
+            </div>
+
+            {error && <p className="text-[12px] font-semibold" style={{ color: 'var(--danger)' }}>{error}</p>}
+
+            <div className="flex gap-2">
+                <button type="button" onClick={onCancel} className="flex-1 py-2.5 rounded-full text-[13px] font-semibold"
+                    style={{ background: 'var(--surface)', border: '1px solid var(--line)' }}>
+                    Cancelar
+                </button>
+                <button type="submit" disabled={!form.label} className="escola-btn flex-[2] py-2.5 text-[13px]">
+                    Adicionar bloco
+                </button>
+            </div>
+        </form>
+    );
+}
+
 interface ExamCardProps {
     exam: EscolaExam;
     subject?: EscolaSubject;
     sharedSlots: Record<string, number>;
+    onAddBlock: (block: Partial<EscolaStudyBlock>) => void;
+    onDeleteBlock: (id: string) => void;
     blocks: EscolaStudyBlock[];
     today: string;
     writable: boolean;
@@ -313,9 +431,13 @@ interface ExamCardProps {
     onRegenerate: () => void;
 }
 
-function ExamCard({ exam, subject, blocks, today, writable, sharedSlots, onToggle, onDelete, onRegenerate }: ExamCardProps) {
+function ExamCard({
+    exam, subject, blocks, today, writable, sharedSlots,
+    onAddBlock, onDeleteBlock, onToggle, onDelete, onRegenerate,
+}: ExamCardProps) {
     const days = daysBetween(today, exam.date);
     const done = blocks.filter(b => b.done).length;
+    const [adding, setAdding] = useState(false);
 
     return (
         <div className="escola-card p-5">
@@ -407,6 +529,12 @@ function ExamCard({ exam, subject, blocks, today, writable, sharedSlots, onToggl
                                                 );
                                             })()}
                                         </span>
+                                        {writable && (
+                                            <span onClick={(e) => { e.stopPropagation(); onDeleteBlock(b.id); }}
+                                                className="shrink-0" style={{ color: 'var(--fg-soft)' }}>
+                                                <span className="material-symbols-outlined text-[18px]">delete</span>
+                                            </span>
+                                        )}
                                     </button>
                                 </li>
                             );
@@ -415,18 +543,32 @@ function ExamCard({ exam, subject, blocks, today, writable, sharedSlots, onToggl
                 </div>
             ) : (
                 <p className="text-[13px] mt-3" style={{ color: 'var(--fg-soft)' }}>
-                    Sem plano de estudo (prova cadastrada em cima da hora).
+                    Sem blocos de estudo. {writable ? 'Monte o plano do jeito que fizer sentido para essa prova.' : 'A professora ainda não montou o plano.'}
                 </p>
             )}
 
+            {writable && adding && (
+                <StudyBlockForm
+                    examDate={exam.date}
+                    today={today}
+                    onCancel={() => setAdding(false)}
+                    onSave={(block) => { onAddBlock(block); setAdding(false); }}
+                />
+            )}
+
             {writable && (
-                <div className="flex items-center gap-4 mt-4 pt-3" style={{ borderTop: '1px solid var(--line)' }}>
-                    <button onClick={onRegenerate} className="text-[12px] font-semibold flex items-center gap-1" style={{ color: 'var(--accent)' }}>
-                        <span className="material-symbols-outlined text-[16px]">refresh</span>
-                        refazer plano a partir de hoje
+                <div className="flex items-center gap-4 mt-4 pt-3 flex-wrap" style={{ borderTop: '1px solid var(--line)' }}>
+                    <button onClick={() => setAdding(v => !v)}
+                        className="text-[12px] font-semibold flex items-center gap-1" style={{ color: 'var(--accent)' }}>
+                        <span className="material-symbols-outlined text-[16px]">{adding ? 'close' : 'add'}</span>
+                        {adding ? 'cancelar' : 'adicionar bloco de estudo'}
+                    </button>
+                    <button onClick={onRegenerate} className="text-[12px] font-semibold flex items-center gap-1" style={{ color: 'var(--fg-soft)' }}>
+                        <span className="material-symbols-outlined text-[16px]">auto_awesome</span>
+                        {blocks.length ? 'refazer sugestão automática' : 'sugerir um plano'}
                     </button>
                     <button onClick={onDelete} className="text-[12px] font-semibold ml-auto" style={{ color: 'var(--danger)' }}>
-                        excluir
+                        excluir prova
                     </button>
                 </div>
             )}

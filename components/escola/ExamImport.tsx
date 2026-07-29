@@ -28,7 +28,9 @@ export default function ExamImport({ subjects, onDone, onCancel }: {
     const [error, setError] = useState('');
     const [rows, setRows] = useState<Row[]>([]);
     const [docInfo, setDocInfo] = useState<{ term: string | null; grade: string | null }>({ term: null, grade: null });
-    const [withPlan, setWithPlan] = useState(true);
+    // Quem monta o plano de estudo é a professora. A sugestão automática fica
+    // disponível, mas desmarcada — ninguém enche a agenda do Henrique sem querer.
+    const [withPlan, setWithPlan] = useState(false);
     const [saveToLibrary, setSaveToLibrary] = useState(true);
     const [progress, setProgress] = useState(0);
 
@@ -293,14 +295,13 @@ export default function ExamImport({ subjects, onDone, onCancel }: {
                 <label className="flex items-center gap-2.5 text-[14px] font-semibold cursor-pointer">
                     <input type="checkbox" checked={withPlan} className="w-4 h-4 rounded"
                         onChange={e => setWithPlan(e.target.checked)} />
-                    Gerar plano de estudo para cada prova
+                    Já sugerir um plano de estudo
                 </label>
-                {withPlan && selectedCount > 2 && (
-                    <p className="text-[12px] pl-7" style={{ color: 'var(--fg-soft)' }}>
-                        São {selectedCount} provas — o plano vai criar até {selectedCount * 4} blocos, encaixados
-                        nas janelas livres da semana. Dá para desmarcar e cadastrar o plano depois, prova a prova.
-                    </p>
-                )}
+                <p className="text-[12px] pl-7" style={{ color: 'var(--fg-soft)' }}>
+                    {withPlan
+                        ? `São ${selectedCount} prova${selectedCount === 1 ? '' : 's'} — a sugestão criaria até ${selectedCount * 4} blocos. A professora pode apagar e refazer à vontade.`
+                        : 'Sem isso, as provas entram só com data e conteúdo, e a professora monta os blocos de estudo como preferir.'}
+                </p>
                 <label className="flex items-center gap-2.5 text-[14px] font-semibold cursor-pointer">
                     <input type="checkbox" checked={saveToLibrary} className="w-4 h-4 rounded"
                         onChange={e => setSaveToLibrary(e.target.checked)} />
