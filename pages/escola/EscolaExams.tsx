@@ -333,6 +333,52 @@ export default function EscolaExams() {
     );
 }
 
+/**
+ * O conteúdo cobrado vem longo (capítulos, páginas, níveis). Mostra as primeiras
+ * linhas e abre o resto sob demanda, preservando as quebras de linha do documento.
+ */
+function ExamContent({ content }: { content: string }) {
+    const [open, setOpen] = useState(false);
+
+    const lines = content.split('\n').map(l => l.trim()).filter(Boolean);
+    const preview = 4;
+    const shown = open ? lines : lines.slice(0, preview);
+    const hidden = lines.length - shown.length;
+
+    /** Linha sem marcador é subtítulo do documento (NÍVEL, MATERIAIS DE ESTUDO...). */
+    const BULLET = /^[-•➢▪◦*·]\s*/;
+    const isHeading = (line: string) => !BULLET.test(line);
+
+    return (
+        <div className="mt-3 p-3.5 rounded-xl" style={{ background: 'var(--surface-2)' }}>
+            <p className="escola-label mb-2">Conteúdo cobrado</p>
+            <ul className="space-y-1">
+                {shown.map((line, i) => (
+                    isHeading(line) ? (
+                        <li key={i} className="text-[12px] font-semibold uppercase tracking-wide pt-1.5 first:pt-0"
+                            style={{ color: 'var(--accent)' }}>
+                            {line}
+                        </li>
+                    ) : (
+                        <li key={i} className="text-[13px] leading-snug flex gap-2">
+                            <span style={{ color: 'var(--fg-soft)' }}>·</span>
+                            <span>{line.replace(BULLET, '')}</span>
+                        </li>
+                    )
+                ))}
+            </ul>
+
+            {lines.length > preview && (
+                <button onClick={() => setOpen(v => !v)}
+                    className="text-[12px] font-semibold flex items-center gap-1 mt-2.5" style={{ color: 'var(--accent)' }}>
+                    <span className="material-symbols-outlined text-[16px]">{open ? 'expand_less' : 'expand_more'}</span>
+                    {open ? 'mostrar menos' : `ver mais ${hidden} ${hidden === 1 ? 'item' : 'itens'}`}
+                </button>
+            )}
+        </div>
+    );
+}
+
 /** Bloco de estudo montado pela professora: dia, o que fazer e, se quiser, horário. */
 function StudyBlockForm({ examDate, today, onCancel, onSave }: {
     examDate: string;
@@ -465,12 +511,7 @@ function ExamCard({
                 </div>
             </div>
 
-            {exam.content && (
-                <p className="text-[13px] mt-3 p-3 rounded-xl leading-snug" style={{ background: 'var(--surface-2)' }}>
-                    <span className="escola-label block mb-1">Conteúdo</span>
-                    {exam.content}
-                </p>
-            )}
+            {exam.content && <ExamContent content={exam.content} />}
 
             {blocks.length > 0 ? (
                 <div className="mt-4">
