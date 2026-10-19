@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import PublicTopBar from '../components/PublicTopBar';
 import { motion } from 'framer-motion';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import {
@@ -34,11 +35,11 @@ interface Product {
 
 function renderSimpleMarkdown(md: string): string {
     return md
-        .replace(/^### (.+)$/gm, '<h3 class="text-lg font-semibold text-white mt-6 mb-2">$1</h3>')
-        .replace(/^## (.+)$/gm, '<h2 class="text-xl font-bold text-white mt-8 mb-3">$1</h2>')
-        .replace(/\*\*(.+?)\*\*/g, '<strong class="text-white font-semibold">$1</strong>')
+        .replace(/^### (.+)$/gm, '<h3 class="text-lg font-semibold text-hf-ice mt-6 mb-2">$1</h3>')
+        .replace(/^## (.+)$/gm, '<h2 class="text-xl font-bold text-hf-ice mt-8 mb-3">$1</h2>')
+        .replace(/\*\*(.+?)\*\*/g, '<strong class="text-hf-ice font-semibold">$1</strong>')
         .replace(/\*(.+?)\*/g, '<em class="text-zinc-300">$1</em>')
-        .replace(/^- (.+)$/gm, '<li class="ml-4 text-zinc-300 leading-relaxed flex items-start gap-2"><span class="text-emerald-400 mt-1">✓</span><span>$1</span></li>')
+        .replace(/^- (.+)$/gm, '<li class="ml-4 text-zinc-300 leading-relaxed flex items-start gap-2"><span class="text-hf-gold mt-1">✓</span><span>$1</span></li>')
         .replace(/\n\n/g, '</p><p class="text-zinc-300 leading-relaxed mb-3">')
         .replace(/^/, '<p class="text-zinc-300 leading-relaxed mb-3">')
         .replace(/$/, '</p>')
@@ -226,8 +227,8 @@ export default function ProductPage() {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-[#0a0a0f] flex items-center justify-center">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-500" />
+            <div className="min-h-screen bg-hf-navy flex items-center justify-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-hf-gold" />
             </div>
         );
     }
@@ -235,20 +236,20 @@ export default function ProductPage() {
     if (!product) return null;
 
     return (
-        <div className="min-h-screen bg-[#0a0a0f]">
-            {/* Top Bar */}
-            <header className="sticky top-0 z-50 backdrop-blur-xl bg-[#0a0a0f]/80 border-b border-white/[0.06]">
-                <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
-                    <Link to="/" className="flex items-center gap-2 text-zinc-400 hover:text-white transition-colors">
-                        <ArrowLeft className="w-4 h-4" />
-                        <span className="text-sm font-medium">Voltar</span>
-                    </Link>
-                    <button onClick={handleShare} className="flex items-center gap-1.5 px-3 py-1.5 text-zinc-400 hover:text-white border border-white/[0.08] rounded-lg text-sm transition-colors">
-                        <Share2 className="w-3.5 h-3.5" />
-                        Compartilhar
+        <div className="min-h-screen bg-hf-navy">
+            <PublicTopBar
+                backTo="/"
+                backLabel="Voltar"
+                right={
+                    <button
+                        onClick={handleShare}
+                        className="inline-flex items-center gap-2 rounded-full border border-hf-line bg-hf-surface/70 px-3.5 py-2 font-ui text-[12px] font-semibold uppercase tracking-[0.12em] text-hf-ice/80 transition-colors hover:border-hf-gold/45 hover:text-hf-ice"
+                    >
+                        <Share2 className="h-3.5 w-3.5" />
+                        <span className="hidden sm:inline">Compartilhar</span>
                     </button>
-                </div>
-            </header>
+                }
+            />
 
             {/* Hero Section */}
             <section className="max-w-5xl mx-auto px-4 pt-6 pb-10">
@@ -259,7 +260,7 @@ export default function ProductPage() {
                         animate={{ opacity: 1, x: 0 }}
                         className="relative"
                     >
-                        <div className="aspect-square rounded-3xl overflow-hidden bg-white/[0.03] border border-white/[0.06] shadow-2xl">
+                        <div className="aspect-square rounded-2xl overflow-hidden bg-hf-ice/[0.03] border border-hf-line/70 shadow-2xl">
                             {product.image_url ? (
                                 <img src={product.image_url} alt={product.name} className="w-full h-full object-cover" />
                             ) : (
@@ -269,7 +270,7 @@ export default function ProductPage() {
                             )}
                         </div>
                         {product.badge && (
-                            <div className="absolute top-4 left-4 flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500/90 backdrop-blur rounded-full text-xs font-bold text-white shadow-lg">
+                            <div className="absolute top-4 left-4 flex items-center gap-1.5 px-3 py-1.5 bg-hf-gold/90 backdrop-blur rounded-full text-xs font-bold text-hf-ice shadow-lg">
                                 <Star className="w-3 h-3" />
                                 {product.badge}
                             </div>
@@ -284,24 +285,24 @@ export default function ProductPage() {
                         className="flex flex-col gap-5"
                     >
                         {/* Trust badge */}
-                        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[11px] font-bold uppercase tracking-wider w-fit">
+                        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-hf-gold/10 border border-hf-gold/20 text-hf-gold text-[11px] font-bold uppercase tracking-wider w-fit">
                             <Award className="w-3 h-3" />
                             Recomendado por Henrique Fujimoto
                         </div>
 
-                        <h1 className="text-3xl md:text-4xl font-bold text-white leading-tight">
+                        <h1 className="text-3xl md:text-4xl font-bold text-hf-ice leading-tight">
                             {product.name}
                         </h1>
 
                         {product.description && (
-                            <p className="text-zinc-400 text-base leading-relaxed">
+                            <p className="text-hf-ice/55 text-base leading-relaxed">
                                 {product.description}
                             </p>
                         )}
 
                         {product.price && (
                             <div className="flex items-baseline gap-2">
-                                <span className="text-3xl font-bold text-emerald-400">{product.price}</span>
+                                <span className="text-3xl font-bold text-hf-gold">{product.price}</span>
                                 <span className="text-sm text-zinc-500">no Mercado Livre</span>
                             </div>
                         )}
@@ -314,7 +315,7 @@ export default function ProductPage() {
                                 'Você me apoia comprando por esse link',
                             ].map((text, i) => (
                                 <div key={i} className="flex items-center gap-2.5 text-sm text-zinc-300">
-                                    <CheckCircle2 className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+                                    <CheckCircle2 className="w-4 h-4 text-hf-gold flex-shrink-0" />
                                     {text}
                                 </div>
                             ))}
@@ -326,8 +327,8 @@ export default function ProductPage() {
                             whileHover={{ scale: 1.02 }}
                             whileTap={{ scale: 0.98 }}
                             className={`group flex items-center justify-center gap-3 w-full px-8 py-5 rounded-2xl font-bold text-lg transition-all shadow-xl ${ctaClicked
-                                ? 'bg-emerald-600 text-white shadow-emerald-600/20'
-                                : 'bg-gradient-to-r from-emerald-500 to-teal-400 text-black shadow-emerald-500/20 hover:shadow-emerald-500/40'
+                                ? 'bg-hf-gold-dim text-hf-ice shadow-hf-gold-dim/20'
+                                : 'bg-gradient-to-r from-hf-gold to-hf-gold-soft text-black shadow-hf-gold/20 hover:shadow-hf-gold/40'
                                 }`}
                         >
                             <ShoppingBag className="w-5 h-5" />
@@ -365,8 +366,8 @@ export default function ProductPage() {
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true }}
                     >
-                        <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-2">
-                            <Shield className="w-5 h-5 text-emerald-400" />
+                        <h2 className="text-2xl font-bold text-hf-ice mb-6 flex items-center gap-2">
+                            <Shield className="w-5 h-5 text-hf-gold" />
                             Por que eu recomendo
                         </h2>
                         <div
@@ -383,13 +384,13 @@ export default function ProductPage() {
                     initial={{ opacity: 0, scale: 0.95 }}
                     whileInView={{ opacity: 1, scale: 1 }}
                     viewport={{ once: true }}
-                    className="p-6 rounded-2xl bg-gradient-to-r from-emerald-500/10 to-teal-500/10 border border-emerald-500/20 text-center"
+                    className="p-6 rounded-2xl bg-gradient-to-r from-hf-gold/10 to-hf-gold/10 border border-hf-gold/20 text-center"
                 >
-                    <p className="text-white font-semibold mb-2">Pronto para garantir o seu?</p>
-                    <p className="text-zinc-400 text-sm mb-5">Compra segura pelo Mercado Livre com frete para todo o Brasil</p>
+                    <p className="text-hf-ice font-semibold mb-2">Pronto para garantir o seu?</p>
+                    <p className="text-hf-ice/55 text-sm mb-5">Compra segura pelo Mercado Livre com frete para todo o Brasil</p>
                     <button
                         onClick={handleBuyClick}
-                        className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-emerald-500 to-teal-400 text-black rounded-2xl font-bold hover:shadow-lg hover:shadow-emerald-500/20 transition-all"
+                        className="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-hf-gold to-hf-gold-soft text-black rounded-2xl font-bold hover:shadow-lg hover:shadow-hf-gold/20 transition-all"
                     >
                         <ShoppingBag className="w-5 h-5" />
                         Comprar Agora
@@ -400,8 +401,8 @@ export default function ProductPage() {
 
             {/* Other Products */}
             {otherProducts.length > 0 && (
-                <section className="max-w-5xl mx-auto px-4 py-10 border-t border-white/[0.06]">
-                    <h2 className="text-xl font-bold text-white mb-6">Veja também</h2>
+                <section className="max-w-5xl mx-auto px-4 py-10 border-t border-hf-line/70">
+                    <h2 className="text-xl font-bold text-hf-ice mb-6">Veja também</h2>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                         {otherProducts.map((other, index) => (
                             <motion.div
@@ -413,9 +414,9 @@ export default function ProductPage() {
                             >
                                 <Link
                                     to={`/produto/${other.slug}`}
-                                    className="group block bg-white/[0.03] border border-white/[0.06] rounded-2xl overflow-hidden hover:border-emerald-500/30 transition-all"
+                                    className="group block bg-hf-ice/[0.03] border border-hf-line/70 rounded-2xl overflow-hidden hover:border-hf-gold/30 transition-all"
                                 >
-                                    <div className="aspect-square bg-white/[0.02] overflow-hidden">
+                                    <div className="aspect-square bg-hf-ice/[0.02] overflow-hidden">
                                         {other.image_url ? (
                                             <img src={other.image_url} alt={other.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                                         ) : (
@@ -425,9 +426,9 @@ export default function ProductPage() {
                                         )}
                                     </div>
                                     <div className="p-3">
-                                        <h4 className="text-sm font-semibold text-white line-clamp-2 group-hover:text-emerald-300 transition-colors">{other.name}</h4>
+                                        <h4 className="text-sm font-semibold text-hf-ice line-clamp-2 group-hover:text-hf-gold-soft transition-colors">{other.name}</h4>
                                         {other.price && (
-                                            <p className="text-xs text-emerald-400 font-bold mt-1">{other.price}</p>
+                                            <p className="text-xs text-hf-gold font-bold mt-1">{other.price}</p>
                                         )}
                                     </div>
                                 </Link>
@@ -438,11 +439,11 @@ export default function ProductPage() {
             )}
 
             {/* Footer */}
-            <footer className="max-w-5xl mx-auto px-4 py-8 border-t border-white/[0.06] text-center">
+            <footer className="max-w-5xl mx-auto px-4 py-8 border-t border-hf-line/70 text-center">
                 <p className="text-xs text-zinc-600">
                     Este é um link de afiliado. Ao comprar por aqui, você não paga nada a mais e me ajuda a continuar treinando e competindo.
                 </p>
-                <Link to="/" className="inline-flex items-center gap-1 mt-3 text-xs text-zinc-500 hover:text-white transition-colors">
+                <Link to="/" className="inline-flex items-center gap-1 mt-3 text-xs text-zinc-500 hover:text-hf-ice transition-colors">
                     <ArrowLeft className="w-3 h-3" />
                     Voltar para henriquefujimoto.com.br
                 </Link>

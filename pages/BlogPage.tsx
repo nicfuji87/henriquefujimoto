@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
+import PublicHeader from '../components/PublicHeader';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-    ArrowLeft, Calendar, Clock, ChevronRight, User, Tag,
+    Calendar, Clock, ChevronRight,
     Search, TrendingUp, Sparkles, ArrowUpRight, Instagram, X
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -9,8 +10,8 @@ import { supabase } from '../lib/supabase';
 import { trackPageView } from '../lib/pageTracking';
 
 // ─── Constants & Styles ──────────────────────────────────
-// All categories share the lime accent in the "Henrique documentary" system.
-const CATEGORY_BADGE = 'bg-lime/10 text-lime border-lime/25';
+// All categories share the hf-gold accent in the "Henrique documentary" system.
+const CATEGORY_BADGE = 'bg-hf-gold/10 text-hf-gold border-hf-gold/25';
 const CATEGORY_STYLES: Record<string, { label: string; color: string; icon: string }> = {
     'judô': { label: 'Judô', color: CATEGORY_BADGE, icon: '🥋' },
     'treino': { label: 'Treino', color: CATEGORY_BADGE, icon: '💪' },
@@ -46,7 +47,7 @@ function CategoryBadge({ category }: { category: string }) {
     const style = CATEGORY_STYLES[key] || CATEGORY_STYLES['geral'];
 
     return (
-        <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full font-grotesk text-[11px] font-semibold uppercase tracking-[0.08em] border ${style.color}`}>
+        <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full font-ui text-[11px] font-semibold uppercase tracking-[0.08em] border ${style.color}`}>
             <span>{style.icon}</span>
             {style.label}
         </span>
@@ -62,10 +63,10 @@ function FeaturedPost({ post }: { post: BlogPost }) {
         <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="group relative grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-10 items-center rounded-3xl border border-white/[0.07] bg-coal p-4 md:p-6 hover:border-lime/25 transition-colors duration-500"
+            className="group relative grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-10 items-center rounded-2xl border border-hf-line/70 bg-hf-surface p-4 md:p-6 hover:border-hf-gold/25 transition-colors duration-500"
         >
             {/* Image Side */}
-            <div className="relative aspect-video w-full overflow-hidden rounded-2xl bg-coal-2">
+            <div className="relative aspect-video w-full overflow-hidden rounded-2xl bg-hf-surface-2">
                 <Link to={`/blog/${post.slug}`}>
                     {post.og_image ? (
                         <img
@@ -74,15 +75,15 @@ function FeaturedPost({ post }: { post: BlogPost }) {
                             className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700"
                         />
                     ) : (
-                        <div className="w-full h-full bg-coal-2 flex items-center justify-center">
-                            <Sparkles className="w-12 h-12 text-white/15" />
+                        <div className="w-full h-full bg-hf-surface-2 flex items-center justify-center">
+                            <Sparkles className="w-12 h-12 text-hf-ice/15" />
                         </div>
                     )}
-                    <div className="absolute inset-0 bg-gradient-to-t from-night/60 to-transparent md:hidden" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-hf-navy/60 to-transparent md:hidden" />
                 </Link>
                 <div className="absolute top-4 left-4">
                     <div className="flex items-center gap-2">
-                        <span className="px-3 py-1 bg-lime text-night text-[11px] font-semibold uppercase tracking-[0.08em] rounded-full flex items-center gap-1 font-grotesk">
+                        <span className="px-3 py-1 bg-hf-gold text-hf-navy text-[11px] font-semibold uppercase tracking-[0.08em] rounded-full flex items-center gap-1 font-ui">
                             <Sparkles className="w-3 h-3" />
                             Destaque
                         </span>
@@ -92,26 +93,26 @@ function FeaturedPost({ post }: { post: BlogPost }) {
 
             {/* Content Side */}
             <div className="space-y-4 md:py-4">
-                <div className="flex items-center gap-3 font-grotesk text-xs text-white/45">
+                <div className="flex items-center gap-3 font-ui text-xs text-hf-ice/45">
                     <CategoryBadge category={post.category} />
                     <span className="flex items-center gap-1"><Calendar className="w-3 h-3" /> {date}</span>
                     <span className="flex items-center gap-1"><Clock className="w-3 h-3" /> {post.reading_time || 5} min</span>
                 </div>
 
-                <Link to={`/blog/${post.slug}`} className="block transition-colors group-hover:text-lime">
-                    <h2 className="font-grotesk text-3xl md:text-4xl font-semibold text-white leading-tight tracking-tight">
+                <Link to={`/blog/${post.slug}`} className="block transition-colors group-hover:text-hf-gold">
+                    <h2 className="font-brand text-3xl md:text-4xl font-semibold text-hf-ice leading-tight tracking-tight">
                         {post.title}
                     </h2>
                 </Link>
 
-                <p className="font-grotesk text-white/70 text-sm md:text-base line-clamp-3 leading-relaxed">
+                <p className="font-ui text-hf-ice/70 text-sm md:text-base line-clamp-3 leading-relaxed">
                     {post.excerpt}
                 </p>
 
                 <div className="pt-4 flex items-center gap-4">
                     <Link
                         to={`/blog/${post.slug}`}
-                        className="flex items-center gap-2 font-grotesk text-white font-semibold hover:text-lime transition-colors group/link"
+                        className="flex items-center gap-2 font-ui text-hf-ice font-semibold hover:text-hf-gold transition-colors group/link"
                     >
                         Ler artigo completo
                         <ArrowUpRight className="w-4 h-4 transition-transform group-hover/link:translate-x-1 group-hover/link:-translate-y-1" />
@@ -137,7 +138,7 @@ function PostCard({ post, index }: { post: BlogPost; index: number }) {
         >
             <Link
                 to={`/blog/${post.slug}`}
-                className="block relative aspect-video overflow-hidden rounded-2xl bg-coal-2 border border-white/[0.07] group-hover:border-lime/25 transition-colors"
+                className="block relative aspect-video overflow-hidden rounded-2xl bg-hf-surface-2 border border-hf-line/70 group-hover:border-hf-gold/25 transition-colors"
             >
                 {post.og_image ? (
                     <img
@@ -147,7 +148,7 @@ function PostCard({ post, index }: { post: BlogPost; index: number }) {
                         loading="lazy"
                     />
                 ) : (
-                    <div className="w-full h-full bg-coal-2 flex items-center justify-center">
+                    <div className="w-full h-full bg-hf-surface-2 flex items-center justify-center">
                         <span className="text-2xl opacity-20">📝</span>
                     </div>
                 )}
@@ -158,24 +159,24 @@ function PostCard({ post, index }: { post: BlogPost; index: number }) {
             </Link>
 
             <div className="pt-4 flex-1 flex flex-col">
-                <div className="flex items-center gap-3 font-grotesk text-xs text-white/45 mb-2">
+                <div className="flex items-center gap-3 font-ui text-xs text-hf-ice/45 mb-2">
                     <span className="flex items-center gap-1"><Calendar className="w-3 h-3" /> {date}</span>
-                    <span className="border-l border-white/10 pl-3 flex items-center gap-1"><Clock className="w-3 h-3" /> {post.reading_time || 5} min</span>
+                    <span className="border-l border-hf-ice/10 pl-3 flex items-center gap-1"><Clock className="w-3 h-3" /> {post.reading_time || 5} min</span>
                 </div>
 
-                <Link to={`/blog/${post.slug}`} className="block flex-1 transition-colors group-hover:text-lime">
-                    <h3 className="font-grotesk text-xl font-semibold text-white leading-snug tracking-tight mb-2 line-clamp-2">
+                <Link to={`/blog/${post.slug}`} className="block flex-1 transition-colors group-hover:text-hf-gold">
+                    <h3 className="font-brand text-xl font-semibold text-hf-ice leading-snug tracking-tight mb-2 line-clamp-2">
                         {post.title}
                     </h3>
                 </Link>
 
-                <p className="font-grotesk text-sm text-white/70 line-clamp-2 mb-4">
+                <p className="font-ui text-sm text-hf-ice/70 line-clamp-2 mb-4">
                     {post.excerpt}
                 </p>
 
                 <Link
                     to={`/blog/${post.slug}`}
-                    className="inline-flex items-center gap-1 font-grotesk text-xs font-semibold text-white hover:text-lime transition-colors mt-auto"
+                    className="inline-flex items-center gap-1 font-ui text-xs font-semibold text-hf-ice hover:text-hf-gold transition-colors mt-auto"
                 >
                     Ler mais <ChevronRight className="w-3 h-3" />
                 </Link>
@@ -234,29 +235,10 @@ export default function BlogPage() {
     const gridPosts = isDefaultView ? filteredPosts.slice(1) : filteredPosts;
 
     return (
-        <div className="min-h-screen bg-night font-grotesk selection:bg-lime/30">
-            {/* Header */}
-            <header className="sticky top-0 z-50 bg-night/80 backdrop-blur-md border-b border-white/[0.07]">
-                <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
-                    <Link to="/" className="flex items-center gap-2 text-white/60 hover:text-lime transition-colors text-sm font-medium group">
-                        <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
-                        Voltar ao início
-                    </Link>
-                    <span className="font-grotesk font-semibold tracking-tight text-white md:hidden">Fujimoto</span>
-                    <div className="hidden md:flex items-center gap-4">
-                        <a
-                            href="https://instagram.com/henriquefujimoto"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-xs font-medium text-white/60 hover:text-lime transition-colors"
-                        >
-                            @henriquefujimoto
-                        </a>
-                    </div>
-                </div>
-            </header>
+        <div className="min-h-screen bg-hf-navy font-ui selection:bg-hf-gold/30">
+            <PublicHeader />
 
-            <main className="max-w-7xl mx-auto px-4 py-10 md:py-16 space-y-16">
+            <main className="mx-auto max-w-7xl space-y-16 px-4 pb-10 pt-28 md:pb-16 md:pt-32">
 
                 {/* Hero Title & Personal Brand */}
                 <section className="text-center space-y-8">
@@ -265,13 +247,13 @@ export default function BlogPage() {
                         animate={{ opacity: 1, y: 0 }}
                         className="space-y-6"
                     >
-                        <p className="font-grotesk text-[12px] font-semibold uppercase tracking-[0.16em] text-lime">
+                        <p className="font-ui text-[12px] font-semibold uppercase tracking-[0.16em] text-hf-gold">
                             Blog oficial
                         </p>
-                        <h1 className="font-grotesk text-[2.1rem] md:text-6xl font-semibold text-white tracking-tight leading-[1.1] md:leading-[1.05]">
-                            Histórias e bastidores do <span className="font-editorial font-normal italic text-lime">judô</span>
+                        <h1 className="font-brand text-[2.1rem] md:text-6xl font-semibold text-hf-ice tracking-tight leading-[1.1] md:leading-[1.05]">
+                            Histórias e bastidores do <span className="text-hf-gold">judô</span>
                         </h1>
-                        <p className="text-white/60 text-lg md:text-xl max-w-2xl mx-auto leading-relaxed">
+                        <p className="text-hf-ice/60 text-lg md:text-xl max-w-2xl mx-auto leading-relaxed">
                             Acompanhe minha rotina de treinos, bastidores das competições e minha evolução no judô rumo à faixa preta.
                         </p>
 
@@ -280,11 +262,11 @@ export default function BlogPage() {
                                 href="https://instagram.com/henriquefujimoto"
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="group inline-flex items-center gap-3 px-6 py-3 rounded-full border border-white/15 bg-white/5 text-white font-medium hover:bg-white/10 transition-colors"
+                                className="group inline-flex items-center gap-3 px-6 py-3 rounded-full border border-hf-ice/15 bg-hf-ice/5 text-hf-ice font-medium hover:bg-hf-ice/10 transition-colors"
                             >
-                                <Instagram className="w-5 h-5 group-hover:text-lime transition-colors" />
+                                <Instagram className="w-5 h-5 group-hover:text-hf-gold transition-colors" />
                                 <span>Seguir no Instagram</span>
-                                <ArrowUpRight className="w-4 h-4 text-white/50 group-hover:text-lime transition-colors" />
+                                <ArrowUpRight className="w-4 h-4 text-hf-ice/50 group-hover:text-hf-gold transition-colors" />
                             </a>
                         </div>
                     </motion.div>
@@ -297,17 +279,17 @@ export default function BlogPage() {
                         className="max-w-2xl mx-auto pt-8"
                     >
                         <div className="relative">
-                            <div className="relative flex items-center rounded-full border border-white/[0.07] bg-coal px-4 py-3 focus-within:border-lime/40 transition-colors">
-                                <Search className="w-5 h-5 text-white/40 mr-3" />
+                            <div className="relative flex items-center rounded-full border border-hf-line/70 bg-hf-surface px-4 py-3 focus-within:border-hf-gold/40 transition-colors">
+                                <Search className="w-5 h-5 text-hf-ice/40 mr-3" />
                                 <input
                                     type="text"
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
                                     placeholder="Buscar artigos..."
-                                    className="bg-transparent border-none focus:outline-none text-white w-full placeholder-white/40 text-sm"
+                                    className="bg-transparent border-none focus:outline-none text-hf-ice w-full placeholder-hf-ice/40 text-sm"
                                 />
                                 {searchQuery && (
-                                    <button onClick={() => setSearchQuery('')} className="p-1 hover:bg-white/10 rounded-full text-white/60">
+                                    <button onClick={() => setSearchQuery('')} className="p-1 hover:bg-hf-ice/10 rounded-full text-hf-ice/60">
                                         <X className="w-4 h-4" />
                                     </button>
                                 )}
@@ -320,8 +302,8 @@ export default function BlogPage() {
                                 <button
                                     onClick={() => setSelectedCategory(null)}
                                     className={`px-4 py-1.5 rounded-full text-xs font-medium transition-colors ${!selectedCategory
-                                        ? 'bg-lime text-night font-semibold'
-                                        : 'border border-white/15 bg-white/5 text-white/70 hover:text-white'}`}
+                                        ? 'bg-hf-gold text-hf-navy font-semibold'
+                                        : 'border border-hf-ice/15 bg-hf-ice/5 text-hf-ice/70 hover:text-hf-ice'}`}
                                 >
                                     Todos
                                 </button>
@@ -333,8 +315,8 @@ export default function BlogPage() {
                                             key={cat}
                                             onClick={() => setSelectedCategory(isActive ? null : cat)}
                                             className={`px-4 py-1.5 rounded-full text-xs font-medium transition-colors ${isActive
-                                                ? 'bg-lime text-night font-semibold'
-                                                : 'border border-white/15 bg-white/5 text-white/70 hover:text-white'}`}
+                                                ? 'bg-hf-gold text-hf-navy font-semibold'
+                                                : 'border border-hf-ice/15 bg-hf-ice/5 text-hf-ice/70 hover:text-hf-ice'}`}
                                         >
                                             {style.label}
                                         </button>
@@ -348,18 +330,18 @@ export default function BlogPage() {
                 {/* Content Area */}
                 {loading ? (
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-8 animate-pulse">
-                        <div className="md:col-span-3 h-96 bg-coal rounded-3xl border border-white/[0.07]" />
-                        <div className="h-64 bg-coal rounded-2xl border border-white/[0.07]" />
-                        <div className="h-64 bg-coal rounded-2xl border border-white/[0.07]" />
+                        <div className="md:col-span-3 h-96 bg-hf-surface rounded-2xl border border-hf-line/70" />
+                        <div className="h-64 bg-hf-surface rounded-2xl border border-hf-line/70" />
+                        <div className="h-64 bg-hf-surface rounded-2xl border border-hf-line/70" />
                     </div>
                 ) : (
                     <div className="space-y-16">
                         {/* Featured Section */}
                         {featuredPost && (
                             <section>
-                                <div className="flex items-center gap-2 mb-6 border-b border-white/[0.07] pb-4">
-                                    <Sparkles className="w-5 h-5 text-lime" />
-                                    <h2 className="font-grotesk text-white text-lg font-semibold tracking-tight">Mais recente</h2>
+                                <div className="flex items-center gap-2 mb-6 border-b border-hf-line/70 pb-4">
+                                    <Sparkles className="w-5 h-5 text-hf-gold" />
+                                    <h2 className="font-brand text-hf-ice text-lg font-semibold tracking-tight">Mais recente</h2>
                                 </div>
                                 <FeaturedPost post={featuredPost} />
                             </section>
@@ -369,9 +351,9 @@ export default function BlogPage() {
                         {gridPosts.length > 0 ? (
                             <section>
                                 {featuredPost && (
-                                    <div className="flex items-center gap-2 mb-6 border-b border-white/[0.07] pb-4">
-                                        <TrendingUp className="w-5 h-5 text-white/45" />
-                                        <h2 className="font-grotesk text-white text-lg font-semibold tracking-tight">
+                                    <div className="flex items-center gap-2 mb-6 border-b border-hf-line/70 pb-4">
+                                        <TrendingUp className="w-5 h-5 text-hf-ice/45" />
+                                        <h2 className="font-brand text-hf-ice text-lg font-semibold tracking-tight">
                                             {isDefaultView ? 'Arquivo' : 'Resultados da busca'}
                                         </h2>
                                     </div>
@@ -386,12 +368,12 @@ export default function BlogPage() {
                             </section>
                         ) : (
                             !featuredPost && (
-                                <div className="text-center py-20 bg-coal rounded-3xl border border-white/[0.07]">
-                                    <Search className="w-12 h-12 text-white/30 mx-auto mb-4" />
-                                    <p className="text-white/60 text-lg">Nenhum post encontrado.</p>
+                                <div className="text-center py-20 bg-hf-surface rounded-2xl border border-hf-line/70">
+                                    <Search className="w-12 h-12 text-hf-ice/30 mx-auto mb-4" />
+                                    <p className="text-hf-ice/60 text-lg">Nenhum post encontrado.</p>
                                     <button
                                         onClick={() => { setSearchQuery(''); setSelectedCategory(null); }}
-                                        className="mt-4 text-lime hover:text-lime-dim transition-colors text-sm"
+                                        className="mt-4 text-hf-gold hover:text-hf-gold-dim transition-colors text-sm"
                                     >
                                         Limpar filtros
                                     </button>

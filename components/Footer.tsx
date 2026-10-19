@@ -1,50 +1,74 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { Instagram, Youtube } from 'lucide-react';
+import { HFSignature } from './brand/HFLogo';
+
+const links = [
+    { label: 'História', to: '/conteudo' },
+    { label: 'Números', to: '/numeros' },
+    { label: 'Conteúdo', to: '/blog' },
+    { label: 'Apoiar', to: '/apoiar' },
+];
 
 const Footer: React.FC = () => {
     return (
-        <footer className="bg-black text-center py-12 pb-32 border-t border-white/5">
-            <div className="flex flex-col items-center gap-8">
-                {/* Social Links */}
-                <div className="flex items-center gap-6">
+        <footer className="border-t border-hf-line/60 bg-hf-navy-deep px-6 pb-32 pt-16">
+            <div className="mx-auto flex w-full max-w-6xl flex-col items-center gap-10 text-center">
+                {/* Assinatura HF */}
+                <HFSignature />
+
+                {/* Navegacao */}
+                <nav aria-label="Navegação do rodapé" className="flex flex-wrap items-center justify-center gap-x-7 gap-y-3">
+                    {links.map((l) => (
+                        <Link
+                            key={l.to}
+                            to={l.to}
+                            className="font-ui text-[12px] font-semibold uppercase tracking-[0.16em] text-hf-ice/55 transition-colors hover:text-hf-gold"
+                        >
+                            {l.label}
+                        </Link>
+                    ))}
+                </nav>
+
+                <div className="h-px w-full max-w-xs bg-hf-line/60" />
+
+                {/* Redes sociais */}
+                <div className="flex items-center gap-4">
                     <a
                         href="https://instagram.com/henriquefujimoto"
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="group flex flex-col items-center gap-1"
+                        aria-label="Instagram de Henrique Fujimoto"
+                        className="group inline-flex h-11 w-11 items-center justify-center rounded-full border border-hf-line bg-hf-surface/70 text-hf-ice/80 transition-colors hover:border-hf-gold/50 hover:text-hf-gold"
                     >
-                        <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-pink-600 transition-colors">
-                            <Instagram className="w-6 h-6 text-white" />
-                        </div>
-                        <span className="text-[10px] font-bold tracking-widest text-gray-500 uppercase group-hover:text-white transition-colors">Instagram</span>
+                        <Instagram className="h-5 w-5" />
                     </a>
-
                     <a
                         href="https://www.youtube.com/@henriquefujimotojudo"
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="group flex flex-col items-center gap-1"
+                        aria-label="YouTube de Henrique Fujimoto"
+                        className="group inline-flex h-11 w-11 items-center justify-center rounded-full border border-hf-line bg-hf-surface/70 text-hf-ice/80 transition-colors hover:border-hf-gold/50 hover:text-hf-gold"
                     >
-                        <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-red-600 transition-colors">
-                            <Youtube className="w-6 h-6 text-white" />
-                        </div>
-                        <span className="text-[10px] font-bold tracking-widest text-gray-500 uppercase group-hover:text-white transition-colors">Youtube</span>
+                        <Youtube className="h-5 w-5" />
                     </a>
                 </div>
 
-                {/* Infuse Credit */}
-                <div className="flex flex-col items-center gap-3 mt-4 opacity-50 hover:opacity-100 transition-opacity duration-300">
-                    <span className="text-[10px] font-bold text-gray-500 uppercase tracking-[0.2em]">Desenvolvido por</span>
+                {/* Credito do desenvolvedor */}
+                <div className="flex flex-col items-center gap-3 opacity-60 transition-opacity duration-300 hover:opacity-100">
+                    <span className="font-ui text-[10px] font-semibold uppercase tracking-[0.24em] text-hf-ice/40">
+                        Desenvolvido por
+                    </span>
                     <img
                         src="https://pxremkvxoybqxfmxdyfc.supabase.co/storage/v1/object/public/site-images/partners/partner-1769994228346.png"
                         alt="Infuse Comunicação"
-                        className="h-10 w-auto grayscale hover:grayscale-0 transition-all duration-300"
+                        loading="lazy"
+                        className="h-9 w-auto grayscale transition-all duration-300 hover:grayscale-0"
                     />
                 </div>
 
-                {/* Copyright */}
-                <p className="text-[10px] text-gray-700 font-medium tracking-wide">
-                    © {new Date().getFullYear()} HENRIQUE FUJIMOTO
+                <p className="font-ui text-[10px] font-medium uppercase tracking-[0.2em] text-hf-ice/30">
+                    © {new Date().getFullYear()} Henrique Fujimoto
                 </p>
             </div>
         </footer>

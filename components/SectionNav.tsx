@@ -18,28 +18,28 @@ const SectionNav: React.FC<SectionNavProps> = ({ title, subtitle }) => {
         <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="sticky top-0 z-50 bg-night/80 backdrop-blur-xl border-b border-white/[0.07]"
+            className="sticky top-0 z-50 bg-hf-navy/80 backdrop-blur-xl border-b border-hf-line/70"
         >
             <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
                 <div className="flex items-center gap-3">
                     <Link
                         to="/"
-                        className="flex items-center gap-2 text-white/55 hover:text-white transition-colors group"
+                        className="flex items-center gap-2 text-hf-ice/55 hover:text-hf-ice transition-colors group"
                     >
-                        <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-lime/15 transition-colors">
+                        <div className="w-8 h-8 rounded-full bg-hf-ice/5 flex items-center justify-center group-hover:bg-hf-gold/15 transition-colors">
                             <ArrowLeft className="w-4 h-4" />
                         </div>
                     </Link>
                     <div>
-                        <h1 className="font-grotesk text-sm font-semibold text-white leading-none">{title}</h1>
+                        <h1 className="font-brand text-sm font-semibold text-hf-ice leading-none">{title}</h1>
                         {subtitle && (
-                            <p className="font-grotesk text-[10px] text-white/55 mt-0.5">{subtitle}</p>
+                            <p className="font-ui text-[10px] text-hf-ice/55 mt-0.5">{subtitle}</p>
                         )}
                     </div>
                 </div>
                 <Link
                     to="/"
-                    className="flex items-center gap-1.5 font-grotesk text-[10px] font-semibold text-white/55 hover:text-lime uppercase tracking-widest transition-colors"
+                    className="flex items-center gap-1.5 font-ui text-[10px] font-semibold text-hf-ice/55 hover:text-hf-gold uppercase tracking-widest transition-colors"
                 >
                     <Home className="w-3 h-3" />
                     Hub

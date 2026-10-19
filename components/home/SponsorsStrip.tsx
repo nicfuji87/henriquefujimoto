@@ -17,7 +17,7 @@ export default function SponsorsStrip({ partners }: SponsorsStripProps) {
     const track = [...partners, ...partners];
 
     return (
-        <section className="bg-night px-6 py-14 sm:py-20 md:py-24">
+        <section className="bg-hf-navy px-6 py-14 sm:py-20 md:py-24">
             <div className="mx-auto max-w-6xl">
                 <SectionHeading
                     title="Quem já acredita nessa jornada"
@@ -31,8 +31,8 @@ export default function SponsorsStrip({ partners }: SponsorsStripProps) {
                     transition={{ duration: 0.6 }}
                     className="relative mt-12 flex items-center overflow-hidden"
                 >
-                    <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-20 bg-gradient-to-r from-night to-transparent" />
-                    <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-20 bg-gradient-to-l from-night to-transparent" />
+                    <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-20 bg-gradient-to-r from-hf-navy to-transparent" />
+                    <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-20 bg-gradient-to-l from-hf-navy to-transparent" />
                     <div className="flex w-max animate-marquee items-center gap-14">
                         {track.map((p, i) =>
                             p.logo_url ? (
@@ -43,7 +43,7 @@ export default function SponsorsStrip({ partners }: SponsorsStripProps) {
                                     className="h-10 w-auto max-w-[130px] object-contain opacity-50 grayscale transition-all duration-300 hover:opacity-100 hover:grayscale-0"
                                 />
                             ) : (
-                                <span key={`${p.id}-${i}`} className="whitespace-nowrap font-grotesk text-base font-semibold text-white/45">{p.name}</span>
+                                <span key={`${p.id}-${i}`} className="whitespace-nowrap font-ui text-base font-semibold text-hf-ice/45">{p.name}</span>
                             )
                         )}
                     </div>

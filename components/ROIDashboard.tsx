@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { getAggregatedMetrics, AggregatedMetrics } from '../lib/metrics';
 import AudienceCharts from './AudienceCharts';
 import BrazilMap from './BrazilMap';
+import { hfEmpty } from './ui/hf';
 
 const ROIDashboard: React.FC = () => {
   const [period, setPeriod] = useState<30 | 60 | 90>(30);
@@ -36,20 +37,21 @@ const ROIDashboard: React.FC = () => {
     show: { opacity: 1, y: 0 }
   };
 
+  // Ausencia de dado nao vira zero: exibimos um tracinho.
   const formatNumber = (num: number) => {
-    if (!num) return '0';
+    if (!num) return '—';
     if (num >= 1000000) return (num / 1000000).toFixed(1).replace('.', ',') + 'M';
     if (num >= 1000) return (num / 1000).toFixed(1).replace('.', ',') + 'K';
     return num.toString();
   };
 
   const GrowthBadge = ({ value }: { value: number }) => {
-    if (!value && value !== 0) return null;
+    if (!value) return null;
     const isPositive = value >= 0;
     return (
-      <div className={`mt-2 inline-flex w-fit items-center gap-1 rounded-full px-2 py-0.5 font-grotesk text-[11px] font-semibold ${isPositive
-        ? 'bg-lime/15 text-lime'
-        : 'bg-white/10 text-white/50'
+      <div className={`mt-2 inline-flex w-fit items-center gap-1 rounded-full px-2 py-0.5 font-ui text-[11px] font-semibold ${isPositive
+        ? 'bg-hf-gold/15 text-hf-gold'
+        : 'bg-hf-ice/10 text-hf-ice/50'
         }`}>
         {isPositive ? <ArrowUpRight size={12} strokeWidth={3} /> : <ArrowDownRight size={12} strokeWidth={3} />}
         <span>{isPositive ? '+' : '-'}{Math.abs(value).toFixed(1).replace('.', ',')}%</span>
@@ -57,25 +59,28 @@ const ROIDashboard: React.FC = () => {
     );
   };
 
+  // So exibimos o painel quando existe pelo menos um indicador verificavel.
+  const hasData = !!stats && [stats.total_reach, stats.total_impressions, stats.total_interactions, stats.total_followers, stats.followers_gained].some((v) => (v || 0) > 0);
+
   return (
     <section className="px-4">
       {/* Header + Filter Tabs */}
       <div className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4 px-2">
         <div className="flex items-center gap-2.5">
-          <h3 className="font-grotesk text-2xl font-semibold tracking-tight text-white sm:text-[1.75rem]">
-            Impacto e <span className="font-editorial font-normal italic text-lime">alcance</span>
+          <h3 className="font-brand text-2xl font-semibold tracking-tight text-hf-ice sm:text-[1.75rem]">
+            Audiência no <span className="text-hf-gold">Instagram</span>
           </h3>
-          <Activity className="h-5 w-5 animate-pulse text-lime" />
+          <Activity className="h-5 w-5 animate-pulse text-hf-gold" />
         </div>
 
-        <div className="flex w-fit rounded-full border border-white/[0.07] bg-coal p-1">
+        <div className="flex w-fit rounded-full border border-hf-line/70 bg-hf-surface p-1">
           {[30, 60, 90].map((d) => (
             <button
               key={d}
               onClick={() => setPeriod(d as any)}
-              className={`rounded-full px-4 py-1.5 font-grotesk text-xs font-semibold transition-all ${period === d
-                ? 'bg-lime text-night'
-                : 'text-white/60 hover:text-white'
+              className={`rounded-full px-4 py-1.5 font-ui text-xs font-semibold transition-all ${period === d
+                ? 'bg-hf-gold text-hf-navy'
+                : 'text-hf-ice/60 hover:text-hf-ice'
                 }`}
             >
               {d}D
@@ -93,8 +98,19 @@ const ROIDashboard: React.FC = () => {
             exit={{ opacity: 0 }}
             className="h-64 flex items-center justify-center"
           >
-            <div className="w-8 h-8 border-2 border-lime border-t-transparent rounded-full animate-spin"></div>
+            <div className="w-8 h-8 border-2 border-hf-gold border-t-transparent rounded-full animate-spin"></div>
           </motion.div>
+        ) : !hasData ? (
+          <motion.p
+            key="empty"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className={hfEmpty}
+          >
+            Os indicadores de audiência não estão disponíveis no momento. Assim que a sincronização com o
+            Instagram for concluída, os números reais aparecem aqui.
+          </motion.p>
         ) : (
           <motion.div
             key="content"
@@ -104,13 +120,13 @@ const ROIDashboard: React.FC = () => {
             className="grid grid-cols-2 gap-4"
           >
             {/* 1. Total Reach */}
-            <motion.div variants={item} className="col-span-2 md:col-span-1 group relative overflow-hidden rounded-3xl border border-white/[0.07] bg-coal p-6 transition-all hover:border-lime/25">
-              <div className="absolute top-0 right-0 p-4 text-lime opacity-[0.12] group-hover:opacity-20 transition-opacity">
+            <motion.div variants={item} className="col-span-2 md:col-span-1 group relative overflow-hidden rounded-2xl border border-hf-line/70 bg-hf-surface p-6 transition-all hover:border-hf-gold/25">
+              <div className="absolute top-0 right-0 p-4 text-hf-gold opacity-[0.12] group-hover:opacity-20 transition-opacity">
                 <TrendingUp size={40} />
               </div>
               <div className="flex flex-col gap-1 relative z-10">
-                <p className="font-grotesk text-[13px] font-medium text-white/50">Alcance acumulado</p>
-                <p className="font-grotesk text-4xl font-semibold tracking-tight text-lime sm:text-[2.75rem]">
+                <p className="font-ui text-[13px] font-medium text-hf-ice/50">Alcance acumulado</p>
+                <p className="font-ui text-4xl font-semibold tracking-tight text-hf-gold sm:text-[2.75rem]">
                   {formatNumber(stats?.total_reach || 0)}
                 </p>
                 <GrowthBadge value={stats?.reach_growth || 0} />
@@ -118,10 +134,10 @@ const ROIDashboard: React.FC = () => {
             </motion.div>
 
             {/* 2. Rolling 28d Reach (Impressões / Alcance 28d) */}
-            <motion.div variants={item} className="col-span-1 md:col-span-1 group relative overflow-hidden rounded-3xl border border-white/[0.07] bg-coal p-6 transition-all hover:border-white/15">
+            <motion.div variants={item} className="col-span-1 md:col-span-1 group relative overflow-hidden rounded-2xl border border-hf-line/70 bg-hf-surface p-6 transition-all hover:border-hf-ice/15">
               <div className="flex flex-col gap-1">
-                <p className="font-grotesk text-[13px] font-medium text-white/50">Alcance 28d</p>
-                <p className="font-grotesk text-3xl font-semibold tracking-tight text-white">
+                <p className="font-ui text-[13px] font-medium text-hf-ice/50">Alcance 28d</p>
+                <p className="font-ui text-3xl font-semibold tracking-tight text-hf-ice">
                   {formatNumber(stats?.total_impressions || 0)}
                 </p>
                 <GrowthBadge value={stats?.impressions_growth || 0} />
@@ -130,15 +146,15 @@ const ROIDashboard: React.FC = () => {
 
 
             {/* 3. Interactions */}
-            <motion.div variants={item} className="col-span-1 group relative overflow-hidden rounded-3xl border border-white/[0.07] bg-coal p-6 transition-all hover:border-white/15">
+            <motion.div variants={item} className="col-span-1 group relative overflow-hidden rounded-2xl border border-hf-line/70 bg-hf-surface p-6 transition-all hover:border-hf-ice/15">
               <div className="flex flex-col gap-1">
-                <p className="font-grotesk text-[13px] font-medium text-white/50">Interações</p>
-                <p className="font-grotesk text-3xl font-semibold tracking-tight text-white">
+                <p className="font-ui text-[13px] font-medium text-hf-ice/50">Interações</p>
+                <p className="font-ui text-3xl font-semibold tracking-tight text-hf-ice">
                   {formatNumber(stats?.total_interactions || 0)}
                 </p>
-                <div className="mt-2 flex items-center gap-1.5 text-lime">
-                  <Zap size={14} className="fill-lime" />
-                  <span className="font-grotesk text-xs font-medium text-white/60">
+                <div className="mt-2 flex items-center gap-1.5 text-hf-gold">
+                  <Zap size={14} className="fill-hf-gold" />
+                  <span className="font-ui text-xs font-medium text-hf-ice/60">
                     {stats?.interactions_growth !== 0 ? `${stats?.interactions_growth.toFixed(0)}%` : '-'}
                   </span>
                 </div>
@@ -146,19 +162,19 @@ const ROIDashboard: React.FC = () => {
             </motion.div>
 
             {/* 4. Followers Gained */}
-            <motion.div variants={item} className="col-span-1 group relative overflow-hidden rounded-3xl border border-white/[0.07] bg-coal p-6 transition-all hover:border-white/15">
-              <div className="absolute top-0 right-0 p-4 text-white opacity-[0.08] group-hover:opacity-[0.16] transition-opacity">
+            <motion.div variants={item} className="col-span-1 group relative overflow-hidden rounded-2xl border border-hf-line/70 bg-hf-surface p-6 transition-all hover:border-hf-ice/15">
+              <div className="absolute top-0 right-0 p-4 text-hf-ice opacity-[0.08] group-hover:opacity-[0.16] transition-opacity">
                 <Users size={32} />
               </div>
               <div className="flex flex-col gap-1">
-                <p className="font-grotesk text-[13px] font-medium text-white/50">Novos seguidores</p>
-                <p className="font-grotesk text-3xl font-semibold tracking-tight text-white">
-                  +{formatNumber(stats?.followers_gained || 0)}
+                <p className="font-ui text-[13px] font-medium text-hf-ice/50">Novos seguidores</p>
+                <p className="font-ui text-3xl font-semibold tracking-tight text-hf-ice">
+                  {stats?.followers_gained ? `+${formatNumber(stats.followers_gained)}` : '—'}
                 </p>
                 <div className="mt-2 flex flex-wrap items-center gap-2">
-                  <span className="font-grotesk text-xs font-medium text-white/45">Neste período</span>
+                  <span className="font-ui text-xs font-medium text-hf-ice/45">Neste período</span>
                   {stats?.total_followers ? (
-                    <span className="inline-flex items-center rounded-full bg-lime/15 px-2 py-0.5 font-grotesk text-xs font-semibold text-lime">
+                    <span className="inline-flex items-center rounded-full bg-hf-gold/15 px-2 py-0.5 font-ui text-xs font-semibold text-hf-gold">
                       Total: {formatNumber(stats.total_followers)}
                     </span>
                   ) : null}

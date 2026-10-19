@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import Footer from '../components/Footer';
+import PublicHeader from '../components/PublicHeader';
 import HomeHero from '../components/home/HomeHero';
 import BeyondTatame from '../components/home/BeyondTatame';
 import StorySection from '../components/home/StorySection';
@@ -37,6 +38,7 @@ interface AthleteProfile {
 export default function HomePage() {
     const { config } = useSiteConfig();
     const [metrics, setMetrics] = useState<AggregatedMetrics | null>(null);
+    const [metricsLoading, setMetricsLoading] = useState(true);
     const [partners, setPartners] = useState<Partner[]>([]);
     const [profile, setProfile] = useState<AthleteProfile | null>(null);
 
@@ -51,6 +53,7 @@ export default function HomePage() {
             ]);
 
             setMetrics(metricsData);
+            setMetricsLoading(false);
             setPartners(partnersRes.data || []);
             setProfile(profileRes.data as AthleteProfile | null);
         }
@@ -58,7 +61,7 @@ export default function HomePage() {
         load();
     }, []);
 
-    // ---- Derived, always-truthful display data ----
+    // ---- Dados derivados, sempre verificaveis ----
     const age = ageFromBirth(profile?.birth_date);
     const category = profile?.category || 'Sub-15';
     const weightKg = profile?.weight != null ? `${String(profile.weight).replace('.', ',')}kg` : null;
@@ -71,9 +74,9 @@ export default function HomePage() {
         { label: 'Categoria', value: category },
     ].filter(Boolean) as StoryFact[];
 
-    // Portrait for the "Quem é o Henrique?" story: use the heritage/legado milestone
-    // (the first one — família Fujimoto / "terceira geração"), matching the section's caption.
-    // Falls back to the hero image.
+    // Retrato da secao "Quem e o Henrique": usa o marco de legado (familia
+    // Fujimoto / terceira geracao), coerente com a legenda da secao.
+    // Na ausencia dele, cai para a imagem do hero.
     const portrait = (() => {
         const ms = profile?.milestones;
         if (ms && ms.length) {
@@ -86,7 +89,9 @@ export default function HomePage() {
     })();
 
     return (
-        <main className="relative min-h-screen w-full overflow-x-hidden bg-night font-grotesk text-white">
+        <main className="relative min-h-screen w-full overflow-x-hidden bg-hf-navy font-ui text-hf-ice">
+            <PublicHeader variant="overlay" />
+
             <HomeHero age={age} category={category} />
 
             <BeyondTatame />
@@ -95,9 +100,9 @@ export default function HomePage() {
 
             <FollowJourney />
 
-            <ProofSection metrics={metrics} />
-
             <AchievementsSection />
+
+            <ProofSection metrics={metrics} loading={metricsLoading} />
 
             <SponsorsStrip partners={partners} />
 

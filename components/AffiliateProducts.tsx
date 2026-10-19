@@ -40,7 +40,7 @@ export default function AffiliateProducts() {
     if (loading || products.length === 0) return null;
 
     return (
-        <section className="bg-night px-6 py-14 sm:py-20 md:py-28">
+        <section className="bg-hf-navy px-6 py-14 sm:py-20 md:py-28">
             <div className="max-w-6xl mx-auto">
                 {/* Section Header */}
                 <motion.div
@@ -50,10 +50,10 @@ export default function AffiliateProducts() {
                     transition={{ duration: 0.6 }}
                     className="text-center mb-10"
                 >
-                    <h2 className="font-grotesk text-[1.6rem] font-semibold leading-[1.15] tracking-tight text-white sm:text-[2rem] sm:leading-[1.08] md:text-[2.75rem]">
-                        Meus produtos <span className="font-editorial font-normal italic text-lime">favoritos</span>
+                    <h2 className="font-brand text-[1.6rem] font-semibold leading-[1.15] tracking-tight text-hf-ice sm:text-[2rem] sm:leading-[1.08] md:text-[2.75rem]">
+                        Meus produtos <span className="text-hf-gold">favoritos</span>
                     </h2>
-                    <p className="mx-auto mt-5 max-w-xl font-grotesk text-base leading-relaxed text-white/60 sm:text-lg">
+                    <p className="mx-auto mt-5 max-w-xl font-ui text-base leading-relaxed text-hf-ice/60 sm:text-lg">
                         Esses são os produtos que uso no meu dia a dia de treino e competição. Ao comprar pelos links abaixo, além de garantir qualidade, você me ajuda diretamente na minha carreira — eu recebo uma comissão por cada compra.
                     </p>
                 </motion.div>
@@ -66,14 +66,14 @@ export default function AffiliateProducts() {
                             <>
                                 {/* Badge */}
                                 {product.badge && (
-                                    <div className="absolute top-3 left-3 z-10 flex items-center gap-1 px-2 py-0.5 bg-lime rounded-full font-grotesk text-[10px] font-semibold text-night">
+                                    <div className="absolute top-3 left-3 z-10 flex items-center gap-1 px-2 py-0.5 bg-hf-gold rounded-full font-ui text-[10px] font-semibold text-hf-navy">
                                         <Star className="w-2.5 h-2.5" />
                                         {product.badge}
                                     </div>
                                 )}
 
                                 {/* Image */}
-                                <div className="aspect-square bg-coal-2 flex items-center justify-center overflow-hidden">
+                                <div className="aspect-square bg-hf-surface-2 flex items-center justify-center overflow-hidden">
                                     {product.image_url ? (
                                         <img
                                             src={product.image_url}
@@ -81,21 +81,21 @@ export default function AffiliateProducts() {
                                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                                         />
                                     ) : (
-                                        <ShoppingBag className="w-10 h-10 text-white/15" />
+                                        <ShoppingBag className="w-10 h-10 text-hf-ice/15" />
                                     )}
                                 </div>
 
                                 {/* Info */}
                                 <div className="p-4">
-                                    <h4 className="font-grotesk text-sm font-semibold text-white line-clamp-2 leading-tight mb-1 group-hover:text-lime transition-colors">
+                                    <h4 className="font-ui text-sm font-semibold text-hf-ice line-clamp-2 leading-tight mb-1 group-hover:text-hf-gold transition-colors">
                                         {product.name}
                                     </h4>
                                     {product.description && (
-                                        <p className="font-grotesk text-[11px] text-white/45 line-clamp-2 mb-2">
+                                        <p className="font-ui text-[11px] text-hf-ice/45 line-clamp-2 mb-2">
                                             {product.description}
                                         </p>
                                     )}
-                                    <div className="flex items-center gap-1 text-lime font-grotesk text-[11px] font-semibold group-hover:gap-2 transition-all">
+                                    <div className="flex items-center gap-1 text-hf-gold font-ui text-[11px] font-semibold group-hover:gap-2 transition-all">
                                         {hasLandingPage ? 'Ver detalhes' : 'Comprar'}
                                         <ExternalLink className="w-3 h-3" />
                                     </div>
@@ -103,7 +103,7 @@ export default function AffiliateProducts() {
                             </>
                         );
 
-                        const cardClasses = "group relative bg-coal border border-white/[0.07] rounded-3xl overflow-hidden transition-all duration-300 hover:border-lime/30";
+                        const cardClasses = "group relative bg-hf-surface border border-hf-line/70 rounded-2xl overflow-hidden transition-all duration-300 hover:border-hf-gold/30";
 
                         if (hasLandingPage) {
                             return (

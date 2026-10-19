@@ -12,16 +12,16 @@ const unseen = [
 
 export default function BeyondTatame() {
     return (
-        <section className="bg-night px-6 py-16 sm:py-24 md:py-32">
+        <section className="bg-hf-navy px-6 py-16 sm:py-24 md:py-32">
             <div className="mx-auto max-w-3xl">
                 <motion.h2
                     initial={{ opacity: 0, y: 18 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true, margin: '-70px' }}
                     transition={{ duration: 0.6 }}
-                    className="font-grotesk text-[1.6rem] leading-[1.15] font-semibold tracking-tight text-white sm:text-[2rem] sm:leading-tight md:text-5xl"
+                    className="font-brand text-[1.75rem] font-bold uppercase leading-[1.08] tracking-[-0.01em] text-hf-ice sm:text-[2.15rem] md:text-[2.6rem]"
                 >
-                    Muito além do <span className="font-editorial font-normal italic text-lime">tatame</span>
+                    Muito além do <span className="text-hf-gold">tatame</span>
                 </motion.h2>
 
                 <motion.p
@@ -29,13 +29,13 @@ export default function BeyondTatame() {
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true, margin: '-70px' }}
                     transition={{ duration: 0.6, delay: 0.08 }}
-                    className="mt-6 font-grotesk text-lg leading-relaxed text-white/70 sm:text-xl"
+                    className="mt-6 font-ui text-lg leading-relaxed text-hf-ice/70 sm:text-xl"
                 >
                     Quando as pessoas veem um pódio, elas enxergam poucos minutos. Mas ninguém vê as milhares
                     de horas que vieram antes.
                 </motion.p>
 
-                <div className="mt-10 space-y-3 border-l-2 border-lime/40 pl-6">
+                <div className="mt-10 space-y-3 border-l-2 border-hf-gold/50 pl-6">
                     {unseen.map((line, i) => (
                         <motion.p
                             key={line}
@@ -43,7 +43,7 @@ export default function BeyondTatame() {
                             whileInView={{ opacity: 1, x: 0 }}
                             viewport={{ once: true, margin: '-40px' }}
                             transition={{ duration: 0.4, delay: i * 0.08 }}
-                            className="font-grotesk text-xl font-medium text-white/85 sm:text-2xl"
+                            className="font-ui text-xl font-medium text-hf-ice/85 sm:text-2xl"
                         >
                             {line}
                         </motion.p>
@@ -55,7 +55,7 @@ export default function BeyondTatame() {
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true, margin: '-60px' }}
                     transition={{ duration: 0.6 }}
-                    className="mt-10 font-grotesk text-lg leading-relaxed text-white/70"
+                    className="mt-10 font-ui text-lg leading-relaxed text-hf-ice/70"
                 >
                     É justamente essa parte da história que decidimos mostrar. Sem filtros. Sem esconder os
                     erros. Porque acreditamos que é nela que um atleta realmente é formado.

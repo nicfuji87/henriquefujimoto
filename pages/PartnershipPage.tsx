@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import PublicTopBar from '../components/PublicTopBar';
 import { useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowRight, Check, Download, Mail, MessageCircle, MapPin, Instagram, Youtube, Newspaper, Globe } from 'lucide-react';
@@ -196,7 +197,7 @@ function Section({
     id?: string;
 }) {
     return (
-        <section id={id} className={`bg-night px-6 py-14 sm:py-20 md:py-28 ${className}`}>
+        <section id={id} className={`bg-hf-navy px-6 py-14 sm:py-20 md:py-28 ${className}`}>
             <div className="mx-auto max-w-4xl">{children}</div>
         </section>
     );
@@ -204,7 +205,7 @@ function Section({
 
 function Kicker({ children }: { children: React.ReactNode }) {
     return (
-        <p className="mb-3 font-grotesk text-[12px] font-semibold uppercase tracking-[0.16em] text-lime">
+        <p className="mb-3 font-ui text-[12px] font-semibold uppercase tracking-[0.16em] text-hf-gold">
             {children}
         </p>
     );
@@ -214,7 +215,7 @@ function Heading({ children }: { children: React.ReactNode }) {
     return (
         <motion.h2
             {...reveal}
-            className="font-grotesk text-[1.6rem] font-semibold leading-[1.15] tracking-tight text-white sm:text-[2rem] sm:leading-[1.08] md:text-[2.75rem]"
+            className="font-brand text-[1.6rem] font-semibold leading-[1.15] tracking-tight text-hf-ice sm:text-[2rem] sm:leading-[1.08] md:text-[2.75rem]"
         >
             {children}
         </motion.h2>
@@ -227,7 +228,7 @@ function Body({ children, className = '' }: { children: React.ReactNode; classNa
         <motion.p
             {...reveal}
             transition={{ duration: 0.6, delay: 0.1 }}
-            className={`mt-6 whitespace-pre-line font-grotesk text-base leading-relaxed text-white/70 sm:text-lg ${className}`}
+            className={`mt-6 whitespace-pre-line font-ui text-base leading-relaxed text-hf-ice/70 sm:text-lg ${className}`}
         >
             {children}
         </motion.p>
@@ -237,23 +238,23 @@ function Body({ children, className = '' }: { children: React.ReactNode; classNa
 // Competition row — mirrors components/home/AchievementsSection.tsx
 function CompRow({ comp }: { comp: Competition }) {
     return (
-        <div className="flex items-center gap-3 rounded-2xl border border-white/[0.07] bg-coal px-4 py-3 transition-colors hover:border-white/15">
+        <div className="flex items-center gap-3 rounded-2xl border border-hf-line/70 bg-hf-surface px-4 py-3 transition-colors hover:border-hf-ice/15">
             <span className="shrink-0 text-xl">{medalEmoji(comp.medal_type)}</span>
             <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-2">
-                    <span className="font-grotesk text-sm font-semibold text-white">{comp.name}</span>
+                    <span className="font-ui text-sm font-semibold text-hf-ice">{comp.name}</span>
                     {comp.category && (
-                        <span className="rounded-md border border-white/10 bg-white/[0.04] px-1.5 py-0.5 font-grotesk text-[10px] text-white/50">
+                        <span className="rounded-md border border-hf-ice/10 bg-hf-ice/[0.04] px-1.5 py-0.5 font-ui text-[10px] text-hf-ice/50">
                             {comp.category}
                         </span>
                     )}
                     {comp.weight_class && (
-                        <span className="rounded-md border border-white/10 bg-white/[0.04] px-1.5 py-0.5 font-grotesk text-[10px] text-white/50">
+                        <span className="rounded-md border border-hf-ice/10 bg-hf-ice/[0.04] px-1.5 py-0.5 font-ui text-[10px] text-hf-ice/50">
                             {comp.weight_class}
                         </span>
                     )}
                 </div>
-                <div className="mt-0.5 flex items-center gap-3 font-grotesk text-[11px] text-white/40">
+                <div className="mt-0.5 flex items-center gap-3 font-ui text-[11px] text-hf-ice/40">
                     <span>{new Date(comp.date + 'T12:00:00').toLocaleDateString('pt-BR')}</span>
                     {comp.location && (
                         <span className="flex items-center gap-1">
@@ -264,8 +265,8 @@ function CompRow({ comp }: { comp: Competition }) {
                 </div>
             </div>
             <span
-                className={`shrink-0 font-grotesk text-sm font-semibold ${
-                    comp.medal_type === 'gold' ? 'text-lime' : 'text-white/80'
+                className={`shrink-0 font-ui text-sm font-semibold ${
+                    comp.medal_type === 'gold' ? 'text-hf-gold' : 'text-hf-ice/80'
                 }`}
             >
                 {comp.placement}
@@ -291,10 +292,10 @@ function PhotoStrip({ items }: { items: Photo[] }) {
                         src={ph.url}
                         alt={ph.caption || 'Henrique Fujimoto'}
                         loading="lazy"
-                        className="w-full rounded-3xl border border-white/[0.07] object-cover"
+                        className="w-full rounded-2xl border border-hf-line/70 object-cover"
                     />
                     {ph.caption && (
-                        <figcaption className="mt-2.5 font-grotesk text-[13px] leading-relaxed text-white/45">
+                        <figcaption className="mt-2.5 font-ui text-[13px] leading-relaxed text-hf-ice/45">
                             {ph.caption}
                         </figcaption>
                     )}
@@ -733,17 +734,17 @@ export default function PartnershipPage() {
     // ---- States ----------------------------------------------------------
     if (loading) {
         return (
-            <div className="flex min-h-screen items-center justify-center bg-night">
-                <div className="h-8 w-8 animate-spin rounded-full border-2 border-white/15 border-t-lime" />
+            <div className="flex min-h-screen items-center justify-center bg-hf-navy">
+                <div className="h-8 w-8 animate-spin rounded-full border-2 border-hf-ice/15 border-t-hf-gold" />
             </div>
         );
     }
 
     if (notFound || !project) {
         return (
-            <div className="flex min-h-screen flex-col items-center justify-center bg-night px-6 text-center">
-                <p className="font-grotesk text-2xl font-semibold text-white">Projeto não encontrado</p>
-                <p className="mt-3 font-grotesk text-sm text-white/45">
+            <div className="flex min-h-screen flex-col items-center justify-center bg-hf-navy px-6 text-center">
+                <p className="font-ui text-2xl font-semibold text-hf-ice">Projeto não encontrado</p>
+                <p className="mt-3 font-ui text-sm text-hf-ice/45">
                     Este link de proposta não está disponível.
                 </p>
             </div>
@@ -829,10 +830,12 @@ export default function PartnershipPage() {
         : [];
 
     return (
-        <div className="min-h-screen bg-night">
+        <div className="min-h-screen bg-hf-navy font-ui text-hf-ice">
+            <PublicTopBar backTo="/" backLabel="Início" maxWidth="max-w-4xl" />
+
             {/* ---- 1. Hero ---- */}
-            <section className="relative overflow-hidden bg-night px-6 pt-16 pb-14 sm:pt-24 sm:pb-20 md:pt-32 md:pb-28">
-                <div className="pointer-events-none absolute -top-20 left-1/2 h-72 w-[40rem] -translate-x-1/2 rounded-full bg-lime/[0.07] blur-[130px]" />
+            <section className="relative overflow-hidden bg-hf-navy px-6 pb-14 pt-14 sm:pb-20 sm:pt-20 md:pb-28 md:pt-24">
+                <div className="pointer-events-none absolute -top-20 left-1/2 h-72 w-[40rem] -translate-x-1/2 rounded-full bg-hf-gold/[0.07] blur-[130px]" />
                 <div className="relative mx-auto max-w-4xl">
                     <motion.div
                         {...reveal}
@@ -846,7 +849,7 @@ export default function PartnershipPage() {
                                 className="h-16 w-auto max-w-[280px] object-contain sm:h-20"
                             />
                         )}
-                        <span className="font-grotesk text-sm font-medium text-white/55">{ATHLETE}</span>
+                        <span className="font-ui text-sm font-medium text-hf-ice/55">{ATHLETE}</span>
                     </motion.div>
 
                     {p.hero_kicker && (
@@ -858,7 +861,7 @@ export default function PartnershipPage() {
                     <motion.h1
                         {...reveal}
                         transition={{ duration: 0.7, delay: 0.08 }}
-                        className="mt-1 font-grotesk text-[1.9rem] font-semibold leading-[1.12] tracking-tight text-white sm:text-[3.25rem] sm:leading-[1.05] md:text-[4rem]"
+                        className="mt-1 font-brand text-[1.9rem] font-semibold leading-[1.12] tracking-tight text-hf-ice sm:text-[3.25rem] sm:leading-[1.05] md:text-[4rem]"
                     >
                         {p.hero_title}
                     </motion.h1>
@@ -867,7 +870,7 @@ export default function PartnershipPage() {
                         <motion.p
                             {...reveal}
                             transition={{ duration: 0.6, delay: 0.16 }}
-                            className="mt-5 max-w-2xl font-grotesk text-base leading-relaxed text-white/60 sm:text-lg md:text-xl"
+                            className="mt-5 max-w-2xl font-ui text-base leading-relaxed text-hf-ice/60 sm:text-lg md:text-xl"
                         >
                             {p.hero_subtitle}
                         </motion.p>
@@ -883,7 +886,7 @@ export default function PartnershipPage() {
                         <motion.p
                             {...reveal}
                             transition={{ duration: 0.7 }}
-                            className="max-w-3xl whitespace-pre-line font-grotesk text-xl leading-relaxed text-white/85 sm:text-2xl"
+                            className="max-w-3xl whitespace-pre-line font-ui text-xl leading-relaxed text-hf-ice/85 sm:text-2xl"
                         >
                             {p.executive_summary}
                         </motion.p>
@@ -891,7 +894,7 @@ export default function PartnershipPage() {
 
                     {executiveHighlights.length > 0 && (
                         <div className="mt-10">
-                            <p className="mb-4 font-grotesk text-[12px] font-semibold uppercase tracking-[0.16em] text-lime">
+                            <p className="mb-4 font-ui text-[12px] font-semibold uppercase tracking-[0.16em] text-hf-gold">
                                 Nos últimos 12 meses
                             </p>
                             <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -902,10 +905,10 @@ export default function PartnershipPage() {
                                         whileInView={{ opacity: 1, y: 0 }}
                                         viewport={{ once: true, margin: '-50px' }}
                                         transition={{ duration: 0.45, delay: (i % 2) * 0.06 }}
-                                        className="flex items-start gap-2.5 rounded-2xl border border-white/[0.07] bg-coal px-5 py-4 transition-colors hover:border-lime/25"
+                                        className="flex items-start gap-2.5 rounded-2xl border border-hf-line/70 bg-hf-surface px-5 py-4 transition-colors hover:border-hf-gold/25"
                                     >
-                                        <Check className="mt-0.5 h-4 w-4 shrink-0 text-lime" />
-                                        <span className="font-grotesk text-sm leading-relaxed text-white/70">{h}</span>
+                                        <Check className="mt-0.5 h-4 w-4 shrink-0 text-hf-gold" />
+                                        <span className="font-ui text-sm leading-relaxed text-hf-ice/70">{h}</span>
                                     </motion.li>
                                 ))}
                             </ul>
@@ -916,12 +919,12 @@ export default function PartnershipPage() {
                         <motion.div
                             {...reveal}
                             transition={{ duration: 0.6, delay: 0.1 }}
-                            className="mt-10 border-l-2 border-lime/60 pl-4"
+                            className="mt-10 border-l-2 border-hf-gold/60 pl-4"
                         >
-                            <p className="mb-1.5 font-grotesk text-[12px] font-semibold uppercase tracking-[0.16em] text-lime">
+                            <p className="mb-1.5 font-ui text-[12px] font-semibold uppercase tracking-[0.16em] text-hf-gold">
                                 Objetivo
                             </p>
-                            <p className="whitespace-pre-line font-grotesk text-base leading-relaxed text-white/80 sm:text-lg">
+                            <p className="whitespace-pre-line font-ui text-base leading-relaxed text-hf-ice/80 sm:text-lg">
                                 {p.executive_objective}
                             </p>
                         </motion.div>
@@ -935,7 +938,7 @@ export default function PartnershipPage() {
                     <motion.p
                         {...reveal}
                         transition={{ duration: 0.7 }}
-                        className="max-w-3xl whitespace-pre-line font-grotesk text-xl leading-relaxed text-white/80 sm:text-2xl"
+                        className="max-w-3xl whitespace-pre-line font-ui text-xl leading-relaxed text-hf-ice/80 sm:text-2xl"
                     >
                         {p.intro}
                     </motion.p>
@@ -949,7 +952,7 @@ export default function PartnershipPage() {
                         {p.results_title || (
                             <>
                                 Resultados que{' '}
-                                <span className="font-editorial font-normal italic text-lime">
+                                <span className="text-hf-gold">
                                     comprovam a trajetória
                                 </span>
                             </>
@@ -962,7 +965,7 @@ export default function PartnershipPage() {
                         <motion.p
                             {...reveal}
                             transition={{ duration: 0.6, delay: 0.14 }}
-                            className="mt-5 whitespace-pre-line font-grotesk text-[13px] leading-relaxed text-white/45"
+                            className="mt-5 whitespace-pre-line font-ui text-[13px] leading-relaxed text-hf-ice/45"
                         >
                             {p.federation_info}
                         </motion.p>
@@ -978,16 +981,16 @@ export default function PartnershipPage() {
                                         whileInView={{ opacity: 1, y: 0 }}
                                         viewport={{ once: true }}
                                         transition={{ duration: 0.4, delay: i * 0.06 }}
-                                        className="rounded-2xl border border-white/[0.07] bg-coal p-4 text-center"
+                                        className="rounded-2xl border border-hf-line/70 bg-hf-surface p-4 text-center"
                                     >
                                         <div
-                                            className={`font-grotesk text-3xl font-semibold ${
-                                                s.accent ? 'text-lime' : 'text-white'
+                                            className={`font-ui text-3xl font-semibold ${
+                                                s.accent ? 'text-hf-gold' : 'text-hf-ice'
                                             }`}
                                         >
                                             {s.value}
                                         </div>
-                                        <div className="mt-1.5 font-grotesk text-[11px] font-medium text-white/45">
+                                        <div className="mt-1.5 font-ui text-[11px] font-medium text-hf-ice/45">
                                             {s.label}
                                         </div>
                                     </motion.div>
@@ -995,7 +998,7 @@ export default function PartnershipPage() {
                             </div>
 
                             <div className="mt-8 space-y-2">
-                                <h3 className="mb-3 font-grotesk text-[12px] font-semibold uppercase tracking-[0.12em] text-white/40">
+                                <h3 className="mb-3 font-brand text-[12px] font-semibold uppercase tracking-[0.12em] text-hf-ice/40">
                                     Mais recentes
                                 </h3>
                                 {recentComps.map((c: Competition) => (
@@ -1020,22 +1023,22 @@ export default function PartnershipPage() {
                     <motion.div
                         {...reveal}
                         transition={{ duration: 0.6, delay: 0.15 }}
-                        className="mt-10 rounded-3xl border border-white/[0.07] bg-coal p-6 transition-colors hover:border-lime/25 sm:p-8"
+                        className="mt-10 rounded-2xl border border-hf-line/70 bg-hf-surface p-6 transition-colors hover:border-hf-gold/25 sm:p-8"
                     >
                         <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:justify-center sm:overflow-visible">
                             {[12, 13, 14, 15, 16].map((age, i, arr) => (
                                 <React.Fragment key={age}>
-                                    <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-lime/40 bg-lime/[0.08] font-grotesk text-lg font-semibold text-lime sm:h-14 sm:w-14 sm:text-xl">
+                                    <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-hf-gold/40 bg-hf-gold/[0.08] font-ui text-lg font-semibold text-hf-gold sm:h-14 sm:w-14 sm:text-xl">
                                         {age}
                                     </span>
                                     {i < arr.length - 1 && (
-                                        <ArrowRight className="h-4 w-4 shrink-0 text-white/30" />
+                                        <ArrowRight className="h-4 w-4 shrink-0 text-hf-ice/30" />
                                     )}
                                 </React.Fragment>
                             ))}
                         </div>
-                        <div className="mt-5 flex items-center justify-center rounded-full border border-lime/25 bg-lime/[0.06] px-4 py-2 text-center">
-                            <span className="font-grotesk text-[11px] font-semibold uppercase tracking-[0.12em] text-lime sm:text-[13px]">
+                        <div className="mt-5 flex items-center justify-center rounded-full border border-hf-gold/25 bg-hf-gold/[0.06] px-4 py-2 text-center">
+                            <span className="font-ui text-[11px] font-semibold uppercase tracking-[0.12em] text-hf-gold sm:text-[13px]">
                                 Janela de maior desenvolvimento esportivo
                             </span>
                         </div>
@@ -1044,7 +1047,7 @@ export default function PartnershipPage() {
                     {goals.length > 0 && (
                         <div className="mt-10">
                             {p.goals_title && (
-                                <h3 className="mb-5 font-grotesk text-lg font-semibold text-white">
+                                <h3 className="mb-5 font-brand text-lg font-semibold text-hf-ice">
                                     {p.goals_title}
                                 </h3>
                             )}
@@ -1056,14 +1059,14 @@ export default function PartnershipPage() {
                                         whileInView={{ opacity: 1, y: 0 }}
                                         viewport={{ once: true, margin: '-50px' }}
                                         transition={{ duration: 0.5, delay: (i % 3) * 0.06 }}
-                                        className="flex flex-col gap-1.5 rounded-3xl border border-white/[0.07] bg-coal p-6 transition-colors hover:border-lime/25 hover:bg-coal-2 sm:flex-row sm:items-baseline sm:gap-6"
+                                        className="flex flex-col gap-1.5 rounded-2xl border border-hf-line/70 bg-hf-surface p-6 transition-colors hover:border-hf-gold/25 hover:bg-hf-surface-2 sm:flex-row sm:items-baseline sm:gap-6"
                                     >
                                         {g.horizon && (
-                                            <span className="shrink-0 font-grotesk text-sm font-semibold text-lime sm:w-44">
+                                            <span className="shrink-0 font-ui text-sm font-semibold text-hf-gold sm:w-44">
                                                 {g.horizon}
                                             </span>
                                         )}
-                                        <span className="whitespace-pre-line font-grotesk text-base leading-relaxed text-white/70">
+                                        <span className="whitespace-pre-line font-ui text-base leading-relaxed text-hf-ice/70">
                                             {g.text}
                                         </span>
                                     </motion.div>
@@ -1099,14 +1102,14 @@ export default function PartnershipPage() {
                                     whileInView={{ opacity: 1, y: 0 }}
                                     viewport={{ once: true, margin: '-50px' }}
                                     transition={{ duration: 0.5, delay: (i % 2) * 0.08 }}
-                                    className="rounded-3xl border border-white/[0.07] bg-coal p-6 transition-colors hover:border-lime/25 hover:bg-coal-2"
+                                    className="rounded-2xl border border-hf-line/70 bg-hf-surface p-6 transition-colors hover:border-hf-gold/25 hover:bg-hf-surface-2"
                                 >
-                                    <h3 className="font-grotesk text-lg font-semibold text-white">{c.category}</h3>
+                                    <h3 className="font-brand text-lg font-semibold text-hf-ice">{c.category}</h3>
                                     <ul className="mt-4 space-y-2.5">
                                         {(c.items || []).map((item, j) => (
                                             <li key={j} className="flex items-start gap-2.5">
-                                                <Check className="mt-0.5 h-4 w-4 shrink-0 text-lime" />
-                                                <span className="font-grotesk text-sm leading-relaxed text-white/70">
+                                                <Check className="mt-0.5 h-4 w-4 shrink-0 text-hf-gold" />
+                                                <span className="font-ui text-sm leading-relaxed text-hf-ice/70">
                                                     {item}
                                                 </span>
                                             </li>
@@ -1134,13 +1137,13 @@ export default function PartnershipPage() {
                                     whileInView={{ opacity: 1, y: 0 }}
                                     viewport={{ once: true, margin: '-50px' }}
                                     transition={{ duration: 0.5, delay: (i % 2) * 0.08 }}
-                                    className="rounded-3xl border border-white/[0.07] bg-coal p-6 transition-colors hover:border-lime/25 hover:bg-coal-2"
+                                    className="rounded-2xl border border-hf-line/70 bg-hf-surface p-6 transition-colors hover:border-hf-gold/25 hover:bg-hf-surface-2"
                                 >
                                     {c.title && (
-                                        <h3 className="font-grotesk text-lg font-semibold text-white">{c.title}</h3>
+                                        <h3 className="font-brand text-lg font-semibold text-hf-ice">{c.title}</h3>
                                     )}
                                     {c.text && (
-                                        <p className="mt-2 whitespace-pre-line font-grotesk text-sm leading-relaxed text-white/60">
+                                        <p className="mt-2 whitespace-pre-line font-ui text-sm leading-relaxed text-hf-ice/60">
                                             {c.text}
                                         </p>
                                     )}
@@ -1174,16 +1177,16 @@ export default function PartnershipPage() {
                                     whileInView={{ opacity: 1, y: 0 }}
                                     viewport={{ once: true, margin: '-50px' }}
                                     transition={{ duration: 0.5, delay: i * 0.06 }}
-                                    className="rounded-2xl border border-white/[0.07] bg-coal p-5 transition-colors hover:border-lime/25 sm:flex sm:gap-6"
+                                    className="rounded-2xl border border-hf-line/70 bg-hf-surface p-5 transition-colors hover:border-hf-gold/25 sm:flex sm:gap-6"
                                 >
-                                    <div className="mb-3 shrink-0 font-grotesk text-sm font-semibold uppercase tracking-wide text-lime sm:mb-0 sm:w-24">
+                                    <div className="mb-3 shrink-0 font-ui text-sm font-semibold uppercase tracking-wide text-hf-gold sm:mb-0 sm:w-24">
                                         {d.day}
                                     </div>
                                     <div className="flex flex-wrap gap-2">
                                         {d.blocks.map((b, j) => (
-                                            <span key={j} className="inline-flex items-center gap-2 rounded-full border border-white/[0.07] bg-night px-3 py-1.5">
-                                                <span className="font-grotesk text-[11px] font-semibold text-lime">{b.time}</span>
-                                                <span className="font-grotesk text-[13px] text-white/75">{b.label}</span>
+                                            <span key={j} className="inline-flex items-center gap-2 rounded-full border border-hf-line/70 bg-hf-navy px-3 py-1.5">
+                                                <span className="font-ui text-[11px] font-semibold text-hf-gold">{b.time}</span>
+                                                <span className="font-ui text-[13px] text-hf-ice/75">{b.label}</span>
                                             </span>
                                         ))}
                                     </div>
@@ -1195,14 +1198,14 @@ export default function PartnershipPage() {
                             {routineTimeline.map((r, i) => (
                                 <div key={`${r.time}-${i}`} className="relative flex gap-5 pb-6 last:pb-0">
                                     {i < routineTimeline.length - 1 && (
-                                        <span className="absolute left-[5px] top-4 h-full w-px border-l border-white/10" />
+                                        <span className="absolute left-[5px] top-4 h-full w-px border-l border-hf-ice/10" />
                                     )}
-                                    <span className="relative mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full bg-lime ring-4 ring-lime/15" />
+                                    <span className="relative mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full bg-hf-gold ring-4 ring-hf-gold/15" />
                                     <div className="flex min-w-0 flex-col gap-0.5 sm:flex-row sm:items-baseline sm:gap-4">
-                                        <span className="w-16 shrink-0 font-grotesk text-sm font-semibold text-lime">
+                                        <span className="w-16 shrink-0 font-ui text-sm font-semibold text-hf-gold">
                                             {r.time}
                                         </span>
-                                        <span className="font-grotesk text-base leading-relaxed text-white/80">
+                                        <span className="font-ui text-base leading-relaxed text-hf-ice/80">
                                             {r.label}
                                         </span>
                                     </div>
@@ -1228,27 +1231,27 @@ export default function PartnershipPage() {
                                     whileInView={{ opacity: 1, y: 0 }}
                                     viewport={{ once: true }}
                                     transition={{ duration: 0.5, delay: i * 0.08 }}
-                                    className="rounded-3xl border border-white/[0.07] bg-coal p-6 transition-colors hover:border-lime/25 hover:bg-coal-2"
+                                    className="rounded-2xl border border-hf-line/70 bg-hf-surface p-6 transition-colors hover:border-hf-gold/25 hover:bg-hf-surface-2"
                                 >
                                     <div
-                                        className={`font-grotesk text-4xl font-semibold tracking-tight sm:text-5xl ${
-                                            t.accent ? 'text-lime' : 'text-white'
+                                        className={`font-ui text-4xl font-semibold tracking-tight sm:text-5xl ${
+                                            t.accent ? 'text-hf-gold' : 'text-hf-ice'
                                         }`}
                                     >
                                         {formatCompact(t.value)}
                                     </div>
-                                    <div className="mt-2 font-grotesk text-sm font-medium text-white/60">
+                                    <div className="mt-2 font-ui text-sm font-medium text-hf-ice/60">
                                         {t.label}
                                     </div>
                                     {t.sub && (
-                                        <div className="mt-1 font-grotesk text-[12px] text-white/40">{t.sub}</div>
+                                        <div className="mt-1 font-ui text-[12px] text-hf-ice/40">{t.sub}</div>
                                     )}
                                 </motion.div>
                             ))}
                         </div>
                     )}
                     {p.show_metrics && (
-                        <p className="mt-5 font-grotesk text-[13px] text-white/40">
+                        <p className="mt-5 font-ui text-[13px] text-hf-ice/40">
                             {metrics && !metrics.isFullYear
                                 ? `Projeção anual com base na média real dos últimos ${Math.round(metrics.monthsOfData)} meses — dados do Instagram, atualizados automaticamente.`
                                 : 'Dados reais do Instagram, atualizados automaticamente.'}
@@ -1259,13 +1262,13 @@ export default function PartnershipPage() {
                         <motion.div
                             {...reveal}
                             transition={{ duration: 0.6, delay: 0.1 }}
-                            className="mt-8 rounded-3xl border border-white/[0.07] bg-coal p-6 sm:p-7"
+                            className="mt-8 rounded-2xl border border-hf-line/70 bg-hf-surface p-6 sm:p-7"
                         >
-                            <p className="font-grotesk text-[11px] font-semibold uppercase tracking-[0.16em] text-lime">
+                            <p className="font-ui text-[11px] font-semibold uppercase tracking-[0.16em] text-hf-gold">
                                 Presença em múltiplos canais
                             </p>
                             {p.channels_note && (
-                                <p className="mt-3 max-w-2xl whitespace-pre-line font-grotesk text-sm leading-relaxed text-white/70 sm:text-base">
+                                <p className="mt-3 max-w-2xl whitespace-pre-line font-ui text-sm leading-relaxed text-hf-ice/70 sm:text-base">
                                     {p.channels_note}
                                 </p>
                             )}
@@ -1274,15 +1277,15 @@ export default function PartnershipPage() {
                                     {channels.map((c, i) => {
                                         const Icon = channelIcon(c.name);
                                         return (
-                                            <div key={`${c.name}-${i}`} className="rounded-2xl border border-white/[0.07] bg-night/40 p-4">
+                                            <div key={`${c.name}-${i}`} className="rounded-2xl border border-hf-line/70 bg-hf-navy/40 p-4">
                                                 <div className="flex items-center gap-2">
-                                                    <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-lime/12 text-lime">
+                                                    <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-hf-gold/12 text-hf-gold">
                                                         <Icon className="h-4 w-4" />
                                                     </span>
-                                                    <span className="font-grotesk text-sm font-semibold text-white">{c.name}</span>
+                                                    <span className="font-ui text-sm font-semibold text-hf-ice">{c.name}</span>
                                                 </div>
                                                 {c.detail && (
-                                                    <p className="mt-2 font-grotesk text-[13px] leading-relaxed text-white/55">{c.detail}</p>
+                                                    <p className="mt-2 font-ui text-[13px] leading-relaxed text-hf-ice/55">{c.detail}</p>
                                                 )}
                                             </div>
                                         );
@@ -1296,20 +1299,20 @@ export default function PartnershipPage() {
                         <motion.div
                             {...reveal}
                             transition={{ duration: 0.6, delay: 0.15 }}
-                            className="mt-4 overflow-hidden rounded-3xl border border-white/[0.07] bg-coal"
+                            className="mt-4 overflow-hidden rounded-2xl border border-hf-line/70 bg-hf-surface"
                         >
-                            <div className="grid grid-cols-2 border-b border-white/[0.07] text-center">
-                                <div className="p-3 font-grotesk text-[10px] font-semibold uppercase tracking-[0.12em] text-white/45 sm:p-4 sm:text-[11px]">
+                            <div className="grid grid-cols-2 border-b border-hf-line/70 text-center">
+                                <div className="p-3 font-ui text-[10px] font-semibold uppercase tracking-[0.12em] text-hf-ice/45 sm:p-4 sm:text-[11px]">
                                     Atleta típico da idade
                                 </div>
-                                <div className="border-l border-white/[0.07] p-3 font-grotesk text-[10px] font-semibold uppercase tracking-[0.12em] text-lime sm:p-4 sm:text-[11px]">
+                                <div className="border-l border-hf-line/70 p-3 font-ui text-[10px] font-semibold uppercase tracking-[0.12em] text-hf-gold sm:p-4 sm:text-[11px]">
                                     Henrique
                                 </div>
                             </div>
                             {ecosystemContrast.map((r, i) => (
-                                <div key={i} className="grid grid-cols-2 border-b border-white/[0.05] last:border-0">
-                                    <div className="p-3 font-grotesk text-[13px] leading-snug text-white/50 sm:p-4 sm:text-sm">{r.typical}</div>
-                                    <div className="border-l border-white/[0.07] p-3 font-grotesk text-[13px] font-medium leading-snug text-white sm:p-4 sm:text-sm">{r.henrique}</div>
+                                <div key={i} className="grid grid-cols-2 border-b border-hf-line/70 last:border-0">
+                                    <div className="p-3 font-ui text-[13px] leading-snug text-hf-ice/50 sm:p-4 sm:text-sm">{r.typical}</div>
+                                    <div className="border-l border-hf-line/70 p-3 font-ui text-[13px] font-medium leading-snug text-hf-ice sm:p-4 sm:text-sm">{r.henrique}</div>
                                 </div>
                             ))}
                         </motion.div>
@@ -1321,7 +1324,7 @@ export default function PartnershipPage() {
             {photosFor('gallery').length > 0 && (
                 <Section>
                     <Heading>
-                        O Henrique <span className="font-editorial font-normal italic text-lime">em ação</span>
+                        O Henrique <span className="text-hf-gold">em ação</span>
                     </Heading>
                     <PhotoStrip items={photosFor('gallery')} />
                 </Section>
@@ -1331,36 +1334,36 @@ export default function PartnershipPage() {
             {costs.length > 0 && (
                 <Section>
                     <Heading>
-                        O que o projeto <span className="font-editorial font-normal italic text-lime">custa</span>
+                        O que o projeto <span className="text-hf-gold">custa</span>
                     </Heading>
 
                     <motion.div
                         {...reveal}
                         transition={{ duration: 0.6, delay: 0.1 }}
-                        className="mt-10 overflow-hidden rounded-3xl border border-white/[0.07] bg-coal"
+                        className="mt-10 overflow-hidden rounded-2xl border border-hf-line/70 bg-hf-surface"
                     >
                         {costs.map((c, i) => (
                             <div
                                 key={`${c.label}-${i}`}
-                                className="flex items-center justify-between gap-4 border-b border-white/[0.06] px-5 py-4 sm:px-6"
+                                className="flex items-center justify-between gap-4 border-b border-hf-line/70 px-5 py-4 sm:px-6"
                             >
                                 <div className="min-w-0">
-                                    <div className="truncate font-grotesk text-base font-medium text-white">
+                                    <div className="truncate font-ui text-base font-medium text-hf-ice">
                                         {c.label}
                                     </div>
-                                    <div className="mt-0.5 font-grotesk text-[11px] font-medium uppercase tracking-wide text-white/40">
+                                    <div className="mt-0.5 font-ui text-[11px] font-medium uppercase tracking-wide text-hf-ice/40">
                                         {c.period === 'mensal' ? 'Mensal' : 'Anual'}
                                     </div>
                                 </div>
                                 <div className="shrink-0 text-right">
-                                    <div className="font-grotesk text-base font-semibold text-white">
+                                    <div className="font-ui text-base font-semibold text-hf-ice">
                                         {fmtBRL(c.amount || 0)}
-                                        <span className="font-normal text-white/40">
+                                        <span className="font-normal text-hf-ice/40">
                                             {c.period === 'mensal' ? '/mês' : '/ano'}
                                         </span>
                                     </div>
                                     {c.period === 'mensal' && (
-                                        <div className="font-grotesk text-[11px] text-white/40">
+                                        <div className="font-ui text-[11px] text-hf-ice/40">
                                             {fmtBRL((c.amount || 0) * 12)}/ano
                                         </div>
                                     )}
@@ -1368,25 +1371,25 @@ export default function PartnershipPage() {
                             </div>
                         ))}
 
-                        <div className="flex items-center justify-between gap-4 bg-lime/[0.06] px-5 py-5 sm:px-6">
+                        <div className="flex items-center justify-between gap-4 bg-hf-gold/[0.06] px-5 py-5 sm:px-6">
                             <div>
-                                <div className="font-grotesk text-base font-semibold text-white">
+                                <div className="font-ui text-base font-semibold text-hf-ice">
                                     Investimento anual
                                 </div>
                                 {monthlyTotal > 0 && (
-                                    <div className="mt-0.5 font-grotesk text-[11px] text-white/45">
+                                    <div className="mt-0.5 font-ui text-[11px] text-hf-ice/45">
                                         Custo mensal recorrente: {fmtBRL(monthlyTotal)}
                                     </div>
                                 )}
                             </div>
-                            <div className="font-grotesk text-2xl font-semibold text-lime sm:text-3xl">
+                            <div className="font-ui text-2xl font-semibold text-hf-gold sm:text-3xl">
                                 {fmtBRL(annualInvestment)}
                             </div>
                         </div>
                     </motion.div>
 
                     {p.costs_note && (
-                        <p className="mt-4 font-grotesk text-[13px] leading-relaxed text-white/40">{p.costs_note}</p>
+                        <p className="mt-4 font-ui text-[13px] leading-relaxed text-hf-ice/40">{p.costs_note}</p>
                     )}
                 </Section>
             )}
@@ -1394,38 +1397,38 @@ export default function PartnershipPage() {
             {/* ---- Scholarship impact ---- */}
             <Section>
                 <Heading>
-                    O impacto de uma <span className="font-editorial font-normal italic text-lime">bolsa</span>
+                    O impacto de uma <span className="text-hf-gold">bolsa</span>
                 </Heading>
 
                 <motion.div
                     {...reveal}
                     transition={{ duration: 0.6, delay: 0.1 }}
-                    className="mt-10 rounded-3xl border border-lime/25 bg-coal p-8 md:p-10"
+                    className="mt-10 rounded-2xl border border-hf-gold/25 bg-hf-surface p-8 md:p-10"
                 >
                     <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
-                        <span className="font-grotesk text-6xl font-semibold leading-none tracking-tight text-lime sm:text-7xl">
+                        <span className="font-ui text-6xl font-semibold leading-none tracking-tight text-hf-gold sm:text-7xl">
                             {pct}%
                         </span>
-                        <span className="font-grotesk text-lg text-white/60">do investimento anual</span>
+                        <span className="font-ui text-lg text-hf-ice/60">do investimento anual</span>
                     </div>
 
                     {p.scholarship_label && (
-                        <p className="mt-6 font-grotesk text-base text-white/80">
-                            <span className="font-semibold text-white">{p.scholarship_label}:</span>{' '}
+                        <p className="mt-6 font-ui text-base text-hf-ice/80">
+                            <span className="font-semibold text-hf-ice">{p.scholarship_label}:</span>{' '}
                             {fmtBRL(p.scholarship_monthly || 0)}/mês
-                            <span className="text-white/45"> · {fmtBRL(scholarshipAnnual)}/ano</span>
+                            <span className="text-hf-ice/45"> · {fmtBRL(scholarshipAnnual)}/ano</span>
                         </p>
                     )}
 
                     {p.scholarship_body && (
-                        <p className="mt-4 whitespace-pre-line font-grotesk text-base leading-relaxed text-white/70">
+                        <p className="mt-4 whitespace-pre-line font-ui text-base leading-relaxed text-hf-ice/70">
                             {p.scholarship_body}
                         </p>
                     )}
 
                     {p.ask_body && (
-                        <div className="mt-6 rounded-2xl border border-white/[0.07] bg-night/60 p-5 sm:p-6">
-                            <p className="whitespace-pre-line font-grotesk text-base leading-relaxed text-white/85">
+                        <div className="mt-6 rounded-2xl border border-hf-line/70 bg-hf-navy/60 p-5 sm:p-6">
+                            <p className="whitespace-pre-line font-ui text-base leading-relaxed text-hf-ice/85">
                                 {p.ask_body}
                             </p>
                         </div>
@@ -1442,7 +1445,7 @@ export default function PartnershipPage() {
                     <motion.p
                         {...reveal}
                         transition={{ duration: 0.6, delay: 0.1 }}
-                        className="mt-6 font-grotesk text-base leading-relaxed text-white/60 sm:text-lg"
+                        className="mt-6 font-ui text-base leading-relaxed text-hf-ice/60 sm:text-lg"
                     >
                         Entregas concretas ao longo do ano letivo:
                     </motion.p>
@@ -1454,10 +1457,10 @@ export default function PartnershipPage() {
                                 whileInView={{ opacity: 1, y: 0 }}
                                 viewport={{ once: true, margin: '-50px' }}
                                 transition={{ duration: 0.45, delay: (i % 2) * 0.06 }}
-                                className="flex items-start gap-2.5 rounded-2xl border border-white/[0.07] bg-coal px-5 py-4 transition-colors hover:border-lime/25"
+                                className="flex items-start gap-2.5 rounded-2xl border border-hf-line/70 bg-hf-surface px-5 py-4 transition-colors hover:border-hf-gold/25"
                             >
-                                <Check className="mt-0.5 h-4 w-4 shrink-0 text-lime" />
-                                <span className="font-grotesk text-sm leading-relaxed text-white/80">{d}</span>
+                                <Check className="mt-0.5 h-4 w-4 shrink-0 text-hf-gold" />
+                                <span className="font-ui text-sm leading-relaxed text-hf-ice/80">{d}</span>
                             </motion.div>
                         ))}
                     </div>
@@ -1465,7 +1468,7 @@ export default function PartnershipPage() {
                         <motion.div
                             {...reveal}
                             transition={{ duration: 0.6, delay: 0.1 }}
-                            className="mt-6 rounded-2xl border border-lime/20 bg-lime/[0.05] p-5 font-grotesk text-sm leading-relaxed text-white/75 sm:text-base"
+                            className="mt-6 rounded-2xl border border-hf-gold/20 bg-hf-gold/[0.05] p-5 font-ui text-sm leading-relaxed text-hf-ice/75 sm:text-base"
                         >
                             {p.pilot_note}
                         </motion.div>
@@ -1477,26 +1480,26 @@ export default function PartnershipPage() {
             {partnershipTable.length > 0 && (
                 <Section>
                     <Heading>
-                        Uma parceria <span className="font-editorial font-normal italic text-lime">equilibrada</span>
+                        Uma parceria <span className="text-hf-gold">equilibrada</span>
                     </Heading>
-                    <div className="mt-8 overflow-hidden rounded-3xl border border-white/[0.07] bg-coal">
-                        <div className="grid grid-cols-2 border-b border-white/[0.07]">
-                            <div className="p-4 font-grotesk text-[10px] font-semibold uppercase tracking-[0.12em] text-lime sm:p-5 sm:text-[11px]">
+                    <div className="mt-8 overflow-hidden rounded-2xl border border-hf-line/70 bg-hf-surface">
+                        <div className="grid grid-cols-2 border-b border-hf-line/70">
+                            <div className="p-4 font-ui text-[10px] font-semibold uppercase tracking-[0.12em] text-hf-gold sm:p-5 sm:text-[11px]">
                                 O Marista oferece
                             </div>
-                            <div className="border-l border-white/[0.07] p-4 font-grotesk text-[10px] font-semibold uppercase tracking-[0.12em] text-white/70 sm:p-5 sm:text-[11px]">
+                            <div className="border-l border-hf-line/70 p-4 font-ui text-[10px] font-semibold uppercase tracking-[0.12em] text-hf-ice/70 sm:p-5 sm:text-[11px]">
                                 O Henrique e a família oferecem
                             </div>
                         </div>
                         {partnershipTable.map((r, i) => (
-                            <div key={i} className="grid grid-cols-2 border-b border-white/[0.05] last:border-0">
-                                <div className="p-4 font-grotesk text-[13px] leading-snug text-white/80 sm:p-5 sm:text-sm">{r.marista}</div>
-                                <div className="border-l border-white/[0.07] p-4 font-grotesk text-[13px] leading-snug text-white/80 sm:p-5 sm:text-sm">{r.family}</div>
+                            <div key={i} className="grid grid-cols-2 border-b border-hf-line/70 last:border-0">
+                                <div className="p-4 font-ui text-[13px] leading-snug text-hf-ice/80 sm:p-5 sm:text-sm">{r.marista}</div>
+                                <div className="border-l border-hf-line/70 p-4 font-ui text-[13px] leading-snug text-hf-ice/80 sm:p-5 sm:text-sm">{r.family}</div>
                             </div>
                         ))}
                     </div>
                     {p.partnership_table_note && (
-                        <p className="mt-5 max-w-2xl font-grotesk text-sm leading-relaxed text-white/50">{p.partnership_table_note}</p>
+                        <p className="mt-5 max-w-2xl font-ui text-sm leading-relaxed text-hf-ice/50">{p.partnership_table_note}</p>
                     )}
                 </Section>
             )}
@@ -1513,10 +1516,10 @@ export default function PartnershipPage() {
                                 whileInView={{ opacity: 1, y: 0 }}
                                 viewport={{ once: true, margin: '-50px' }}
                                 transition={{ duration: 0.5, delay: (i % 2) * 0.08 }}
-                                className="rounded-3xl border border-white/[0.07] bg-coal p-6"
+                                className="rounded-2xl border border-hf-line/70 bg-hf-surface p-6"
                             >
-                                <h3 className="font-grotesk text-lg font-semibold text-white">{it.title}</h3>
-                                <p className="mt-2 whitespace-pre-line font-grotesk text-sm leading-relaxed text-white/60">
+                                <h3 className="font-brand text-lg font-semibold text-hf-ice">{it.title}</h3>
+                                <p className="mt-2 whitespace-pre-line font-ui text-sm leading-relaxed text-hf-ice/60">
                                     {it.text}
                                 </p>
                             </motion.div>
@@ -1533,13 +1536,13 @@ export default function PartnershipPage() {
                         <motion.div
                             {...reveal}
                             transition={{ duration: 0.6, delay: 0.1 }}
-                            className="mt-10 rounded-3xl border border-white/[0.07] bg-coal p-8 md:p-12"
+                            className="mt-10 rounded-2xl border border-hf-line/70 bg-hf-surface p-8 md:p-12"
                         >
-                            <p className="whitespace-pre-line font-editorial text-lg italic leading-relaxed text-white/85 sm:text-xl">
+                            <p className="whitespace-pre-line font-brand text-lg leading-relaxed text-hf-ice/85 sm:text-xl">
                                 {p.family_letter}
                             </p>
                             {p.family_letter_signature && (
-                                <p className="mt-8 font-editorial text-lg italic text-white">
+                                <p className="mt-8 font-brand text-lg text-hf-ice">
                                     {p.family_letter_signature}
                                 </p>
                             )}
@@ -1555,10 +1558,10 @@ export default function PartnershipPage() {
                             {familyCommitments.map((item, i) => (
                                 <li
                                     key={i}
-                                    className="flex items-start gap-2.5 rounded-2xl border border-white/[0.07] bg-coal px-5 py-4"
+                                    className="flex items-start gap-2.5 rounded-2xl border border-hf-line/70 bg-hf-surface px-5 py-4"
                                 >
-                                    <Check className="mt-0.5 h-4 w-4 shrink-0 text-lime" />
-                                    <span className="font-grotesk text-sm leading-relaxed text-white/70">{item}</span>
+                                    <Check className="mt-0.5 h-4 w-4 shrink-0 text-hf-gold" />
+                                    <span className="font-ui text-sm leading-relaxed text-hf-ice/70">{item}</span>
                                 </li>
                             ))}
                         </motion.ul>
@@ -1578,12 +1581,12 @@ export default function PartnershipPage() {
                         {timeline.map((t, i) => (
                             <div key={`${t.year}-${i}`} className="relative flex gap-5 pb-8 last:pb-0">
                                 {i < timeline.length - 1 && (
-                                    <span className="absolute left-[7px] top-5 h-full w-px bg-white/10" />
+                                    <span className="absolute left-[7px] top-5 h-full w-px bg-hf-ice/10" />
                                 )}
-                                <span className="relative mt-1.5 h-3.5 w-3.5 shrink-0 rounded-full bg-lime ring-4 ring-lime/15" />
+                                <span className="relative mt-1.5 h-3.5 w-3.5 shrink-0 rounded-full bg-hf-gold ring-4 ring-hf-gold/15" />
                                 <div className="min-w-0">
-                                    <div className="font-grotesk text-lg font-semibold text-lime">{t.year}</div>
-                                    <div className="mt-0.5 font-grotesk text-base leading-relaxed text-white/70">
+                                    <div className="font-ui text-lg font-semibold text-hf-gold">{t.year}</div>
+                                    <div className="mt-0.5 font-ui text-base leading-relaxed text-hf-ice/70">
                                         {t.label}
                                     </div>
                                 </div>
@@ -1591,7 +1594,7 @@ export default function PartnershipPage() {
                         ))}
                     </motion.div>
                     {p.timeline_note && (
-                        <p className="mt-2 font-grotesk text-[13px] leading-relaxed text-white/40">{p.timeline_note}</p>
+                        <p className="mt-2 font-ui text-[13px] leading-relaxed text-hf-ice/40">{p.timeline_note}</p>
                     )}
                 </Section>
             )}
@@ -1606,7 +1609,7 @@ export default function PartnershipPage() {
                                 <motion.p
                                     {...reveal}
                                     transition={{ duration: 0.6, delay: 0.1 }}
-                                    className="mt-6 whitespace-pre-line font-grotesk text-base leading-relaxed text-white/70 sm:text-lg"
+                                    className="mt-6 whitespace-pre-line font-ui text-base leading-relaxed text-hf-ice/70 sm:text-lg"
                                 >
                                     {s.body}
                                 </motion.p>
@@ -1617,8 +1620,8 @@ export default function PartnershipPage() {
             )}
 
             {/* ---- 17. Closing + contact + PDF ---- */}
-            <section className="relative overflow-hidden bg-night px-6 py-24 md:py-32">
-                <div className="pointer-events-none absolute left-1/2 top-1/2 h-80 w-[38rem] -translate-x-1/2 -translate-y-1/2 rounded-full bg-lime/[0.08] blur-[130px]" />
+            <section className="relative overflow-hidden bg-hf-navy px-6 py-24 md:py-32">
+                <div className="pointer-events-none absolute left-1/2 top-1/2 h-80 w-[38rem] -translate-x-1/2 -translate-y-1/2 rounded-full bg-hf-gold/[0.08] blur-[130px]" />
                 <div className="relative mx-auto max-w-3xl text-center">
                     {p.partner_logo_url && (
                         <motion.img
@@ -1637,14 +1640,14 @@ export default function PartnershipPage() {
                             src={closingImage}
                             alt={p.closing_title || 'Henrique Fujimoto'}
                             loading="lazy"
-                            className="mx-auto mb-10 max-h-[420px] w-full rounded-3xl border border-white/[0.07] object-cover"
+                            className="mx-auto mb-10 max-h-[420px] w-full rounded-2xl border border-hf-line/70 object-cover"
                         />
                     )}
 
                     <motion.h2
                         {...reveal}
                         transition={{ duration: 0.6 }}
-                        className="font-grotesk text-[1.6rem] font-semibold leading-[1.15] tracking-tight text-white sm:text-[2rem] sm:leading-[1.08] md:text-[2.75rem]"
+                        className="font-brand text-[1.6rem] font-semibold leading-[1.15] tracking-tight text-hf-ice sm:text-[2rem] sm:leading-[1.08] md:text-[2.75rem]"
                     >
                         {p.closing_title || 'Vamos construir isso juntos'}
                     </motion.h2>
@@ -1653,7 +1656,7 @@ export default function PartnershipPage() {
                         <motion.p
                             {...reveal}
                             transition={{ duration: 0.6, delay: 0.1 }}
-                            className="mx-auto mt-5 max-w-2xl whitespace-pre-line font-grotesk text-base leading-relaxed text-white/60 sm:text-lg"
+                            className="mx-auto mt-5 max-w-2xl whitespace-pre-line font-ui text-base leading-relaxed text-hf-ice/60 sm:text-lg"
                         >
                             {p.closing_body}
                         </motion.p>
@@ -1669,7 +1672,7 @@ export default function PartnershipPage() {
                                 href={p.contact_whatsapp}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="inline-flex items-center gap-2.5 rounded-full bg-lime px-6 py-3.5 font-grotesk text-sm font-semibold text-night transition-colors hover:bg-lime-dim"
+                                className="inline-flex items-center gap-2.5 rounded-full bg-hf-gold px-6 py-3.5 font-ui text-sm font-semibold text-hf-navy transition-colors hover:bg-hf-gold-dim"
                             >
                                 <MessageCircle className="h-4.5 w-4.5" />
                                 Conversar no WhatsApp
@@ -1678,7 +1681,7 @@ export default function PartnershipPage() {
                         {p.contact_email && (
                             <a
                                 href={`mailto:${p.contact_email}`}
-                                className="inline-flex items-center gap-2.5 rounded-full border border-white/20 bg-white/5 px-6 py-3.5 font-grotesk text-sm font-semibold text-white transition-all hover:border-lime/40 hover:bg-white/10"
+                                className="inline-flex items-center gap-2.5 rounded-full border border-hf-ice/20 bg-hf-ice/5 px-6 py-3.5 font-ui text-sm font-semibold text-hf-ice transition-all hover:border-hf-gold/40 hover:bg-hf-ice/10"
                             >
                                 <Mail className="h-4.5 w-4.5" />
                                 Enviar e-mail
@@ -1687,14 +1690,14 @@ export default function PartnershipPage() {
                         <button
                             type="button"
                             onClick={handleDownloadPdf}
-                            className="inline-flex items-center gap-2.5 rounded-full border border-white/20 bg-white/5 px-6 py-3.5 font-grotesk text-sm font-semibold text-white transition-all hover:border-lime/40 hover:bg-white/10"
+                            className="inline-flex items-center gap-2.5 rounded-full border border-hf-ice/20 bg-hf-ice/5 px-6 py-3.5 font-ui text-sm font-semibold text-hf-ice transition-all hover:border-hf-gold/40 hover:bg-hf-ice/10"
                         >
                             <Download className="h-4.5 w-4.5" />
                             Baixar proposta em PDF
                         </button>
                     </motion.div>
 
-                    <p className="mt-8 font-grotesk text-sm text-white/45">
+                    <p className="mt-8 font-ui text-sm text-hf-ice/45">
                         {p.contact_name ? `${p.contact_name} · ` : ''}
                         {ATHLETE}
                     </p>

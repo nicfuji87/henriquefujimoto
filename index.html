@@ -5,19 +5,48 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="facebook-domain-verification" content="jb4xluwb3ry0mfqofw4uw86dlszijx" />
-  <title>Henrique Fujimoto · Judoca — Acompanhe a jornada</title>
+
+  <title>Henrique Fujimoto · Judoca — Um treino de cada vez.</title>
+  <meta name="description"
+    content="Acompanhe a trajetória de Henrique Fujimoto no judô. Cada treino, cada desafio e cada conquista fazem parte de uma história que ainda está sendo escrita." />
+  <meta name="theme-color" content="#0B1426" />
+  <link rel="canonical" href="https://www.henriquefujimoto.com.br/" />
+
+  <!-- Marca HF -->
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="apple-touch-icon" href="/brand/hf-selo-marinho.png" />
+  <link rel="mask-icon" href="/brand/hf-simbolo-mono-marinho.svg" color="#0B1426" />
+
+  <!-- Open Graph / redes sociais -->
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Henrique Fujimoto" />
+  <meta property="og:locale" content="pt_BR" />
+  <meta property="og:title" content="Henrique Fujimoto · Judoca — Um treino de cada vez." />
+  <meta property="og:description"
+    content="Acompanhe a trajetória de Henrique Fujimoto no judô. Cada treino, cada desafio e cada conquista fazem parte de uma história que ainda está sendo escrita." />
+  <meta property="og:url" content="https://www.henriquefujimoto.com.br/" />
+  <meta property="og:image" content="https://www.henriquefujimoto.com.br/brand/hf-og.png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="Monograma HF e o slogan Um treino de cada vez." />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Henrique Fujimoto · Judoca — Um treino de cada vez." />
+  <meta name="twitter:description"
+    content="Acompanhe a trajetória de Henrique Fujimoto no judô. Cada treino, cada desafio e cada conquista fazem parte de uma história que ainda está sendo escrita." />
+  <meta name="twitter:image" content="https://www.henriquefujimoto.com.br/brand/hf-og.png" />
 
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <!-- Tipografia oficial HF: Montserrat (títulos) + Inter (textos e interface) -->
+  <link
+    href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap"
+    rel="stylesheet" />
+  <!-- Tipografia dos módulos internos (admin, app, gym, escola, nutri) -->
   <link
     href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;700&family=Space+Grotesk:wght@300;400;500;600;700&family=Lexend:wght@100..900&display=swap"
     rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
-    rel="stylesheet" />
-  <!-- Home redesign typography: Hanken Grotesk (UI/headlines) + Fraunces (italic serif accent) -->
-  <link
-    href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400;1,500&family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500;1,9..144,600&display=swap"
     rel="stylesheet" />
 
   <!-- Tailwind CSS -->
@@ -28,22 +57,38 @@
       theme: {
         extend: {
           colors: {
-            background: '#09090b',
+            // --- Identidade oficial HF ---
+            'hf-navy': '#0B1426',        // fundo principal
+            'hf-navy-deep': '#070E1B',   // fundo de respiro / rodape
+            'hf-surface': '#121D31',     // cards e superficies elevadas
+            'hf-surface-2': '#17243B',   // hover de superficies
+            'hf-line': '#223150',        // divisorias e bordas
+            'hf-gold': '#D4A336',        // assinatura visual (detalhe, nunca dominante)
+            'hf-gold-dim': '#B8882A',
+            'hf-gold-soft': '#E8C97A',
+            'hf-ice': '#F4F6F8',         // texto e superficies claras
+            'hf-graphite': '#2E3138',    // apoio / elementos secundarios
+
+            background: '#0B1426',
             primary: '#22c55e',
-            // Home redesign palette — premium dark + lime accent
-            night: '#0a0b0d',
-            'night-2': '#0f1113',
-            coal: '#141619',
-            'coal-2': '#1b1e22',
-            line: '#282c31',
+
+            // Tokens do site publico repontados para a paleta HF.
+            // Usados apenas em pages/ e components/ publicos - nao afetam os modulos internos.
+            night: '#0B1426',
+            'night-2': '#0E1A2E',
+            coal: '#121D31',
+            'coal-2': '#17243B',
+            line: '#223150',
+            ink: '#0B1426',
+            'ink-2': '#121D31',
+            'ink-3': '#17243B',
+            'ink-line': '#223150',
+
+            // Mantido para os modulos internos que ainda referenciam o acento antigo.
             lime: '#c6f24e',
             'lime-dim': '#a9d92f',
             'lime-soft': '#e6f7a8',
-            // legacy tokens kept for safety (repointed to the new dark scale)
-            ink: '#0a0b0d',
-            'ink-2': '#141619',
-            'ink-3': '#1b1e22',
-            'ink-line': '#282c31',
+
             "app-primary": "#1152d4",
             "app-primary-dark": "#0a3aa0",
             "app-primary-light": "#dce6fc",
@@ -61,15 +106,21 @@
             "gym-muted": "#64748b",
           },
           fontFamily: {
+            // Modulos internos (inalterados)
             sans: ['Space Grotesk', 'sans-serif'],
             display: ['Oswald', 'sans-serif'],
             'app-display': ['Lexend', 'sans-serif'],
-            // Home redesign type system
-            grotesk: ['Hanken Grotesk', 'system-ui', 'sans-serif'],
-            editorial: ['Fraunces', 'Georgia', 'serif'],
-            ui: ['Hanken Grotesk', 'system-ui', 'sans-serif'],
-            impact: ['Hanken Grotesk', 'system-ui', 'sans-serif'],
-          }
+            // Sistema tipografico publico HF
+            brand: ['Montserrat', 'system-ui', 'sans-serif'],
+            grotesk: ['Inter', 'system-ui', 'sans-serif'],
+            editorial: ['Montserrat', 'system-ui', 'sans-serif'],
+            ui: ['Inter', 'system-ui', 'sans-serif'],
+            impact: ['Montserrat', 'system-ui', 'sans-serif'],
+          },
+          boxShadow: {
+            'hf-card': '0 18px 50px -24px rgba(0,0,0,0.75)',
+            'hf-gold': '0 14px 40px -14px rgba(212,163,54,0.45)',
+          },
         }
       }
     }
@@ -103,11 +154,25 @@
       scrollbar-width: none;
     }
 
-    /* Home redesign: smooth anchor scrolling + branded selection */
+    /* Rolagem suave + selecao na cor da marca */
     html { scroll-behavior: smooth; }
-    ::selection { background: #c6f24e; color: #0a0b0d; }
+    ::selection { background: #D4A336; color: #0B1426; }
 
-    /* Kinetic marquee (CSS-driven so it can pause under reduced motion) */
+    /* Foco visivel consistente (acessibilidade) */
+    :focus-visible {
+      outline: 2px solid #D4A336;
+      outline-offset: 2px;
+      border-radius: 4px;
+    }
+
+    /* Filete dourado da assinatura HF */
+    .hf-rule {
+      height: 2px;
+      width: 56px;
+      background: linear-gradient(90deg, #D4A336 0%, rgba(212, 163, 54, 0) 100%);
+    }
+
+    /* Marquee cinetico (CSS para poder pausar com reduced motion) */
     @keyframes tatame-marquee { from { transform: translate3d(0,0,0); } to { transform: translate3d(-50%,0,0); } }
     .animate-marquee { animation: tatame-marquee 32s linear infinite; }
 

@@ -98,12 +98,12 @@ const BrazilMap: React.FC<BrazilMapProps> = ({ cityData }) => {
         const val = stateData[code] || 0;
         if (val === 0) return 'rgba(255,255,255,0.04)';
         const intensity = Math.max(0.15, val / maxVal);
-        // Sequential lime: faint (low) → solid #c6f24e (high)
-        return `rgba(198,242,78,${0.18 + intensity * 0.82})`;
+        // Sequential hf-gold: faint (low) → solid #D4A336 (high)
+        return `rgba(212,163,54,${0.18 + intensity * 0.82})`;
     };
 
     const getStrokeColor = (code: string) => {
-        if (code === hoveredState) return '#c6f24e';
+        if (code === hoveredState) return '#D4A336';
         return stateData[code] ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.08)';
     };
 
@@ -120,10 +120,10 @@ const BrazilMap: React.FC<BrazilMapProps> = ({ cityData }) => {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.2 }}
-            className="col-span-1 rounded-3xl border border-white/[0.07] bg-coal p-6 transition-all hover:border-lime/25 md:col-span-2"
+            className="col-span-1 rounded-2xl border border-hf-line/70 bg-hf-surface p-6 transition-all hover:border-hf-gold/25 md:col-span-2"
         >
-            <h4 className="mb-6 flex items-center gap-2 font-grotesk font-semibold text-white">
-                <span className="h-6 w-1.5 rounded-full bg-lime"></span>
+            <h4 className="mb-6 flex items-center gap-2 font-ui font-semibold text-hf-ice">
+                <span className="h-6 w-1.5 rounded-full bg-hf-gold"></span>
                 Seguidores por estado
             </h4>
 
@@ -183,46 +183,46 @@ const BrazilMap: React.FC<BrazilMapProps> = ({ cityData }) => {
                     {/* Tooltip */}
                     {hoveredState && stateData[hoveredState] && (
                         <div
-                            className="absolute pointer-events-none z-30 rounded-2xl border border-white/[0.07] bg-coal px-3 py-2 shadow-xl"
+                            className="absolute pointer-events-none z-30 rounded-2xl border border-hf-line/70 bg-hf-surface px-3 py-2 shadow-xl"
                             style={{
                                 left: Math.min(tooltipPos.x + 10, 280),
                                 top: tooltipPos.y - 40,
                             }}
                         >
-                            <p className="font-grotesk text-xs font-semibold text-white">{stateCodeToName[hoveredState] || hoveredState}</p>
-                            <p className="font-grotesk text-sm font-semibold text-lime">{Math.round((stateData[hoveredState] / totalState) * 100)}% da audiência</p>
+                            <p className="font-ui text-xs font-semibold text-hf-ice">{stateCodeToName[hoveredState] || hoveredState}</p>
+                            <p className="font-ui text-sm font-semibold text-hf-gold">{Math.round((stateData[hoveredState] / totalState) * 100)}% da audiência</p>
                         </div>
                     )}
                 </div>
 
                 {/* State Ranking */}
                 <div className="flex-1 w-full space-y-2.5">
-                    <p className="mb-3 font-grotesk text-[11px] font-medium uppercase tracking-wide text-white/45">
+                    <p className="mb-3 font-ui text-[11px] font-medium uppercase tracking-wide text-hf-ice/45">
                         Top {sortedStates.length} estados
                     </p>
                     {sortedStates.map(([code, val], i) => (
                         <div
                             key={code}
-                            className={`relative group py-1.5 transition-colors ${hoveredState === code ? 'bg-white/5 rounded-lg px-2 -mx-2' : ''}`}
+                            className={`relative group py-1.5 transition-colors ${hoveredState === code ? 'bg-hf-ice/5 rounded-lg px-2 -mx-2' : ''}`}
                             onMouseEnter={() => setHoveredState(code)}
                             onMouseLeave={() => setHoveredState(null)}
                         >
-                            <div className="mb-1 flex justify-between font-grotesk text-xs text-white/70">
+                            <div className="mb-1 flex justify-between font-ui text-xs text-hf-ice/70">
                                 <span className="flex items-center gap-2 font-medium">
-                                    <span className="w-4 text-white/40">{i + 1}.</span>
+                                    <span className="w-4 text-hf-ice/40">{i + 1}.</span>
                                     <span className={`w-2 h-2 rounded-full`} style={{ backgroundColor: getColor(code) }}></span>
                                     {stateCodeToName[code] || code}
                                 </span>
-                                <span className="font-grotesk font-semibold text-lime">{Math.round((Number(val) / totalState) * 100)}%</span>
+                                <span className="font-ui font-semibold text-hf-gold">{Math.round((Number(val) / totalState) * 100)}%</span>
                             </div>
-                            <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/10">
+                            <div className="h-1.5 w-full overflow-hidden rounded-full bg-hf-ice/10">
                                 <motion.div
                                     initial={{ width: 0 }}
                                     whileInView={{ width: `${(val / maxVal) * 100}%` }}
                                     transition={{ duration: 0.8, delay: i * 0.08 }}
                                     className="h-full rounded-full"
                                     style={{
-                                        background: `linear-gradient(90deg, #a9d92f, #c6f24e)`
+                                        background: `linear-gradient(90deg, #B8882A, #D4A336)`
                                     }}
                                 />
                             </div>

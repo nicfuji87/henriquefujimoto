@@ -27,7 +27,7 @@ const reasons = [
 
 const WhySupport: React.FC = () => {
     return (
-        <section className="bg-night px-6 py-14 sm:py-20 md:py-28">
+        <section className="bg-hf-navy px-6 py-14 sm:py-20 md:py-28">
             <div className="max-w-4xl mx-auto">
                 <motion.div
                     initial={{ opacity: 0, y: 16 }}
@@ -36,10 +36,10 @@ const WhySupport: React.FC = () => {
                     transition={{ duration: 0.6 }}
                     className="text-center mb-12"
                 >
-                    <h2 className="font-grotesk text-[1.6rem] font-semibold leading-[1.15] tracking-tight text-white sm:text-[2rem] sm:leading-[1.08] md:text-[2.75rem]">
-                        Por que apoiar o <span className="font-editorial font-normal italic text-lime">Henrique</span>?
+                    <h2 className="font-brand text-[1.6rem] font-semibold leading-[1.15] tracking-tight text-hf-ice sm:text-[2rem] sm:leading-[1.08] md:text-[2.75rem]">
+                        Por que apoiar o <span className="text-hf-gold">Henrique</span>?
                     </h2>
-                    <p className="mx-auto mt-5 max-w-xl font-grotesk text-base leading-relaxed text-white/60 sm:text-lg">
+                    <p className="mx-auto mt-5 max-w-xl font-ui text-base leading-relaxed text-hf-ice/60 sm:text-lg">
                         Muito além de patrocínio, é uma parceria para construir uma história de superação e conquistas.
                     </p>
                 </motion.div>
@@ -52,15 +52,15 @@ const WhySupport: React.FC = () => {
                             whileInView={{ opacity: 1, y: 0 }}
                             viewport={{ once: true, margin: '-50px' }}
                             transition={{ duration: 0.5, delay: index * 0.08 }}
-                            className="group rounded-3xl border border-white/[0.07] bg-coal p-6 transition-all hover:border-lime/25 hover:bg-coal-2"
+                            className="group rounded-2xl border border-hf-line/70 bg-hf-surface p-6 transition-all hover:border-hf-gold/25 hover:bg-hf-surface-2"
                         >
                             <div className="flex items-start gap-4">
-                                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-lime/12 text-lime transition-colors group-hover:bg-lime group-hover:text-night">
+                                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-hf-gold/12 text-hf-gold transition-colors group-hover:bg-hf-gold group-hover:text-hf-navy">
                                     {reason.icon}
                                 </div>
                                 <div>
-                                    <h3 className="font-grotesk text-lg font-semibold text-white mb-1.5">{reason.title}</h3>
-                                    <p className="font-grotesk text-sm leading-relaxed text-white/55">
+                                    <h3 className="font-brand text-lg font-semibold text-hf-ice mb-1.5">{reason.title}</h3>
+                                    <p className="font-ui text-sm leading-relaxed text-hf-ice/55">
                                         {reason.description}
                                     </p>
                                 </div>

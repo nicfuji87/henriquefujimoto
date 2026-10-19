@@ -22,7 +22,7 @@ const defaultConfig: SiteConfig = {
     tagline: 'Judô & Alta Performance',
     cta_text: 'Apoiar o Atleta',
     cta_link: '#',
-    live_views: '73.4k',
+    live_views: '',
 };
 
 export function useSiteConfig() {
