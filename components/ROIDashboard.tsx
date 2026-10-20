@@ -60,7 +60,8 @@ const ROIDashboard: React.FC = () => {
   };
 
   // So exibimos o painel quando existe pelo menos um indicador verificavel.
-  const hasData = !!stats && [stats.total_reach, stats.total_impressions, stats.total_interactions, stats.total_followers, stats.followers_gained].some((v) => (v || 0) > 0);
+  const measured = (stats?.coverage ?? 0) >= 0.6;
+  const hasData = measured && !!stats && [stats.total_reach, stats.total_impressions, stats.total_interactions, stats.total_followers, stats.followers_gained].some((v) => (v || 0) > 0);
 
   return (
     <section className="px-4">
@@ -108,8 +109,8 @@ const ROIDashboard: React.FC = () => {
             exit={{ opacity: 0 }}
             className={hfEmpty}
           >
-            Os indicadores de audiência não estão disponíveis no momento. Assim que a sincronização com o
-            Instagram for concluída, os números reais aparecem aqui.
+            Os indicadores de audiência não estão disponíveis para este período: a sincronização com o
+            Instagram está incompleta. Assim que os dados forem atualizados, os números reais aparecem aqui.
           </motion.p>
         ) : (
           <motion.div
