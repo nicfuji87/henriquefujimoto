@@ -745,7 +745,7 @@ export default function PartnershipPage() {
             heading('Uma parceria equilibrada');
             autoTable(doc, {
                 startY: y,
-                head: [['O Marista oferece', 'O Henrique e a familia oferecem']],
+                head: [[`${project.partner_name || 'O parceiro'} oferece`, 'O Henrique e a familia oferecem']],
                 body: partnershipPdf.map((r) => [r.marista || '', r.family || '']),
                 margin: { left: margin, right: margin },
                 styles: { fontSize: 9, cellPadding: 5, textColor: [45, 45, 50] },
@@ -1489,6 +1489,7 @@ export default function PartnershipPage() {
             )}
 
             {/* ---- Scholarship impact ---- */}
+            {(pct > 0 || p.scholarship_label || p.scholarship_body || p.ask_body) && (
             <Section>
                 <Heading>
                     O impacto de uma <span className="text-hf-gold">bolsa</span>
@@ -1499,15 +1500,17 @@ export default function PartnershipPage() {
                     transition={{ duration: 0.6, delay: 0.1 }}
                     className="mt-10 rounded-2xl border border-hf-gold/25 bg-hf-surface p-8 md:p-10"
                 >
-                    <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
-                        <span className="font-ui text-6xl font-semibold leading-none tracking-tight text-hf-gold sm:text-7xl">
-                            {pct}%
-                        </span>
-                        <span className="font-ui text-lg text-hf-ice/60">do investimento anual</span>
-                    </div>
+                    {pct > 0 && (
+                        <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
+                            <span className="font-brand text-6xl font-bold leading-none tracking-tight text-hf-gold sm:text-7xl">
+                                {pct}%
+                            </span>
+                            <span className="font-ui text-lg text-hf-ice/60">do investimento anual</span>
+                        </div>
+                    )}
 
-                    {p.scholarship_label && (
-                        <p className="mt-6 font-ui text-base text-hf-ice/80">
+                    {p.scholarship_label && (p.scholarship_monthly || 0) > 0 && (
+                        <p className={`font-ui text-base text-hf-ice/80 ${pct > 0 ? 'mt-6' : ''}`}>
                             <span className="font-semibold text-hf-ice">{p.scholarship_label}:</span>{' '}
                             {fmtBRL(p.scholarship_monthly || 0)}/mês
                             <span className="text-hf-ice/45"> · {fmtBRL(scholarshipAnnual)}/ano</span>
@@ -1529,6 +1532,7 @@ export default function PartnershipPage() {
                     )}
                 </motion.div>
             </Section>
+            )}
 
             {/* ---- What the school receives over a school year ---- */}
             {(deliverables.length > 0 || p.pilot_note) && (
@@ -1579,7 +1583,7 @@ export default function PartnershipPage() {
                     <div className="mt-8 overflow-hidden rounded-2xl border border-hf-line/70 bg-hf-surface">
                         <div className="grid grid-cols-2 border-b border-hf-line/70">
                             <div className="p-4 font-ui text-[10px] font-semibold uppercase tracking-[0.12em] text-hf-gold sm:p-5 sm:text-[11px]">
-                                O Marista oferece
+                                {p.partner_name || 'O parceiro'} oferece
                             </div>
                             <div className="border-l border-hf-line/70 p-4 font-ui text-[10px] font-semibold uppercase tracking-[0.12em] text-hf-ice/70 sm:p-5 sm:text-[11px]">
                                 O Henrique e a família oferecem
