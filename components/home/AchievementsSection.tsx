@@ -192,9 +192,14 @@ export default function AchievementsSection() {
                 </div>
 
                 {/* Resumo real dos registros */}
-                <div className="mt-12 grid grid-cols-3 gap-px overflow-hidden rounded-xl border border-hf-navy/10 bg-hf-navy/10 sm:grid-cols-5">
-                    {summary.map((s) => (
-                        <div key={s.label} className="bg-hf-ice px-4 py-5 text-center">
+                <div className="mt-12 grid grid-cols-2 gap-px overflow-hidden rounded-xl border border-hf-navy/10 bg-hf-navy/10 sm:grid-cols-5">
+                    {summary.map((s, i) => (
+                        <div
+                            key={s.label}
+                            className={`bg-hf-ice px-4 py-5 text-center ${
+                                i === summary.length - 1 ? 'col-span-2 sm:col-span-1' : ''
+                            }`}
+                        >
                             <div
                                 className={`font-brand text-2xl font-bold sm:text-3xl ${
                                     s.accent ? 'text-hf-gold-dim' : 'text-hf-navy'

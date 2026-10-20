@@ -1,9 +1,8 @@
 import React, { useRef } from 'react';
-import { Link } from 'react-router-dom';
 import { motion, useReducedMotion, useScroll, useTransform } from 'framer-motion';
 import { ArrowRight } from 'lucide-react';
 import { useSiteConfig } from '../../hooks/useSiteConfig';
-import { hfBtnPrimary, hfBtnSecondary } from '../ui/hf';
+import { hfBtnPrimary } from '../ui/hf';
 import WordRail from './WordRail';
 
 interface HomeHeroProps {
@@ -111,7 +110,7 @@ export default function HomeHero({ age, category }: HomeHeroProps) {
                         >
                             Você chegou
                             <br />
-                            antes.
+                            antes<span className="text-hf-gold">.</span>
                         </motion.h1>
 
                         <motion.p
@@ -143,9 +142,6 @@ export default function HomeHero({ age, category }: HomeHeroProps) {
                                 Descubra o Henrique
                                 <ArrowRight className="h-4 w-4" />
                             </a>
-                            <Link to="/blog" className={hfBtnSecondary}>
-                                Veja o que está acontecendo
-                            </Link>
                         </motion.div>
                     </div>
 
