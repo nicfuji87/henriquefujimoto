@@ -2,12 +2,14 @@ import React, { useEffect, useMemo, useState } from 'react';
 import PublicTopBar from '../components/PublicTopBar';
 import { useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowRight, Check, Download, Mail, MessageCircle, MapPin, Instagram, Youtube, Newspaper, Globe } from 'lucide-react';
+import { ArrowRight, Check, Download, Mail, MessageCircle, MapPin, Medal, Instagram, Youtube, Newspaper, Globe } from 'lucide-react';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { supabase } from '../lib/supabase';
 import { getMediaKitMetrics, type MediaKitMetrics } from '../lib/metrics';
 import { formatCompact } from '../components/home/utils';
+import { HFSignature, HFSymbol } from '../components/brand/HFLogo';
+import { hfBtnPrimary, hfBtnSecondary } from '../components/ui/hf';
 
 // ---- Types ---------------------------------------------------------------
 interface CostItem {
@@ -168,8 +170,48 @@ const fmtBRL = (n: number) =>
 
 const ATHLETE = 'Henrique Fujimoto · Judoca Sub-15';
 
-const medalEmoji = (type: string | null) =>
-    type === 'gold' ? '🥇' : type === 'silver' ? '🥈' : type === 'bronze' ? '🥉' : '🏅';
+// Paleta HF no PDF (mesmos valores do manual de marca).
+const PDF_NAVY: [number, number, number] = [11, 20, 38];
+const PDF_GOLD: [number, number, number] = [212, 163, 54];
+const PDF_ICE: [number, number, number] = [244, 246, 248];
+const PDF_BODY: [number, number, number] = [55, 55, 60];
+const PDF_MUTED: [number, number, number] = [120, 120, 125];
+
+/**
+ * Monograma oficial em coordenadas do SVG aprovado (viewBox 0 0 752 618).
+ * O ultimo poligono e o unico dourado — a ponta direita da barra central.
+ */
+const HF_MONOGRAM: { gold?: boolean; pts: number[][] }[] = [
+    { pts: [[127.64, 24], [28, 115.18], [28, 595.52], [130.46, 508.1], [129.52, 347.36], [294.02, 347.36], [385.2, 260.88], [130.46, 263.7]] },
+    { pts: [[294.02, 241.14], [397.42, 241.14], [398.36, 120.82], [634.3, 120.82], [723.6, 37.16], [364.52, 37.16], [294.02, 101.08]] },
+    { pts: [[401.18, 366.16], [294.02, 367.1], [294.02, 594.58], [401.18, 506.22]] },
+    { gold: true, pts: [[294.02, 348.3], [545.94, 348.3], [634.3, 260.88], [383.32, 260.88]] },
+];
+
+/** Desenha o monograma no PDF, sem redesenhar a marca: so escala os poligonos. */
+function drawMonogram(doc: jsPDF, x: number, y: number, width: number, base: [number, number, number]) {
+    const scale = width / 752;
+    for (const poly of HF_MONOGRAM) {
+        const pts = poly.pts;
+        const deltas = pts.slice(1).map((p, i) => [(p[0] - pts[i][0]) * scale, (p[1] - pts[i][1]) * scale]);
+        const [r, g, b] = poly.gold ? PDF_GOLD : base;
+        doc.setFillColor(r, g, b);
+        doc.lines(deltas, x + pts[0][0] * scale, y + pts[0][1] * scale, [1, 1], 'F', true);
+    }
+}
+
+/** Tom do icone de medalha. Ouro usa o dourado da marca. */
+const medalTone = (type: string | null) =>
+    type === 'gold'
+        ? 'text-hf-gold'
+        : type === 'silver'
+          ? 'text-hf-ice/70'
+          : type === 'bronze'
+            ? 'text-[#B87333]'
+            : 'text-hf-ice/35';
+
+const medalLabel = (type: string | null) =>
+    type === 'gold' ? 'Ouro' : type === 'silver' ? 'Prata' : type === 'bronze' ? 'Bronze' : 'Participação';
 
 const channelIcon = (name: string) => {
     const n = (name || '').toLowerCase();
@@ -213,12 +255,12 @@ function Kicker({ children }: { children: React.ReactNode }) {
 
 function Heading({ children }: { children: React.ReactNode }) {
     return (
-        <motion.h2
-            {...reveal}
-            className="font-brand text-[1.6rem] font-semibold leading-[1.15] tracking-tight text-hf-ice sm:text-[2rem] sm:leading-[1.08] md:text-[2.75rem]"
-        >
-            {children}
-        </motion.h2>
+        <motion.div {...reveal}>
+            <span className="hf-rule mb-5 block" />
+            <h2 className="font-brand text-[1.6rem] font-bold uppercase leading-[1.08] tracking-[-0.01em] text-hf-ice sm:text-[2rem] md:text-[2.5rem]">
+                {children}
+            </h2>
+        </motion.div>
     );
 }
 
@@ -239,7 +281,7 @@ function Body({ children, className = '' }: { children: React.ReactNode; classNa
 function CompRow({ comp }: { comp: Competition }) {
     return (
         <div className="flex items-center gap-3 rounded-2xl border border-hf-line/70 bg-hf-surface px-4 py-3 transition-colors hover:border-hf-ice/15">
-            <span className="shrink-0 text-xl">{medalEmoji(comp.medal_type)}</span>
+            <Medal className={`h-5 w-5 shrink-0 ${medalTone(comp.medal_type)}`} aria-label={medalLabel(comp.medal_type)} />
             <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-2">
                     <span className="font-ui text-sm font-semibold text-hf-ice">{comp.name}</span>
@@ -434,15 +476,19 @@ export default function PartnershipPage() {
         };
         const heading = (text: string, size = 14) => {
             if (!text) return;
-            ensure(size + 20);
+            ensure(size + 26);
+            y += 10;
+            // Filete dourado de assinatura acima de cada titulo.
+            doc.setFillColor(...PDF_GOLD);
+            doc.rect(margin, y - 8, 28, 2, 'F');
             y += 8;
             doc.setFont('helvetica', 'bold');
             doc.setFontSize(size);
-            doc.setTextColor(18, 20, 23);
+            doc.setTextColor(...PDF_NAVY);
             doc.text(text, margin, y);
             y += size + 6;
         };
-        const paragraph = (text: string, size = 10.5, color: [number, number, number] = [55, 55, 60]) => {
+        const paragraph = (text: string, size = 10.5, color: [number, number, number] = PDF_BODY) => {
             if (!text) return;
             doc.setFont('helvetica', 'normal');
             doc.setFontSize(size);
@@ -479,10 +525,38 @@ export default function PartnershipPage() {
             ? project.deliverables.filter((d) => typeof d === 'string' && d.trim() !== '')
             : [];
 
+        // Faixa de marca no topo da primeira pagina
+        const bandH = 116;
+        doc.setFillColor(...PDF_NAVY);
+        doc.rect(0, 0, pageW, bandH, 'F');
+        doc.setFillColor(...PDF_GOLD);
+        doc.rect(0, bandH - 3, pageW, 3, 'F');
+        drawMonogram(doc, margin, 30, 58, PDF_ICE);
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(10);
+        doc.setTextColor(...PDF_ICE);
+        doc.text('HENRIQUE FUJIMOTO', margin + 76, 56);
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(8.5);
+        doc.setTextColor(...PDF_GOLD);
+        doc.text('UM TREINO DE CADA VEZ.', margin + 76, 70);
+        doc.setTextColor(...PDF_ICE);
+        doc.setFontSize(8.5);
+        doc.text('PROPOSTA DE PARCERIA', pageW - margin, 56, { align: 'right' });
+        doc.setTextColor(...PDF_MUTED);
+        doc.text(
+            new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' }),
+            pageW - margin,
+            70,
+            { align: 'right' }
+        );
+
+        y = bandH + 40;
+
         // Title block
         doc.setFont('helvetica', 'bold');
         doc.setFontSize(20);
-        doc.setTextColor(18, 20, 23);
+        doc.setTextColor(...PDF_NAVY);
         for (const line of doc.splitTextToSize(project.project_title || 'Proposta de parceria', contentW)) {
             ensure(26);
             doc.text(line, margin, y);
@@ -491,7 +565,7 @@ export default function PartnershipPage() {
         y += 2;
         doc.setFont('helvetica', 'normal');
         doc.setFontSize(11);
-        doc.setTextColor(120, 120, 125);
+        doc.setTextColor(...PDF_MUTED);
         if (project.partner_name) {
             doc.text(`Proposta para ${project.partner_name}`, margin, y);
             y += 16;
@@ -504,7 +578,7 @@ export default function PartnershipPage() {
             heading('Resumo executivo');
             paragraph(project.executive_summary);
             if (execHighlights.length > 0) {
-                paragraph('Nos últimos 12 meses:', 10.5, [18, 20, 23]);
+                paragraph('Nos últimos 12 meses:', 10.5, PDF_NAVY);
                 for (const h of execHighlights) paragraph(`•  ${h}`, 10);
             }
             if (project.executive_objective) {
@@ -631,7 +705,7 @@ export default function PartnershipPage() {
                 body,
                 margin: { left: margin, right: margin },
                 styles: { fontSize: 9, cellPadding: 5, textColor: [45, 45, 50] },
-                headStyles: { fillColor: [18, 20, 23], textColor: [255, 255, 255], fontStyle: 'bold' },
+                headStyles: { fillColor: PDF_NAVY, textColor: PDF_ICE, fontStyle: 'bold' },
                 theme: 'grid',
             });
             y = (doc as any).lastAutoTable.finalY + 14;
@@ -675,7 +749,7 @@ export default function PartnershipPage() {
                 body: partnershipPdf.map((r) => [r.marista || '', r.family || '']),
                 margin: { left: margin, right: margin },
                 styles: { fontSize: 9, cellPadding: 5, textColor: [45, 45, 50] },
-                headStyles: { fillColor: [18, 20, 23], textColor: [255, 255, 255], fontStyle: 'bold' },
+                headStyles: { fillColor: PDF_NAVY, textColor: PDF_ICE, fontStyle: 'bold' },
                 theme: 'grid',
             });
             y = (doc as any).lastAutoTable.finalY + 14;
@@ -723,10 +797,24 @@ export default function PartnershipPage() {
 
         // Contact
         heading('Contato');
-        if (project.contact_name) paragraph(project.contact_name, 10.5, [18, 20, 23]);
+        if (project.contact_name) paragraph(project.contact_name, 10.5, PDF_NAVY);
         const waNumber = (project.contact_whatsapp || '').match(/wa\.me\/(\d+)/)?.[1];
         if (waNumber) paragraph(`WhatsApp: +${waNumber}`, 10);
         if (project.contact_email) paragraph(`E-mail: ${project.contact_email}`, 10);
+
+        // Rodape da marca em todas as paginas
+        const totalPages = doc.getNumberOfPages();
+        for (let i = 1; i <= totalPages; i++) {
+            doc.setPage(i);
+            doc.setDrawColor(...PDF_GOLD);
+            doc.setLineWidth(0.8);
+            doc.line(margin, pageH - 34, pageW - margin, pageH - 34);
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(8);
+            doc.setTextColor(...PDF_MUTED);
+            doc.text('Henrique Fujimoto · Um treino de cada vez.', margin, pageH - 22);
+            doc.text(`${i}/${totalPages}`, pageW - margin, pageH - 22, { align: 'right' });
+        }
 
         doc.save(`proposta-${project.slug || 'parceria'}.pdf`);
     }
@@ -842,14 +930,20 @@ export default function PartnershipPage() {
                         transition={{ duration: 0.5 }}
                         className="flex flex-wrap items-center gap-x-5 gap-y-3"
                     >
+                        <HFSymbol className="h-12 w-auto text-hf-ice sm:h-14" title="Henrique Fujimoto" />
                         {p.partner_logo_url && (
-                            <img
-                                src={p.partner_logo_url}
-                                alt={p.partner_name || 'Parceiro'}
-                                className="h-16 w-auto max-w-[280px] object-contain sm:h-20"
-                            />
+                            <>
+                                <span className="h-10 w-px bg-hf-line sm:h-12" />
+                                <img
+                                    src={p.partner_logo_url}
+                                    alt={p.partner_name || 'Parceiro'}
+                                    className="h-14 w-auto max-w-[240px] object-contain sm:h-16"
+                                />
+                            </>
                         )}
-                        <span className="font-ui text-sm font-medium text-hf-ice/55">{ATHLETE}</span>
+                        <span className="font-ui text-[11px] font-semibold uppercase tracking-[0.18em] text-hf-ice/50">
+                            {ATHLETE}
+                        </span>
                     </motion.div>
 
                     {p.hero_kicker && (
@@ -861,7 +955,7 @@ export default function PartnershipPage() {
                     <motion.h1
                         {...reveal}
                         transition={{ duration: 0.7, delay: 0.08 }}
-                        className="mt-1 font-brand text-[1.9rem] font-semibold leading-[1.12] tracking-tight text-hf-ice sm:text-[3.25rem] sm:leading-[1.05] md:text-[4rem]"
+                        className="mt-1 font-brand text-[1.9rem] font-extrabold uppercase leading-[0.98] tracking-[-0.015em] text-hf-ice sm:text-[3rem] md:text-[3.75rem]"
                     >
                         {p.hero_title}
                     </motion.h1>
@@ -1647,7 +1741,7 @@ export default function PartnershipPage() {
                     <motion.h2
                         {...reveal}
                         transition={{ duration: 0.6 }}
-                        className="font-brand text-[1.6rem] font-semibold leading-[1.15] tracking-tight text-hf-ice sm:text-[2rem] sm:leading-[1.08] md:text-[2.75rem]"
+                        className="font-brand text-[1.6rem] font-extrabold uppercase leading-[1.02] tracking-[-0.015em] text-hf-ice sm:text-[2.25rem] md:text-[2.75rem]"
                     >
                         {p.closing_title || 'Vamos construir isso juntos'}
                     </motion.h2>
@@ -1672,27 +1766,27 @@ export default function PartnershipPage() {
                                 href={p.contact_whatsapp}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="inline-flex items-center gap-2.5 rounded-full bg-hf-gold px-6 py-3.5 font-ui text-sm font-semibold text-hf-navy transition-colors hover:bg-hf-gold-dim"
+                                className={hfBtnPrimary}
                             >
-                                <MessageCircle className="h-4.5 w-4.5" />
+                                <MessageCircle className="h-4 w-4" />
                                 Conversar no WhatsApp
                             </a>
                         )}
                         {p.contact_email && (
                             <a
                                 href={`mailto:${p.contact_email}`}
-                                className="inline-flex items-center gap-2.5 rounded-full border border-hf-ice/20 bg-hf-ice/5 px-6 py-3.5 font-ui text-sm font-semibold text-hf-ice transition-all hover:border-hf-gold/40 hover:bg-hf-ice/10"
+                                className={hfBtnSecondary}
                             >
-                                <Mail className="h-4.5 w-4.5" />
+                                <Mail className="h-4 w-4" />
                                 Enviar e-mail
                             </a>
                         )}
                         <button
                             type="button"
                             onClick={handleDownloadPdf}
-                            className="inline-flex items-center gap-2.5 rounded-full border border-hf-ice/20 bg-hf-ice/5 px-6 py-3.5 font-ui text-sm font-semibold text-hf-ice transition-all hover:border-hf-gold/40 hover:bg-hf-ice/10"
+                            className={hfBtnSecondary}
                         >
-                            <Download className="h-4.5 w-4.5" />
+                            <Download className="h-4 w-4" />
                             Baixar proposta em PDF
                         </button>
                     </motion.div>
@@ -1701,6 +1795,10 @@ export default function PartnershipPage() {
                         {p.contact_name ? `${p.contact_name} · ` : ''}
                         {ATHLETE}
                     </p>
+
+                    <div className="mt-12 flex justify-center border-t border-hf-line/60 pt-12">
+                        <HFSignature />
+                    </div>
                 </div>
             </section>
         </div>

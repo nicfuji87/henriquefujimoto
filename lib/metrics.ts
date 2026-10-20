@@ -31,6 +31,10 @@ export interface AggregatedMetrics {
     audience_city: Record<string, number>;
     audience_gender_age: Record<string, number>;
     audience_country: Record<string, number>;
+    /** Dias do periodo que realmente tem medicao no banco. */
+    days_with_data: number;
+    /** Fracao do periodo coberta pela medicao (0 a 1). */
+    coverage: number;
 }
 
 export async function getAggregatedMetrics(days: number): Promise<AggregatedMetrics | null> {
@@ -152,7 +156,9 @@ export async function getAggregatedMetrics(days: number): Promise<AggregatedMetr
         followers_growth: calcGrowth(currentFollowersGained, prevFollowersGained),
         audience_city,
         audience_gender_age,
-        audience_country
+        audience_country,
+        days_with_data: currentPeriod.length,
+        coverage: days > 0 ? currentPeriod.length / days : 0,
     };
 }
 

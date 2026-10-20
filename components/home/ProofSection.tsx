@@ -82,7 +82,10 @@ export default function ProofSection({ metrics, loading = false }: ProofSectionP
         followers > 0 && { key: 'followers', label: 'Seguidores', value: followers },
     ].filter(Boolean) as { key: string; label: string; value: number; growth?: number; accent?: boolean }[];
 
-    const hasData = tiles.length > 0;
+    // Uma janela mal sincronizada nao vira "pouco alcance": sem cobertura
+    // suficiente de medicao, o periodo e tratado como indisponivel.
+    const measured = (metrics?.coverage ?? 0) >= 0.6;
+    const hasData = measured && tiles.length > 0;
 
     return (
         <section id="numeros" className="scroll-mt-20 bg-hf-navy px-6 py-16 sm:py-20 md:py-28">
@@ -155,8 +158,9 @@ export default function ProofSection({ metrics, loading = false }: ProofSectionP
                         </div>
                     ) : (
                         <p className={hfEmpty}>
-                            Os indicadores de audiência não estão disponíveis no momento. Assim que a sincronização
-                            com o Instagram for concluída, os números reais aparecem aqui.
+                            Os indicadores de audiência não estão disponíveis para este período: a sincronização com
+                            o Instagram está incompleta. Assim que os dados forem atualizados, os números reais
+                            aparecem aqui.
                         </p>
                     )}
                 </div>
