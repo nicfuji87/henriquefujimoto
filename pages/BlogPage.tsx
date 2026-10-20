@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import PublicHeader from '../components/PublicHeader';
+import Footer from '../components/Footer';
+import WordRail from '../components/home/WordRail';
+import { hfBtnPrimary, hfCard, hfKicker, hfLead } from '../components/ui/hf';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     Calendar, Clock, ChevronRight,
@@ -42,7 +45,7 @@ interface BlogPost {
 
 // ─── Components ──────────────────────────────────────────
 
-function CategoryBadge({ category }: { category: string }) {
+const CategoryBadge: React.FC<{ category: string }> = ({ category }) => {
     const key = category.toLowerCase();
     const style = CATEGORY_STYLES[key] || CATEGORY_STYLES['geral'];
 
@@ -54,7 +57,7 @@ function CategoryBadge({ category }: { category: string }) {
     );
 }
 
-function FeaturedPost({ post }: { post: BlogPost }) {
+const FeaturedPost: React.FC<{ post: BlogPost }> = ({ post }) => {
     const date = new Date(post.published_at || post.created_at).toLocaleDateString('pt-BR', {
         day: 'numeric', month: 'long', year: 'numeric'
     });
@@ -123,7 +126,7 @@ function FeaturedPost({ post }: { post: BlogPost }) {
     );
 }
 
-function PostCard({ post, index }: { post: BlogPost; index: number }) {
+const PostCard: React.FC<{ post: BlogPost; index: number }> = ({ post, index }) => {
     const date = new Date(post.published_at || post.created_at).toLocaleDateString('pt-BR', {
         day: '2-digit', month: 'short', year: 'numeric'
     });
@@ -234,155 +237,268 @@ export default function BlogPage() {
     const featuredPost = isDefaultView && filteredPosts.length > 0 ? filteredPosts[0] : null;
     const gridPosts = isDefaultView ? filteredPosts.slice(1) : filteredPosts;
 
+    // Capa do hero: a imagem do post mais recente (real, nunca banco de imagens).
+    const heroImage = posts.find((p) => p.og_image)?.og_image || null;
+
+    // Contagem por categoria a partir dos posts publicados — sem numeros fixos.
+    const categoryCounts = activeCategories
+        .map((cat) => ({
+            key: cat,
+            label: (CATEGORY_STYLES[cat] || CATEGORY_STYLES['geral']).label,
+            count: posts.filter((p) => p.category.toLowerCase() === cat).length,
+        }))
+        .sort((a, b) => b.count - a.count);
+
     return (
-        <div className="min-h-screen bg-hf-navy font-ui selection:bg-hf-gold/30">
+        <div className="min-h-screen bg-hf-navy font-ui text-hf-ice selection:bg-hf-gold/30">
             <PublicHeader />
 
-            <main className="mx-auto max-w-7xl space-y-16 px-4 pb-10 pt-28 md:pb-16 md:pt-32">
+            {/* Hero */}
+            <section className="relative isolate overflow-hidden border-b border-hf-line/60 px-6 pb-14 pt-28 sm:pb-16 sm:pt-32">
+                {heroImage && (
+                    <>
+                        <img
+                            src={heroImage}
+                            alt=""
+                            className="absolute inset-0 -z-10 h-full w-full object-cover object-center opacity-35 grayscale"
+                        />
+                        <div className="absolute inset-0 -z-10 bg-gradient-to-r from-hf-navy via-hf-navy/90 to-hf-navy/40" />
+                    </>
+                )}
 
-                {/* Hero Title & Personal Brand */}
-                <section className="text-center space-y-8">
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="space-y-6"
-                    >
-                        <p className="font-ui text-[12px] font-semibold uppercase tracking-[0.16em] text-hf-gold">
-                            Blog oficial
-                        </p>
-                        <h1 className="font-brand text-[2.1rem] md:text-6xl font-semibold text-hf-ice tracking-tight leading-[1.1] md:leading-[1.05]">
-                            Histórias e bastidores do <span className="text-hf-gold">judô</span>
-                        </h1>
-                        <p className="text-hf-ice/60 text-lg md:text-xl max-w-2xl mx-auto leading-relaxed">
-                            Acompanhe minha rotina de treinos, bastidores das competições e minha evolução no judô rumo à faixa preta.
-                        </p>
+                <motion.div
+                    initial={{ opacity: 0, y: 16 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.6 }}
+                    className="mx-auto max-w-7xl"
+                >
+                    <span className="hf-rule mb-5 block" />
+                    <p className={hfKicker}>Bastidores / Rotina / Reflexões</p>
+                    <h1 className="mt-4 font-brand text-[2.25rem] font-extrabold uppercase leading-[0.95] tracking-[-0.015em] text-hf-ice sm:text-[3.25rem] lg:text-[4rem]">
+                        Não coube
+                        <br />
+                        no Reels.
+                    </h1>
+                    <p className={`mt-6 max-w-xl ${hfLead}`}>
+                        Histórias, bastidores, treinos e tudo o que também faz parte dessa jornada. Os momentos que
+                        não cabem em vídeos curtos, mas que constroem o caminho.
+                    </p>
+                </motion.div>
+            </section>
 
-                        <div className="flex justify-center pt-2">
-                            <a
-                                href="https://instagram.com/henriquefujimoto"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="group inline-flex items-center gap-3 px-6 py-3 rounded-full border border-hf-ice/15 bg-hf-ice/5 text-hf-ice font-medium hover:bg-hf-ice/10 transition-colors"
-                            >
-                                <Instagram className="w-5 h-5 group-hover:text-hf-gold transition-colors" />
-                                <span>Seguir no Instagram</span>
-                                <ArrowUpRight className="w-4 h-4 text-hf-ice/50 group-hover:text-hf-gold transition-colors" />
-                            </a>
-                        </div>
-                    </motion.div>
-
-                    {/* Search & Filter Bar */}
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.1 }}
-                        className="max-w-2xl mx-auto pt-8"
-                    >
-                        <div className="relative">
-                            <div className="relative flex items-center rounded-full border border-hf-line/70 bg-hf-surface px-4 py-3 focus-within:border-hf-gold/40 transition-colors">
-                                <Search className="w-5 h-5 text-hf-ice/40 mr-3" />
-                                <input
-                                    type="text"
-                                    value={searchQuery}
-                                    onChange={(e) => setSearchQuery(e.target.value)}
-                                    placeholder="Buscar artigos..."
-                                    className="bg-transparent border-none focus:outline-none text-hf-ice w-full placeholder-hf-ice/40 text-sm"
-                                />
-                                {searchQuery && (
-                                    <button onClick={() => setSearchQuery('')} className="p-1 hover:bg-hf-ice/10 rounded-full text-hf-ice/60">
-                                        <X className="w-4 h-4" />
-                                    </button>
-                                )}
+            <main className="mx-auto grid max-w-7xl grid-cols-1 gap-10 px-6 py-12 lg:grid-cols-[1.9fr_0.75fr] lg:gap-14 lg:py-16">
+                {/* Coluna principal */}
+                <div className="min-w-0 space-y-14">
+                    {loading ? (
+                        <div className="space-y-8">
+                            <div className="h-80 animate-pulse rounded-2xl bg-hf-surface" />
+                            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                                <div className="h-64 animate-pulse rounded-2xl bg-hf-surface" />
+                                <div className="h-64 animate-pulse rounded-2xl bg-hf-surface" />
                             </div>
                         </div>
-
-                        {/* Categories Pills */}
-                        {activeCategories.length > 0 && (
-                            <div className="flex flex-wrap items-center justify-center gap-2 mt-6">
-                                <button
-                                    onClick={() => setSelectedCategory(null)}
-                                    className={`px-4 py-1.5 rounded-full text-xs font-medium transition-colors ${!selectedCategory
-                                        ? 'bg-hf-gold text-hf-navy font-semibold'
-                                        : 'border border-hf-ice/15 bg-hf-ice/5 text-hf-ice/70 hover:text-hf-ice'}`}
-                                >
-                                    Todos
-                                </button>
-                                {activeCategories.map(cat => {
-                                    const style = CATEGORY_STYLES[cat as string] || CATEGORY_STYLES['geral'];
-                                    const isActive = selectedCategory === cat;
-                                    return (
-                                        <button
-                                            key={cat}
-                                            onClick={() => setSelectedCategory(isActive ? null : cat)}
-                                            className={`px-4 py-1.5 rounded-full text-xs font-medium transition-colors ${isActive
-                                                ? 'bg-hf-gold text-hf-navy font-semibold'
-                                                : 'border border-hf-ice/15 bg-hf-ice/5 text-hf-ice/70 hover:text-hf-ice'}`}
-                                        >
-                                            {style.label}
-                                        </button>
-                                    );
-                                })}
-                            </div>
-                        )}
-                    </motion.div>
-                </section>
-
-                {/* Content Area */}
-                {loading ? (
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8 animate-pulse">
-                        <div className="md:col-span-3 h-96 bg-hf-surface rounded-2xl border border-hf-line/70" />
-                        <div className="h-64 bg-hf-surface rounded-2xl border border-hf-line/70" />
-                        <div className="h-64 bg-hf-surface rounded-2xl border border-hf-line/70" />
-                    </div>
-                ) : (
-                    <div className="space-y-16">
-                        {/* Featured Section */}
-                        {featuredPost && (
-                            <section>
-                                <div className="flex items-center gap-2 mb-6 border-b border-hf-line/70 pb-4">
-                                    <Sparkles className="w-5 h-5 text-hf-gold" />
-                                    <h2 className="font-brand text-hf-ice text-lg font-semibold tracking-tight">Mais recente</h2>
-                                </div>
-                                <FeaturedPost post={featuredPost} />
-                            </section>
-                        )}
-
-                        {/* Grid Section */}
-                        {gridPosts.length > 0 ? (
-                            <section>
-                                {featuredPost && (
-                                    <div className="flex items-center gap-2 mb-6 border-b border-hf-line/70 pb-4">
-                                        <TrendingUp className="w-5 h-5 text-hf-ice/45" />
-                                        <h2 className="font-brand text-hf-ice text-lg font-semibold tracking-tight">
-                                            {isDefaultView ? 'Arquivo' : 'Resultados da busca'}
+                    ) : (
+                        <>
+                            {featuredPost && (
+                                <section>
+                                    <div className="mb-6 flex items-center gap-2 border-b border-hf-line/70 pb-4">
+                                        <Sparkles className="h-4 w-4 text-hf-gold" />
+                                        <h2 className="font-ui text-[11px] font-semibold uppercase tracking-[0.2em] text-hf-ice/70">
+                                            Artigo em destaque
                                         </h2>
                                     </div>
-                                )}
-                                <motion.div layout className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                                    <AnimatePresence>
-                                        {gridPosts.map((post, index) => (
-                                            <PostCard key={post.id} post={post} index={index} />
-                                        ))}
-                                    </AnimatePresence>
-                                </motion.div>
-                            </section>
-                        ) : (
-                            !featuredPost && (
-                                <div className="text-center py-20 bg-hf-surface rounded-2xl border border-hf-line/70">
-                                    <Search className="w-12 h-12 text-hf-ice/30 mx-auto mb-4" />
-                                    <p className="text-hf-ice/60 text-lg">Nenhum post encontrado.</p>
-                                    <button
-                                        onClick={() => { setSearchQuery(''); setSelectedCategory(null); }}
-                                        className="mt-4 text-hf-gold hover:text-hf-gold-dim transition-colors text-sm"
-                                    >
-                                        Limpar filtros
-                                    </button>
-                                </div>
-                            )
+                                    <FeaturedPost post={featuredPost} />
+                                </section>
+                            )}
+
+                            {gridPosts.length > 0 ? (
+                                <section>
+                                    <div className="mb-6 flex items-center gap-2 border-b border-hf-line/70 pb-4">
+                                        <TrendingUp className="h-4 w-4 text-hf-ice/45" />
+                                        <h2 className="font-ui text-[11px] font-semibold uppercase tracking-[0.2em] text-hf-ice/70">
+                                            {isDefaultView ? 'Artigos recentes' : 'Resultados da busca'}
+                                        </h2>
+                                    </div>
+                                    <motion.div layout className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3">
+                                        <AnimatePresence>
+                                            {gridPosts.map((post, index) => (
+                                                <PostCard key={post.id} post={post} index={index} />
+                                            ))}
+                                        </AnimatePresence>
+                                    </motion.div>
+                                </section>
+                            ) : (
+                                !featuredPost && (
+                                    <div className="rounded-2xl border border-hf-line/70 bg-hf-surface py-20 text-center">
+                                        <Search className="mx-auto mb-4 h-10 w-10 text-hf-ice/25" />
+                                        <p className="font-ui text-hf-ice/60">Nenhum artigo encontrado.</p>
+                                        <button
+                                            onClick={() => {
+                                                setSearchQuery('');
+                                                setSelectedCategory(null);
+                                            }}
+                                            className="mt-4 font-ui text-sm text-hf-gold transition-colors hover:text-hf-gold-soft"
+                                        >
+                                            Limpar filtros
+                                        </button>
+                                    </div>
+                                )
+                            )}
+                        </>
+                    )}
+                </div>
+
+                {/* Barra lateral */}
+                <aside className="space-y-8 lg:sticky lg:top-24 lg:self-start">
+                    {/* Busca */}
+                    <div className="flex items-center rounded-full border border-hf-line/70 bg-hf-surface px-4 py-3 transition-colors focus-within:border-hf-gold/50">
+                        <Search className="mr-3 h-4 w-4 text-hf-ice/40" />
+                        <label htmlFor="busca-artigos" className="sr-only">
+                            Buscar artigos
+                        </label>
+                        <input
+                            id="busca-artigos"
+                            type="search"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            placeholder="Buscar artigos..."
+                            className="w-full border-none bg-transparent font-ui text-sm text-hf-ice placeholder-hf-ice/40 focus:outline-none"
+                        />
+                        {searchQuery && (
+                            <button
+                                onClick={() => setSearchQuery('')}
+                                aria-label="Limpar busca"
+                                className="rounded-full p-1 text-hf-ice/60 hover:bg-hf-ice/10"
+                            >
+                                <X className="h-4 w-4" />
+                            </button>
                         )}
                     </div>
-                )}
+
+                    {/* Categorias com contagem real */}
+                    {categoryCounts.length > 0 && (
+                        <div>
+                            <div className="mb-4 flex items-center gap-2">
+                                <span className="h-0.5 w-5 bg-hf-gold" />
+                                <h2 className="font-ui text-[11px] font-semibold uppercase tracking-[0.2em] text-hf-ice/70">
+                                    Categorias
+                                </h2>
+                            </div>
+                            <ul className="space-y-1">
+                                <li>
+                                    <button
+                                        onClick={() => setSelectedCategory(null)}
+                                        className={`flex w-full items-center justify-between border-b border-hf-line/40 py-2.5 font-ui text-sm transition-colors ${
+                                            !selectedCategory ? 'text-hf-gold' : 'text-hf-ice/70 hover:text-hf-ice'
+                                        }`}
+                                    >
+                                        Todos
+                                        <span className="font-ui text-xs text-hf-ice/40">{posts.length}</span>
+                                    </button>
+                                </li>
+                                {categoryCounts.map((c) => (
+                                    <li key={c.key}>
+                                        <button
+                                            onClick={() => setSelectedCategory(selectedCategory === c.key ? null : c.key)}
+                                            className={`flex w-full items-center justify-between border-b border-hf-line/40 py-2.5 font-ui text-sm transition-colors ${
+                                                selectedCategory === c.key ? 'text-hf-gold' : 'text-hf-ice/70 hover:text-hf-ice'
+                                            }`}
+                                        >
+                                            {c.label}
+                                            <span className="font-ui text-xs text-hf-ice/40">{c.count}</span>
+                                        </button>
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+                    )}
+
+                    {/* Todos os artigos */}
+                    {posts.length > 0 && (
+                        <div>
+                            <div className="mb-4 flex items-center gap-2">
+                                <span className="h-0.5 w-5 bg-hf-gold" />
+                                <h2 className="font-ui text-[11px] font-semibold uppercase tracking-[0.2em] text-hf-ice/70">
+                                    Todos os artigos
+                                </h2>
+                            </div>
+                            <ul className="space-y-3">
+                                {posts.map((p) => (
+                                    <li key={p.id}>
+                                        <Link to={`/blog/${p.slug}`} className="group flex gap-3">
+                                            <span className="h-14 w-14 shrink-0 overflow-hidden rounded-lg border border-hf-line/60 bg-hf-surface-2">
+                                                {p.og_image && (
+                                                    <img src={p.og_image} alt="" className="h-full w-full object-cover" />
+                                                )}
+                                            </span>
+                                            <span className="min-w-0">
+                                                <span className="line-clamp-2 font-ui text-[13px] font-semibold leading-snug text-hf-ice/85 transition-colors group-hover:text-hf-gold">
+                                                    {p.title}
+                                                </span>
+                                                <span className="mt-1 block font-ui text-[11px] text-hf-ice/40">
+                                                    {new Date(p.published_at || p.created_at).toLocaleDateString('pt-BR')} ·{' '}
+                                                    {p.reading_time || 5} min
+                                                </span>
+                                            </span>
+                                        </Link>
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+                    )}
+
+                    {/* Instagram */}
+                    <a
+                        href="https://instagram.com/henriquefujimoto"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={`group flex items-center justify-between gap-3 ${hfCard} px-4 py-4 transition-colors hover:border-hf-gold/40`}
+                    >
+                        <span className="flex items-center gap-3">
+                            <Instagram className="h-5 w-5 text-hf-gold" />
+                            <span className="font-ui text-[13px] font-semibold text-hf-ice">Seguir no Instagram</span>
+                        </span>
+                        <ArrowUpRight className="h-4 w-4 text-hf-ice/45 transition-colors group-hover:text-hf-gold" />
+                    </a>
+                </aside>
             </main>
+
+            {/* Fechamento */}
+            <section className="relative isolate overflow-hidden border-t border-hf-line/60 bg-hf-navy px-6 py-16 sm:py-20">
+                {heroImage && (
+                    <>
+                        <img
+                            src={heroImage}
+                            alt=""
+                            loading="lazy"
+                            className="absolute inset-0 -z-10 h-full w-full object-cover object-center opacity-30 grayscale"
+                        />
+                        <div className="absolute inset-0 -z-10 bg-gradient-to-r from-hf-navy via-hf-navy/85 to-hf-navy/50" />
+                    </>
+                )}
+                <div className="mx-auto flex w-full max-w-7xl items-end justify-between gap-10">
+                    <div className="max-w-2xl">
+                        <h2 className="font-brand text-[1.75rem] font-extrabold uppercase leading-[1] tracking-[-0.015em] text-hf-ice sm:text-[2.5rem]">
+                            Continua essa jornada.
+                        </h2>
+                        <p className="mt-4 max-w-md font-ui text-[15px] leading-relaxed text-hf-ice/70">
+                            Mais histórias, aprendizados e bastidores por aqui. A jornada segue, e você faz parte dela.
+                        </p>
+                        <a
+                            href="https://instagram.com/henriquefujimoto"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className={`mt-7 ${hfBtnPrimary}`}
+                        >
+                            <Instagram className="h-4 w-4" />
+                            Acompanhar tudo
+                        </a>
+                    </div>
+                    <WordRail words={['Mesmo', 'tatame', 'novas', 'histórias']} className="pb-2" />
+                </div>
+            </section>
+
+            <Footer />
         </div>
     );
 }

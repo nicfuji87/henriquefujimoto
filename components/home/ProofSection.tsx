@@ -88,16 +88,20 @@ export default function ProofSection({ metrics, loading = false }: ProofSectionP
         <section id="numeros" className="scroll-mt-20 bg-hf-navy px-6 py-16 sm:py-20 md:py-28">
             <div className="mx-auto max-w-6xl">
                 <SectionHeading
-                    kicker="Alcance"
-                    title={<>Uma história que já <span className="text-hf-gold">alcança muita gente</span></>}
+                    kicker="Números"
+                    title={<>A jornada também pode ser <span className="text-hf-gold">contada em números.</span></>}
                     lead={
                         hasData && reach > 0 ? (
                             <>
                                 {formatCompact(reach)} pessoas acompanharam o conteúdo do Henrique nos últimos 30 dias.
-                                Mas, mais importante do que o alcance, é quem está acompanhando.
+                                Os números ajudam a registrar o caminho percorrido — mas não definem tudo o que o
+                                esporte representa.
                             </>
                         ) : (
-                            <>Mais importante do que o alcance é quem está acompanhando esta jornada.</>
+                            <>
+                                Os números ajudam a registrar o caminho percorrido — mas não definem tudo o que o
+                                esporte representa. Mais importante do que o alcance é quem está acompanhando.
+                            </>
                         )
                     }
                 />

@@ -158,3 +158,61 @@ tokens, fontes ou componentes modificados.
    imagem Open Graph entre em cache.
 5. `sitemap.xml`, `robots.txt`, URLs e `facebook-domain-verification` foram preservados — nenhuma
    URL mudou.
+---
+
+## 9. Rodada 2 — layout dos mockups e nova copy (19/10/2026)
+
+Aplicação das quatro telas enviadas (home desktop, home mobile, blog e apoiar) somada ao documento
+de copy, com **todo o conteúdo checado contra o banco**. O hero manteve o vídeo, conforme pedido.
+
+### O que entrou
+
+- **Cabeçalho** com a navegação das telas — Início, História, Jornada, Blog, Apoiar — item ativo
+  sublinhado em dourado e botão contornado "Acompanhar jornada".
+- **Hero** com o vídeo real do atleta, breadcrumb (`Henrique Fujimoto / Judô / Sub-15 / História em
+  andamento`), a manchete **"Você chegou antes."**, o complemento "Antes de quê? Ninguém sabe
+  ainda." e a trilha vertical de palavras (`components/home/WordRail.tsx`).
+- **Faixa dupla escura** com fotos reais dos marcos: "Fujimoto não é um nome novo no judô. Henrique
+  é." e "Aqui não tem trailer. Tem treino."
+- **Faixa clara em branco gelo** para as competições — "Terminou no tatame. Continua aqui." — com os
+  três registros mais recentes em cards, o resumo real (18 competições, 13 pódios, 5 ouros, 2
+  pratas, 6 bronzes) e a lista completa expansível.
+- **"Não coube no Reels."** na home e como hero do blog.
+- **Fechamentos** "Não temos o final." (home) e "Não sabemos qual será a próxima medalha." (apoiar),
+  ambos com a trilha de palavras.
+- **Blog** reorganizado em coluna principal + barra lateral (busca, categorias e lista de artigos).
+- **Apoiar** com hero próprio, quatro cards de apoio, faixa clara de valores, bloco institucional e
+  fechamento.
+- Tokens de faixa clara no design system: `hfSectionLight`, `hfTitleOnLight`, `hfKickerOnLight`,
+  `hfLeadOnLight`, `hfBodyOnLight`, `hfCardLight`, `hfLinkOnLight`, `hfBtnOutlineGold`.
+
+### Dados fictícios das telas que NÃO foram copiados
+
+As telas enviadas eram comps com conteúdo de exemplo. O que foi substituído pelo dado real:
+
+| Na tela | No site |
+|---|---|
+| "Campeonato Brasileiro Sub-18", "Copa São Paulo", "Open Pan-Americano Sub-18" | As três competições mais recentes do banco (Copa do Ovo, 5ª Etapa Ranking Brasília, 1ª Etapa Circuito Escolar), todas **Sub-15** |
+| Textos descritivos inventados em cada card de competição | Colocação, categoria, peso e cidade — campos reais do registro |
+| Categorias do blog com contagens 12/8/11/9/14/6 | Categorias reais dos posts publicados, com a contagem real (hoje: Judô, 3) |
+| "Artigos mais lidos — 32 mil visualizações" | Lista "Todos os artigos" — **não existe contador de visualizações** na base, então nenhum número foi exibido |
+| Citação atribuída ao Henrique ("Acreditar no processo…") | **Removida.** Não invento fala de pessoa real; se houver uma frase dita por ele, basta enviar que eu insiro |
+| Fotos de banco de imagens | Fotos reais dos marcos cadastrados (`athlete_profile.milestones`) e o vídeo do hero |
+
+O bloco "Sobre o projeto" da página de apoio monta o texto a partir do banco (idade, categoria,
+total de competições e ano da primeira), em vez de números escritos à mão que envelhecem sozinhos.
+
+### Verificações desta rodada
+
+- `npm run build` — passou.
+- `npx tsc --noEmit` — **zero erros em todas as páginas públicas** (BlogPage e ConteudoPage, que já
+  falhavam antes deste trabalho, foram corrigidas de quebra).
+- `npx eslint` nos arquivos tocados — sem erros e sem avisos novos.
+- Navegador: `/`, `/blog`, `/apoiar` em 390 px — sem rolagem horizontal, sem erro de console,
+  contagens e categorias batendo com o banco.
+
+### Observação sobre as capturas de tela
+
+O painel do navegador não compõe texto sobre imagens de fundo nas capturas desta sessão (a camada
+de texto sai em branco) e o recorte sai ampliado em telas largas. Validei a geometria por medição no
+DOM e capturei com as imagens de fundo ocultas. Vale uma conferência no seu navegador.

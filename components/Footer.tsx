@@ -5,17 +5,22 @@ import { HFSignature } from './brand/HFLogo';
 
 const links = [
     { label: 'História', to: '/conteudo' },
+    { label: 'Jornada', to: '/#conquistas' },
     { label: 'Números', to: '/numeros' },
-    { label: 'Conteúdo', to: '/blog' },
+    { label: 'Blog', to: '/blog' },
     { label: 'Apoiar', to: '/apoiar' },
 ];
 
 const Footer: React.FC = () => {
     return (
         <footer className="border-t border-hf-line/60 bg-hf-navy-deep px-6 pb-32 pt-16">
-            <div className="mx-auto flex w-full max-w-6xl flex-col items-center gap-10 text-center">
+            <div className="mx-auto flex w-full max-w-6xl flex-col items-center gap-9 text-center">
                 {/* Assinatura HF */}
                 <HFSignature />
+
+                <p className="font-ui text-[10px] font-semibold uppercase tracking-[0.26em] text-hf-ice/40">
+                    Judô · Disciplina · Respeito · Evolução
+                </p>
 
                 {/* Navegacao */}
                 <nav aria-label="Navegação do rodapé" className="flex flex-wrap items-center justify-center gap-x-7 gap-y-3">
@@ -39,7 +44,7 @@ const Footer: React.FC = () => {
                         target="_blank"
                         rel="noopener noreferrer"
                         aria-label="Instagram de Henrique Fujimoto"
-                        className="group inline-flex h-11 w-11 items-center justify-center rounded-full border border-hf-line bg-hf-surface/70 text-hf-ice/80 transition-colors hover:border-hf-gold/50 hover:text-hf-gold"
+                        className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-hf-line bg-hf-surface/70 text-hf-ice/80 transition-colors hover:border-hf-gold/50 hover:text-hf-gold"
                     >
                         <Instagram className="h-5 w-5" />
                     </a>
@@ -48,7 +53,7 @@ const Footer: React.FC = () => {
                         target="_blank"
                         rel="noopener noreferrer"
                         aria-label="YouTube de Henrique Fujimoto"
-                        className="group inline-flex h-11 w-11 items-center justify-center rounded-full border border-hf-line bg-hf-surface/70 text-hf-ice/80 transition-colors hover:border-hf-gold/50 hover:text-hf-gold"
+                        className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-hf-line bg-hf-surface/70 text-hf-ice/80 transition-colors hover:border-hf-gold/50 hover:text-hf-gold"
                     >
                         <Youtube className="h-5 w-5" />
                     </a>
@@ -68,7 +73,7 @@ const Footer: React.FC = () => {
                 </div>
 
                 <p className="font-ui text-[10px] font-medium uppercase tracking-[0.2em] text-hf-ice/30">
-                    © {new Date().getFullYear()} Henrique Fujimoto
+                    © {new Date().getFullYear()} Henrique Fujimoto — Todos os direitos reservados.
                 </p>
             </div>
         </footer>

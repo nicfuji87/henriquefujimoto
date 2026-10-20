@@ -74,19 +74,16 @@ export default function HomePage() {
         { label: 'Categoria', value: category },
     ].filter(Boolean) as StoryFact[];
 
-    // Retrato da secao "Quem e o Henrique": usa o marco de legado (familia
-    // Fujimoto / terceira geracao), coerente com a legenda da secao.
-    // Na ausencia dele, cai para a imagem do hero.
-    const portrait = (() => {
-        const ms = profile?.milestones;
-        if (ms && ms.length) {
-            for (let i = 0; i < ms.length; i++) {
-                const url = ms[i].media_items?.[0]?.url || ms[i].media_url;
-                if (url) return url;
-            }
-        }
-        return config.hero_image_desktop || config.hero_image || null;
-    })();
+    // Fotos reais dos marcos da trajetoria, na ordem em que foram cadastradas.
+    // Sao as unicas imagens do atleta usadas fora do hero — nada de banco de imagens.
+    const milestonePhotos = (profile?.milestones || [])
+        .map((m) => m.media_items?.[0]?.url || m.media_url || null)
+        .filter(Boolean) as string[];
+
+    const fallbackPhoto = config.hero_image_desktop || config.hero_image || null;
+    const portrait = milestonePhotos[0] || fallbackPhoto;
+    const bandPhotos = [milestonePhotos[1] || fallbackPhoto, milestonePhotos[2] || milestonePhotos[0] || fallbackPhoto];
+    const closingPhoto = milestonePhotos[milestonePhotos.length - 1] || fallbackPhoto;
 
     return (
         <main className="relative min-h-screen w-full overflow-x-hidden bg-hf-navy font-ui text-hf-ice">
@@ -94,13 +91,15 @@ export default function HomePage() {
 
             <HomeHero age={age} category={category} />
 
-            <BeyondTatame />
+            <BeyondTatame photos={bandPhotos} />
+
+            <AchievementsSection />
 
             <StorySection portrait={portrait} facts={storyFacts} />
 
             <FollowJourney />
 
-            <AchievementsSection />
+            <BlogTeaser />
 
             <ProofSection metrics={metrics} loading={metricsLoading} />
 
@@ -110,9 +109,7 @@ export default function HomePage() {
 
             <ProductsSection />
 
-            <BlogTeaser />
-
-            <ClosingCTA ctaLink={config.cta_link} />
+            <ClosingCTA ctaLink={config.cta_link} photo={closingPhoto} />
 
             <Footer />
             <StickyApoiar ctaLink={config.cta_link} />

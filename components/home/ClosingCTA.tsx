@@ -1,90 +1,72 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Instagram, HeartHandshake } from 'lucide-react';
+import { ArrowRight, Instagram } from 'lucide-react';
+import { hfBtnPrimary, hfBtnSecondary } from '../ui/hf';
 import { buildWaLink } from './utils';
+import WordRail from './WordRail';
 
 interface ClosingCTAProps {
     ctaLink?: string;
+    /** Foto real de fechamento (marco mais recente do atleta). */
+    photo?: string | null;
 }
 
-const buildup = [
-    'Talvez você esteja conhecendo o Henrique hoje.',
-    'Daqui a alguns anos, talvez veja esse mesmo menino disputando um Campeonato Brasileiro.',
-    'Quem sabe um Pan-Americano. Ou até uma Olimpíada.',
-];
-
-export default function ClosingCTA({ ctaLink }: ClosingCTAProps) {
-    const wa = buildWaLink(ctaLink, 'Olá! Vim pelo site do Henrique e quero fazer parte dessa jornada. Podemos conversar?');
+export default function ClosingCTA({ ctaLink, photo }: ClosingCTAProps) {
+    const wa = buildWaLink(
+        ctaLink,
+        'Olá! Vim pelo site do Henrique e quero fazer parte dessa jornada. Podemos conversar?'
+    );
 
     return (
-        <section className="relative overflow-hidden bg-hf-navy px-6 py-20 sm:py-28 md:py-36">
-            <div className="pointer-events-none absolute left-1/2 top-1/2 h-80 w-[38rem] -translate-x-1/2 -translate-y-1/2 rounded-full bg-hf-gold/[0.08] blur-[130px]" />
+        <section className="relative isolate overflow-hidden border-y border-hf-line/60 bg-hf-navy px-6 py-16 sm:py-20 md:py-24">
+            {photo && (
+                <>
+                    <img
+                        src={photo}
+                        alt=""
+                        loading="lazy"
+                        className="absolute inset-0 -z-10 h-full w-full object-cover object-center opacity-40 grayscale"
+                    />
+                    <div className="absolute inset-0 -z-10 bg-gradient-to-r from-hf-navy via-hf-navy/85 to-hf-navy/55" />
+                </>
+            )}
 
-            <div className="relative mx-auto max-w-3xl text-center">
-                <div className="space-y-2">
-                    {buildup.map((line, i) => (
-                        <motion.p
-                            key={line}
-                            initial={{ opacity: 0, y: 14 }}
-                            whileInView={{ opacity: 1, y: 0 }}
-                            viewport={{ once: true, margin: '-50px' }}
-                            transition={{ duration: 0.6, delay: i * 0.12 }}
-                            className="font-ui text-lg leading-relaxed text-hf-ice/60 sm:text-xl"
-                        >
-                            {line}
-                        </motion.p>
-                    ))}
-                </div>
-
-                <motion.p
-                    initial={{ opacity: 0 }}
-                    whileInView={{ opacity: 1 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 0.6, delay: 0.4 }}
-                    className="mt-8 font-ui text-base text-hf-ice/45"
-                >
-                    Quando esse dia chegar, esperamos que você possa dizer:
-                </motion.p>
-
-                <motion.blockquote
-                    initial={{ opacity: 0, y: 18 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 0.7, delay: 0.5 }}
-                    className="mt-4 font-brand text-[1.75rem] font-bold uppercase leading-[1.05] tracking-[-0.01em] text-hf-gold sm:text-[2.75rem]"
-                >
-                    “Eu acompanho essa história desde o começo.”
-                </motion.blockquote>
-
+            <div className="mx-auto flex w-full max-w-7xl items-end justify-between gap-10">
                 <motion.div
-                    initial={{ opacity: 0, y: 16 }}
+                    initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 0.6, delay: 0.66 }}
-                    className="mt-12"
+                    viewport={{ once: true, margin: '-70px' }}
+                    transition={{ duration: 0.6 }}
+                    className="max-w-2xl"
                 >
-                    <p className="font-brand text-xl font-bold uppercase tracking-[0.02em] text-hf-ice">Faça parte da jornada.</p>
-                    <div className="mt-6 flex flex-col items-center justify-center gap-3 sm:flex-row">
+                    <h2 className="font-brand text-[1.9rem] font-extrabold uppercase leading-[0.98] tracking-[-0.015em] text-hf-ice sm:text-[2.75rem]">
+                        Não temos o final.
+                    </h2>
+                    <p className="mt-3 font-brand text-lg font-semibold text-hf-ice/85 sm:text-xl">
+                        E você não precisa esperar por ele.
+                    </p>
+                    <p className="mt-2 font-ui text-sm uppercase tracking-[0.2em] text-hf-gold">
+                        Um treino de cada vez.
+                    </p>
+
+                    <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
                         <a
                             href="https://instagram.com/henriquefujimoto"
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="inline-flex items-center gap-2.5 rounded-full bg-hf-gold px-7 py-4 font-ui text-base font-semibold text-hf-navy transition-all hover:bg-hf-gold-dim"
+                            className={hfBtnPrimary}
                         >
-                            <Instagram className="h-5 w-5" />
-                            Acompanhar nas redes sociais
+                            <Instagram className="h-4 w-4" />
+                            Acompanhar essa jornada
                         </a>
-                        <a
-                            href={wa}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-2.5 rounded-full border border-hf-ice/20 bg-hf-ice/5 px-7 py-4 font-ui text-base font-semibold text-hf-ice transition-all hover:bg-hf-ice/10"
-                        >
-                            <HeartHandshake className="h-5 w-5" />
-                            Apoiar o atleta
+                        <a href={wa} target="_blank" rel="noopener noreferrer" className={hfBtnSecondary}>
+                            Conhecer as parcerias
+                            <ArrowRight className="h-4 w-4" />
                         </a>
                     </div>
                 </motion.div>
+
+                <WordRail words={['Mesmo', 'tatame', 'novas', 'histórias']} className="pb-2" />
             </div>
         </section>
     );

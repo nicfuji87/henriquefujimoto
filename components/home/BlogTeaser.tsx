@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Calendar, Clock, ArrowRight, Newspaper } from 'lucide-react';
+import { ArrowRight, Clock } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
-import SectionHeading from './SectionHeading';
+import { hfKicker, hfLead, hfLink, hfTitle } from '../ui/hf';
 
 interface BlogPost {
     id: string;
@@ -34,65 +34,71 @@ export default function BlogTeaser() {
         load();
     }, []);
 
+    // Sem posts publicados a secao nao aparece.
     if (loading || posts.length === 0) return null;
 
-    const [featured, ...others] = posts;
-    const dateOf = (p: BlogPost) => new Date(p.published_at || p.created_at).toLocaleDateString('pt-BR');
-
     return (
-        <section className="bg-hf-navy px-6 py-14 sm:py-20 md:py-28">
-            <div className="mx-auto max-w-6xl">
-                <div className="flex flex-wrap items-end justify-between gap-4">
-                    <SectionHeading
-                        title={<>Notícias e <span className="text-hf-gold">conteúdo</span></>}
-                        lead="Novidades, guias e informações sobre o mundo do judô — e as atualizações da trajetória do Henrique, para quem quer entender o esporte por dentro."
-                    />
-                    <Link to="/blog" className="group inline-flex items-center gap-2 font-ui text-sm font-semibold text-hf-gold transition-colors hover:text-hf-gold-dim">
-                        Ver todos
+        <section className="bg-hf-navy px-6 py-16 sm:py-20 md:py-24">
+            <div className="mx-auto grid max-w-7xl grid-cols-1 gap-10 lg:grid-cols-[0.8fr_1.6fr] lg:gap-14">
+                {/* Texto */}
+                <div>
+                    <span className="hf-rule mb-5 block" />
+                    <p className={hfKicker}>Bastidores / Rotina / Reflexões</p>
+                    <h2 className={`mt-4 ${hfTitle}`}>Não coube no Reels.</h2>
+                    <p className={`mt-5 max-w-md ${hfLead}`}>
+                        Além dos resultados, existe o dia a dia. Treinos, viagens, pessoas, pensamentos e tudo o
+                        que também faz parte dessa história.
+                    </p>
+                    <Link to="/blog" className={`group mt-7 ${hfLink}`}>
+                        Ver mais conteúdos
                         <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
                     </Link>
                 </div>
 
-                <div className="mt-10 grid grid-cols-1 gap-4 lg:grid-cols-2">
-                    <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5 }}>
-                        <Link to={`/blog/${featured.slug}`} className="group block overflow-hidden rounded-2xl border border-hf-line/70 bg-hf-surface transition-colors hover:border-hf-gold/25">
-                            <div className="aspect-[16/9] overflow-hidden bg-hf-surface-2">
-                                {featured.og_image && <img src={featured.og_image} alt={featured.title} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />}
-                            </div>
-                            <div className="p-6">
-                                {featured.category && <span className="font-ui text-[11px] font-semibold uppercase tracking-[0.1em] text-hf-gold">{featured.category}</span>}
-                                <h3 className="mt-2 font-brand text-xl font-semibold leading-snug text-hf-ice transition-colors group-hover:text-hf-gold">{featured.title}</h3>
-                                <div className="mt-3 flex items-center gap-3 font-ui text-[11px] text-hf-ice/40">
-                                    <span className="flex items-center gap-1"><Calendar className="h-3 w-3" />{dateOf(featured)}</span>
-                                    <span className="flex items-center gap-1"><Clock className="h-3 w-3" />{featured.reading_time || 5} min</span>
-                                </div>
-                            </div>
-                        </Link>
-                    </motion.div>
+                {/* Cards */}
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                    {posts.map((p, i) => (
+                        <motion.div
+                            key={p.id}
+                            initial={{ opacity: 0, y: 18 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true, margin: '-50px' }}
+                            transition={{ duration: 0.45, delay: i * 0.08 }}
+                        >
+                            <Link
+                                to={`/blog/${p.slug}`}
+                                className="group relative isolate flex h-full min-h-[210px] flex-col justify-end overflow-hidden rounded-xl border border-hf-line/70 bg-hf-surface p-5 transition-colors hover:border-hf-gold/45"
+                            >
+                                {p.og_image && (
+                                    <>
+                                        <img
+                                            src={p.og_image}
+                                            alt=""
+                                            loading="lazy"
+                                            className="absolute inset-0 -z-10 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                                        />
+                                        <div className="absolute inset-0 -z-10 bg-gradient-to-t from-hf-navy via-hf-navy/80 to-hf-navy/25" />
+                                    </>
+                                )}
 
-                    <div className="flex flex-col gap-4">
-                        {others.length > 0 ? others.map((p, i) => (
-                            <motion.div key={p.id} initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5, delay: 0.1 + i * 0.1 }} className="flex-1">
-                                <Link to={`/blog/${p.slug}`} className="group flex h-full items-center gap-4 overflow-hidden rounded-2xl border border-hf-line/70 bg-hf-surface p-4 transition-colors hover:border-hf-gold/25">
-                                    <div className="h-24 w-24 shrink-0 overflow-hidden rounded-2xl bg-hf-surface-2">
-                                        {p.og_image && <img src={p.og_image} alt={p.title} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />}
-                                    </div>
-                                    <div className="min-w-0 flex-1">
-                                        {p.category && <span className="font-ui text-[10px] font-semibold uppercase tracking-wide text-hf-gold/80">{p.category}</span>}
-                                        <h4 className="mt-1 line-clamp-2 font-ui text-sm font-semibold leading-tight text-hf-ice transition-colors group-hover:text-hf-gold">{p.title}</h4>
-                                        <div className="mt-2 flex items-center gap-3 font-ui text-[10px] text-hf-ice/40">
-                                            <span className="flex items-center gap-1"><Calendar className="h-2.5 w-2.5" />{dateOf(p)}</span>
-                                            <span className="flex items-center gap-1"><Clock className="h-2.5 w-2.5" />{p.reading_time || 5} min</span>
-                                        </div>
-                                    </div>
-                                </Link>
-                            </motion.div>
-                        )) : (
-                            <div className="flex h-full items-center justify-center rounded-2xl border border-dashed border-hf-ice/10 p-8 text-center">
-                                <div className="flex items-center gap-2 font-ui text-sm text-hf-ice/40"><Newspaper className="h-4 w-4" />Mais posts em breve.</div>
-                            </div>
-                        )}
-                    </div>
+                                {p.category && (
+                                    <span className="font-ui text-[10px] font-semibold uppercase tracking-[0.18em] text-hf-gold">
+                                        {p.category}
+                                    </span>
+                                )}
+                                <h3 className="mt-2 font-brand text-sm font-bold uppercase leading-snug text-hf-ice">
+                                    {p.title}
+                                </h3>
+                                <div className="mt-3 flex items-center justify-between">
+                                    <span className="flex items-center gap-1.5 font-ui text-[11px] text-hf-ice/45">
+                                        <Clock className="h-3 w-3" />
+                                        {p.reading_time || 5} min
+                                    </span>
+                                    <ArrowRight className="h-4 w-4 text-hf-ice/60 transition-all group-hover:translate-x-1 group-hover:text-hf-gold" />
+                                </div>
+                            </Link>
+                        </motion.div>
+                    ))}
                 </div>
             </div>
         </section>

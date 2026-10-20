@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X } from 'lucide-react';
+import { ArrowRight, Menu, X } from 'lucide-react';
 import { HFLockup } from './brand/HFLogo';
 
 interface NavItem {
@@ -9,10 +9,11 @@ interface NavItem {
 }
 
 const NAV: NavItem[] = [
-    { label: 'História', to: '/#historia' },
-    { label: 'Jornada', to: '/conteudo' },
-    { label: 'Números', to: '/numeros' },
-    { label: 'Conteúdo', to: '/blog' },
+    { label: 'Início', to: '/' },
+    { label: 'História', to: '/conteudo' },
+    { label: 'Jornada', to: '/#conquistas' },
+    { label: 'Blog', to: '/blog' },
+    { label: 'Apoiar', to: '/apoiar' },
 ];
 
 interface PublicHeaderProps {
@@ -49,8 +50,11 @@ export default function PublicHeader({ variant = 'solid' }: PublicHeaderProps) {
         };
     }, [open]);
 
-    const isActive = (to: string) =>
-        to.startsWith('/#') ? pathname === '/' && hash === to.slice(1) : pathname.startsWith(to);
+    const isActive = (to: string) => {
+        if (to === '/') return pathname === '/' && !hash;
+        if (to.startsWith('/#')) return pathname === '/' && hash === to.slice(1);
+        return pathname.startsWith(to);
+    };
 
     return (
         <header
@@ -60,31 +64,35 @@ export default function PublicHeader({ variant = 'solid' }: PublicHeaderProps) {
                     : 'border-b border-transparent bg-transparent'
             }`}
         >
-            <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-4 px-5 py-3.5 sm:px-6">
+            <div className="mx-auto flex w-full max-w-7xl items-center justify-between gap-4 px-5 py-3.5 sm:px-8">
                 <Link to="/" aria-label="Henrique Fujimoto — início" className="shrink-0">
                     <HFLockup symbolClassName="h-8 w-auto text-hf-ice sm:h-9" compact />
                 </Link>
 
-                <nav aria-label="Navegação principal" className="hidden items-center gap-7 md:flex">
+                <nav aria-label="Navegação principal" className="hidden items-center gap-8 md:flex">
                     {NAV.map((item) => (
                         <Link
                             key={item.to}
                             to={item.to}
-                            className={`font-ui text-[12px] font-semibold uppercase tracking-[0.16em] transition-colors hover:text-hf-ice ${
+                            className={`relative py-1 font-ui text-[12px] font-semibold uppercase tracking-[0.16em] transition-colors hover:text-hf-ice ${
                                 isActive(item.to) ? 'text-hf-ice' : 'text-hf-ice/60'
                             }`}
                         >
                             {item.label}
+                            {isActive(item.to) && (
+                                <span className="absolute -bottom-1 left-0 h-0.5 w-full bg-hf-gold" />
+                            )}
                         </Link>
                     ))}
                 </nav>
 
                 <div className="flex items-center gap-2">
                     <Link
-                        to="/apoiar"
-                        className="hidden rounded-full bg-hf-gold px-5 py-2.5 font-ui text-[12px] font-semibold uppercase tracking-[0.12em] text-hf-navy transition-colors hover:bg-hf-gold-dim sm:inline-flex"
+                        to="/blog"
+                        className="hidden items-center gap-2 rounded-sm border border-hf-gold/70 px-4 py-2.5 font-ui text-[11px] font-semibold uppercase tracking-[0.14em] text-hf-gold transition-colors hover:bg-hf-gold hover:text-hf-navy sm:inline-flex"
                     >
-                        Apoiar
+                        Acompanhar jornada
+                        <ArrowRight className="h-3.5 w-3.5" />
                     </Link>
 
                     <button
@@ -117,10 +125,11 @@ export default function PublicHeader({ variant = 'solid' }: PublicHeaderProps) {
                         </Link>
                     ))}
                     <Link
-                        to="/apoiar"
-                        className="mt-4 inline-flex items-center justify-center rounded-full bg-hf-gold px-6 py-3.5 font-ui text-sm font-semibold uppercase tracking-[0.1em] text-hf-navy"
+                        to="/blog"
+                        className="mt-4 inline-flex items-center justify-center gap-2 rounded-sm border border-hf-gold/70 px-6 py-3.5 font-ui text-sm font-semibold uppercase tracking-[0.1em] text-hf-gold"
                     >
-                        Apoiar o atleta
+                        Acompanhar jornada
+                        <ArrowRight className="h-4 w-4" />
                     </Link>
                     <span className="py-4 text-center font-ui text-[10px] font-semibold uppercase tracking-[0.3em] text-hf-gold">
                         Um treino de cada vez.

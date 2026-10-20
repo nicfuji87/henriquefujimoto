@@ -56,7 +56,7 @@ const MILESTONE_ICONS = [
 ];
 
 
-function StatCard({ value, label }: { value: string; label: string }) {
+const StatCard: React.FC<{ value: string; label: string }> = ({ value, label }) => {
     return (
         <div className="rounded-2xl border border-hf-line/70 bg-hf-surface p-4 text-center transition-all hover:border-hf-gold/25">
             <div className="mb-1 font-ui text-xl font-semibold text-hf-ice sm:text-2xl">{value}</div>
