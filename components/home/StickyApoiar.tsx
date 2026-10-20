@@ -34,7 +34,7 @@ export default function StickyApoiar({ ctaLink }: StickyApoiarProps) {
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: 24, scale: 0.9 }}
                     transition={{ duration: 0.3 }}
-                    className="fixed bottom-5 right-5 z-50 inline-flex items-center gap-2.5 rounded-full bg-lime px-5 py-3.5 font-grotesk text-sm font-semibold text-night shadow-[0_12px_40px_-8px_rgba(198,242,78,0.5)] transition-colors hover:bg-lime-dim"
+                    className="fixed bottom-5 right-5 z-50 inline-flex items-center gap-2.5 rounded-full bg-hf-gold px-5 py-3.5 font-ui text-sm font-semibold text-hf-navy shadow-[0_12px_40px_-8px_rgba(212,163,54,0.5)] transition-colors hover:bg-hf-gold-dim"
                 >
                     <MessageCircle className="h-4 w-4" />
                     <span className="hidden sm:inline">Apoiar o atleta</span>

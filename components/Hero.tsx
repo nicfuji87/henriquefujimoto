@@ -86,13 +86,13 @@ const Hero: React.FC = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.2 }}
-          className="inline-flex w-fit items-center gap-2 rounded-full border border-primary/30 bg-black/60 backdrop-blur-md px-3 py-1.5 shadow-[0_0_15px_rgba(34,197,94,0.3)]"
+          className="inline-flex w-fit items-center gap-2 rounded-full border border-hf-gold/30 bg-black/60 backdrop-blur-md px-3 py-1.5 shadow-[0_0_15px_rgba(212,163,54,0.3)]"
         >
           <span className="relative flex h-2.5 w-2.5">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-primary"></span>
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-hf-gold opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-hf-gold"></span>
           </span>
-          <span className="text-xs font-bold uppercase tracking-wider text-white">
+          <span className="text-xs font-bold uppercase tracking-wider text-hf-ice">
             Live: {totalViews} Views (30d)
           </span>
         </motion.div>
@@ -103,7 +103,7 @@ const Hero: React.FC = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.3 }}
         >
-          <h1 className="font-display text-5xl md:text-7xl lg:text-8xl font-bold uppercase leading-[0.9] tracking-tighter text-white drop-shadow-2xl">
+          <h1 className="font-display text-5xl md:text-7xl lg:text-8xl font-bold uppercase leading-[0.9] tracking-tighter text-hf-ice drop-shadow-2xl">
             {config.athlete_name.split(' ').map((word, i) => (
               <React.Fragment key={i}>
                 {word}
@@ -127,16 +127,16 @@ const Hero: React.FC = () => {
         onClick={() => window.scrollTo({ top: window.innerHeight, behavior: 'smooth' })}
       >
         <div className="flex flex-col items-center gap-2">
-          <span className="text-xs font-bold uppercase tracking-widest text-white/80">Veja Mais</span>
+          <span className="text-xs font-bold uppercase tracking-widest text-hf-ice/80">Veja Mais</span>
           <motion.div
             className="flex flex-col items-center -space-y-3"
             animate={{ y: [0, 6, 0] }}
             transition={{ repeat: Infinity, duration: 1.2, ease: "easeInOut" }}
           >
-            <svg className="w-8 h-8 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-8 h-8 text-hf-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7" />
             </svg>
-            <svg className="w-8 h-8 text-primary/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-8 h-8 text-hf-gold/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7" />
             </svg>
           </motion.div>

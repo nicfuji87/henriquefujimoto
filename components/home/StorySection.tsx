@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowRight } from 'lucide-react';
 import SectionHeading from './SectionHeading';
+import { hfBody, hfBtnSecondary, hfCard } from '../ui/hf';
 
 export interface StoryFact {
     label: string;
@@ -16,9 +17,9 @@ interface StorySectionProps {
 
 export default function StorySection({ portrait, facts }: StorySectionProps) {
     return (
-        <section id="historia" className="scroll-mt-16 bg-night px-6 py-14 sm:py-20 md:py-28">
-            <div className="mx-auto grid max-w-6xl grid-cols-1 items-start gap-10 lg:grid-cols-[0.8fr_1fr] lg:gap-16">
-                {/* Portrait */}
+        <section id="historia" className="scroll-mt-20 bg-hf-navy px-6 py-16 sm:py-20 md:py-24">
+            <div className="mx-auto grid max-w-7xl grid-cols-1 items-start gap-10 lg:grid-cols-[0.85fr_1fr] lg:gap-16">
+                {/* Retrato real */}
                 <motion.div
                     initial={{ opacity: 0, y: 24 }}
                     whileInView={{ opacity: 1, y: 0 }}
@@ -26,14 +27,20 @@ export default function StorySection({ portrait, facts }: StorySectionProps) {
                     transition={{ duration: 0.7 }}
                     className="relative order-2 lg:order-1"
                 >
-                    <div className="relative aspect-[4/5] w-full overflow-hidden rounded-3xl border border-white/[0.08] bg-coal">
+                    <div className="relative aspect-[4/5] w-full overflow-hidden rounded-xl border border-hf-line/70 bg-hf-surface">
                         {portrait ? (
-                            <img src={portrait} alt="Henrique Fujimoto" className="h-full w-full object-cover" />
+                            <img
+                                src={portrait}
+                                alt="Henrique Fujimoto"
+                                className="h-full w-full object-cover"
+                            />
                         ) : (
-                            <div className="flex h-full w-full items-center justify-center font-grotesk text-5xl font-semibold text-white/10">HF</div>
+                            <div className="flex h-full w-full items-center justify-center font-brand text-5xl font-bold text-hf-ice/10">
+                                HF
+                            </div>
                         )}
-                        <div className="absolute inset-0 bg-gradient-to-t from-night/70 via-transparent to-transparent" />
-                        <span className="absolute bottom-4 left-5 font-grotesk text-sm font-medium text-white/80">
+                        <div className="absolute inset-0 bg-gradient-to-t from-hf-navy/80 via-transparent to-transparent" />
+                        <span className="absolute bottom-4 left-5 font-ui text-[11px] font-semibold uppercase tracking-[0.18em] text-hf-ice/80">
                             Terceira geração · família Fujimoto
                         </span>
                     </div>
@@ -41,65 +48,68 @@ export default function StorySection({ portrait, facts }: StorySectionProps) {
 
                 {/* Copy */}
                 <div className="order-1 lg:order-2">
-                    <SectionHeading title="Quem é o Henrique?" />
-
-                    <motion.p
-                        initial={{ opacity: 0, y: 14 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true, margin: '-60px' }}
-                        transition={{ duration: 0.6, delay: 0.08 }}
-                        className="mt-6 max-w-xl font-grotesk text-base leading-relaxed text-white/70"
-                    >
-                        Vestiu o primeiro kimono aos seis anos. Desde então, o judô deixou de ser apenas um
-                        esporte — virou rotina, virou disciplina, virou estilo de vida.
-                    </motion.p>
-
-                    <motion.p
-                        initial={{ opacity: 0, y: 14 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true, margin: '-60px' }}
-                        transition={{ duration: 0.6, delay: 0.14 }}
-                        className="mt-4 max-w-xl font-grotesk text-base leading-relaxed text-white/70"
-                    >
-                        Ele representa a terceira geração da família Fujimoto dentro do judô. O avô foi campeão
-                        brasileiro. O tio-avô conquistou um título mundial.
-                    </motion.p>
+                    <SectionHeading
+                        kicker="Quem é Henrique Fujimoto?"
+                        title={<>Uma história de família. <span className="text-hf-gold">Um caminho próprio.</span></>}
+                    />
 
                     <motion.div
                         initial={{ opacity: 0, y: 14 }}
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true, margin: '-60px' }}
-                        transition={{ duration: 0.6, delay: 0.2 }}
-                        className="mt-6 border-l-2 border-lime/60 pl-4"
+                        transition={{ duration: 0.6, delay: 0.08 }}
+                        className="mt-6 max-w-xl space-y-4"
                     >
-                        <p className="font-editorial text-xl italic leading-snug text-white/90 sm:text-2xl">
-                            Mas nenhuma dessas medalhas garante o futuro. Agora chegou a vez dele escrever a
-                            própria história.
+                        <p className={hfBody}>
+                            O judô faz parte da história da família Fujimoto há gerações. Henrique representa a
+                            terceira geração dessa relação com o esporte — uma tradição construída com dedicação,
+                            respeito e amor pelo tatame.
+                        </p>
+                        <p className={hfBody}>
+                            Mas carregar esse legado não significa ter um caminho pronto. Ele está escrevendo a
+                            própria história, enfrentando os desafios de quem escolheu levar o esporte a sério.
+                        </p>
+                        <p className={hfBody}>
+                            Entre treinos, escola, competições e a vida de um adolescente, descobre todos os dias
+                            o que significa evoluir como atleta e como pessoa.
                         </p>
                     </motion.div>
 
-                    {/* Dados rápidos */}
-                    <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-3">
-                        {facts.map((f, i) => (
-                            <motion.div
-                                key={f.label}
-                                initial={{ opacity: 0, y: 12 }}
-                                whileInView={{ opacity: 1, y: 0 }}
-                                viewport={{ once: true }}
-                                transition={{ duration: 0.4, delay: i * 0.06 }}
-                                className="rounded-2xl border border-white/[0.07] bg-coal px-4 py-3.5"
-                            >
-                                <div className="font-grotesk text-xl font-semibold text-white">{f.value}</div>
-                                <div className="mt-1 font-grotesk text-[11px] font-medium uppercase tracking-wide text-white/45">{f.label}</div>
-                            </motion.div>
-                        ))}
-                    </div>
-
-                    <Link
-                        to="/conteudo"
-                        className="group mt-8 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-6 py-3 font-grotesk text-sm font-semibold text-white transition-all hover:border-lime/40 hover:bg-white/10"
+                    <motion.div
+                        initial={{ opacity: 0, y: 14 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true, margin: '-60px' }}
+                        transition={{ duration: 0.6, delay: 0.16 }}
+                        className="mt-7 border-l-2 border-hf-gold/60 pl-5"
                     >
-                        Conhecer a jornada completa
+                        <p className="font-brand text-lg font-bold uppercase leading-snug tracking-[0.01em] text-hf-ice sm:text-xl">
+                            O passado inspira. O futuro ainda está sendo construído.
+                        </p>
+                    </motion.div>
+
+                    {/* Dados reais do perfil do atleta */}
+                    {facts.length > 0 && (
+                        <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-3">
+                            {facts.map((f, i) => (
+                                <motion.div
+                                    key={f.label}
+                                    initial={{ opacity: 0, y: 12 }}
+                                    whileInView={{ opacity: 1, y: 0 }}
+                                    viewport={{ once: true }}
+                                    transition={{ duration: 0.4, delay: i * 0.06 }}
+                                    className={`${hfCard} px-4 py-3.5`}
+                                >
+                                    <div className="font-brand text-xl font-bold text-hf-ice">{f.value}</div>
+                                    <div className="mt-1 font-ui text-[10px] font-semibold uppercase tracking-[0.16em] text-hf-ice/45">
+                                        {f.label}
+                                    </div>
+                                </motion.div>
+                            ))}
+                        </div>
+                    )}
+
+                    <Link to="/conteudo" className={`group mt-8 ${hfBtnSecondary}`}>
+                        Conheça a história completa
                         <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
                     </Link>
                 </div>

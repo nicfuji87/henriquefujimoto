@@ -71,7 +71,7 @@ const AudienceCharts: React.FC<AudienceProps> = ({ cityData, genderAgeData }) =>
 
     if (!genderAgeData || Object.keys(genderAgeData).length === 0) {
         return (
-            <div className="rounded-3xl border border-white/[0.07] bg-coal p-8 text-center font-grotesk text-white/55">
+            <div className="rounded-2xl border border-hf-line/70 bg-hf-surface p-8 text-center font-ui text-hf-ice/55">
                 Dados de audiência indisponíveis no momento.
             </div>
         );
@@ -85,42 +85,42 @@ const AudienceCharts: React.FC<AudienceProps> = ({ cityData, genderAgeData }) =>
                 initial={{ opacity: 0, y: 10 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                className="rounded-3xl border border-white/[0.07] bg-coal p-6 transition-all hover:border-lime/25"
+                className="rounded-2xl border border-hf-line/70 bg-hf-surface p-6 transition-all hover:border-hf-gold/25"
             >
-                <h4 className="mb-6 flex items-center gap-2 font-grotesk font-semibold text-white">
-                    <span className="h-6 w-1.5 rounded-full bg-lime"></span>
+                <h4 className="mb-6 flex items-center gap-2 font-ui font-semibold text-hf-ice">
+                    <span className="h-6 w-1.5 rounded-full bg-hf-gold"></span>
                     Gênero e idade
                 </h4>
 
                 {/* Gender Split */}
                 <div className="mb-8">
-                    <div className="mb-2 flex justify-between font-grotesk text-xs text-white/50">
+                    <div className="mb-2 flex justify-between font-ui text-xs text-hf-ice/50">
                         <span className="flex items-center gap-1.5">
-                            <span className="inline-block h-2.5 w-2.5 rounded-full bg-lime"></span>
+                            <span className="inline-block h-2.5 w-2.5 rounded-full bg-hf-gold"></span>
                             Mulheres
                         </span>
                         <span className="flex items-center gap-1.5">
                             Homens
-                            <span className="inline-block h-2.5 w-2.5 rounded-full bg-white/40"></span>
+                            <span className="inline-block h-2.5 w-2.5 rounded-full bg-hf-ice/40"></span>
                         </span>
                     </div>
                     <div className="flex items-center gap-3">
-                        <div className="w-10 text-right font-grotesk text-sm font-semibold text-lime">{processedGender.femalePercent}%</div>
-                        <div className="flex h-4 flex-1 overflow-hidden rounded-full bg-white/10">
+                        <div className="w-10 text-right font-ui text-sm font-semibold text-hf-gold">{processedGender.femalePercent}%</div>
+                        <div className="flex h-4 flex-1 overflow-hidden rounded-full bg-hf-ice/10">
                             <motion.div
                                 initial={{ width: 0 }}
                                 whileInView={{ width: `${processedGender.femalePercent}%` }}
                                 transition={{ duration: 1, ease: 'easeOut' }}
-                                className="h-full rounded-l-full bg-lime"
+                                className="h-full rounded-l-full bg-hf-gold"
                             />
                             <motion.div
                                 initial={{ width: 0 }}
                                 whileInView={{ width: `${processedGender.malePercent}%` }}
                                 transition={{ duration: 1, ease: 'easeOut', delay: 0.2 }}
-                                className="h-full rounded-r-full bg-white/30"
+                                className="h-full rounded-r-full bg-hf-ice/30"
                             />
                         </div>
-                        <div className="w-10 text-left font-grotesk text-sm font-semibold text-white/60">{processedGender.malePercent}%</div>
+                        <div className="w-10 text-left font-ui text-sm font-semibold text-hf-ice/60">{processedGender.malePercent}%</div>
                     </div>
                 </div>
 
@@ -129,17 +129,17 @@ const AudienceCharts: React.FC<AudienceProps> = ({ cityData, genderAgeData }) =>
                     {processedGender.sortedAges.map(([age, val], i) => {
                         const pct = Math.round((val / processedGender.totalAge) * 100);
                         return (
-                            <div key={age} className="flex items-center gap-2 font-grotesk text-xs">
-                                <span className="w-12 text-right font-medium text-white/50">{age}</span>
-                                <div className="h-3 flex-1 overflow-hidden rounded-full bg-white/10">
+                            <div key={age} className="flex items-center gap-2 font-ui text-xs">
+                                <span className="w-12 text-right font-medium text-hf-ice/50">{age}</span>
+                                <div className="h-3 flex-1 overflow-hidden rounded-full bg-hf-ice/10">
                                     <motion.div
                                         initial={{ width: 0 }}
                                         whileInView={{ width: `${(val / processedGender.maxAgeVal) * 100}%` }}
                                         transition={{ duration: 0.8, delay: i * 0.08, ease: 'easeOut' }}
-                                        className="h-full rounded-full bg-lime"
+                                        className="h-full rounded-full bg-hf-gold"
                                     />
                                 </div>
-                                <span className="w-8 text-right font-semibold text-white/70">
+                                <span className="w-8 text-right font-semibold text-hf-ice/70">
                                     {pct}%
                                 </span>
                             </div>
@@ -154,10 +154,10 @@ const AudienceCharts: React.FC<AudienceProps> = ({ cityData, genderAgeData }) =>
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: 0.1 }}
-                className="rounded-3xl border border-white/[0.07] bg-coal p-6 transition-all hover:border-lime/25"
+                className="rounded-2xl border border-hf-line/70 bg-hf-surface p-6 transition-all hover:border-hf-gold/25"
             >
-                <h4 className="mb-6 flex items-center gap-2 font-grotesk font-semibold text-white">
-                    <span className="h-6 w-1.5 rounded-full bg-lime"></span>
+                <h4 className="mb-6 flex items-center gap-2 font-ui font-semibold text-hf-ice">
+                    <span className="h-6 w-1.5 rounded-full bg-hf-gold"></span>
                     Principais cidades
                 </h4>
 
@@ -166,19 +166,19 @@ const AudienceCharts: React.FC<AudienceProps> = ({ cityData, genderAgeData }) =>
                         const pct = Math.round((val / processedCities.totalFollowers) * 100);
                         return (
                             <div key={city} className="relative group">
-                                <div className="relative z-10 mb-1 flex justify-between font-grotesk text-xs text-white/70">
+                                <div className="relative z-10 mb-1 flex justify-between font-ui text-xs text-hf-ice/70">
                                     <span className="flex items-center gap-2 font-medium">
-                                        <span className="w-4 font-grotesk text-white/40">{i + 1}.</span>
+                                        <span className="w-4 font-ui text-hf-ice/40">{i + 1}.</span>
                                         {city}
                                     </span>
-                                    <span className="font-grotesk font-semibold text-lime">{pct}%</span>
+                                    <span className="font-ui font-semibold text-hf-gold">{pct}%</span>
                                 </div>
-                                <div className="h-2 w-full overflow-hidden rounded-full bg-white/10">
+                                <div className="h-2 w-full overflow-hidden rounded-full bg-hf-ice/10">
                                     <motion.div
                                         initial={{ width: 0 }}
                                         whileInView={{ width: `${(val / processedCities.maxVal) * 100}%` }}
                                         transition={{ duration: 0.8, delay: i * 0.08 }}
-                                        className="h-full rounded-full bg-lime"
+                                        className="h-full rounded-full bg-hf-gold"
                                     />
                                 </div>
                             </div>

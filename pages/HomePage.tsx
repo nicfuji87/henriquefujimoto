@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import Footer from '../components/Footer';
+import PublicHeader from '../components/PublicHeader';
 import HomeHero from '../components/home/HomeHero';
 import BeyondTatame from '../components/home/BeyondTatame';
 import StorySection from '../components/home/StorySection';
@@ -37,6 +38,7 @@ interface AthleteProfile {
 export default function HomePage() {
     const { config } = useSiteConfig();
     const [metrics, setMetrics] = useState<AggregatedMetrics | null>(null);
+    const [metricsLoading, setMetricsLoading] = useState(true);
     const [partners, setPartners] = useState<Partner[]>([]);
     const [profile, setProfile] = useState<AthleteProfile | null>(null);
 
@@ -51,6 +53,7 @@ export default function HomePage() {
             ]);
 
             setMetrics(metricsData);
+            setMetricsLoading(false);
             setPartners(partnersRes.data || []);
             setProfile(profileRes.data as AthleteProfile | null);
         }
@@ -58,7 +61,7 @@ export default function HomePage() {
         load();
     }, []);
 
-    // ---- Derived, always-truthful display data ----
+    // ---- Dados derivados, sempre verificaveis ----
     const age = ageFromBirth(profile?.birth_date);
     const category = profile?.category || 'Sub-15';
     const weightKg = profile?.weight != null ? `${String(profile.weight).replace('.', ',')}kg` : null;
@@ -71,33 +74,34 @@ export default function HomePage() {
         { label: 'Categoria', value: category },
     ].filter(Boolean) as StoryFact[];
 
-    // Portrait for the "Quem é o Henrique?" story: use the heritage/legado milestone
-    // (the first one — família Fujimoto / "terceira geração"), matching the section's caption.
-    // Falls back to the hero image.
-    const portrait = (() => {
-        const ms = profile?.milestones;
-        if (ms && ms.length) {
-            for (let i = 0; i < ms.length; i++) {
-                const url = ms[i].media_items?.[0]?.url || ms[i].media_url;
-                if (url) return url;
-            }
-        }
-        return config.hero_image_desktop || config.hero_image || null;
-    })();
+    // Fotos reais dos marcos da trajetoria, na ordem em que foram cadastradas.
+    // Sao as unicas imagens do atleta usadas fora do hero — nada de banco de imagens.
+    const milestonePhotos = (profile?.milestones || [])
+        .map((m) => m.media_items?.[0]?.url || m.media_url || null)
+        .filter(Boolean) as string[];
+
+    const fallbackPhoto = config.hero_image_desktop || config.hero_image || null;
+    const portrait = milestonePhotos[0] || fallbackPhoto;
+    const bandPhotos = [milestonePhotos[1] || fallbackPhoto, milestonePhotos[2] || milestonePhotos[0] || fallbackPhoto];
+    const closingPhoto = milestonePhotos[milestonePhotos.length - 1] || fallbackPhoto;
 
     return (
-        <main className="relative min-h-screen w-full overflow-x-hidden bg-night font-grotesk text-white">
+        <main className="relative min-h-screen w-full overflow-x-hidden bg-hf-navy font-ui text-hf-ice">
+            <PublicHeader variant="overlay" />
+
             <HomeHero age={age} category={category} />
 
-            <BeyondTatame />
+            <BeyondTatame photos={bandPhotos} />
+
+            <AchievementsSection />
 
             <StorySection portrait={portrait} facts={storyFacts} />
 
             <FollowJourney />
 
-            <ProofSection metrics={metrics} />
+            <BlogTeaser />
 
-            <AchievementsSection />
+            <ProofSection metrics={metrics} loading={metricsLoading} />
 
             <SponsorsStrip partners={partners} />
 
@@ -105,9 +109,7 @@ export default function HomePage() {
 
             <ProductsSection />
 
-            <BlogTeaser />
-
-            <ClosingCTA ctaLink={config.cta_link} />
+            <ClosingCTA ctaLink={config.cta_link} photo={closingPhoto} />
 
             <Footer />
             <StickyApoiar ctaLink={config.cta_link} />

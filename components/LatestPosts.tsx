@@ -58,17 +58,17 @@ export default function LatestPosts() {
         <section className="py-20 px-4 relative overflow-hidden">
             {/* Background Elements */}
             <div className="absolute inset-0 bg-black" />
-            <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+            <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-hf-gold/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
 
             <div className="max-w-6xl mx-auto relative z-10">
                 <div className="flex flex-col md:flex-row items-end justify-between gap-6 mb-12">
                     <div className="space-y-2">
-                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-zinc-900 border border-zinc-800 text-primary text-xs font-bold uppercase tracking-wider">
-                            <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-zinc-900 border border-zinc-800 text-hf-gold text-xs font-bold uppercase tracking-wider">
+                            <span className="w-2 h-2 rounded-full bg-hf-gold animate-pulse" />
                             Atualizações
                         </div>
-                        <h2 className="font-display text-4xl md:text-5xl font-bold text-white">
-                            Blog & <span className="text-primary">Notícias</span>
+                        <h2 className="font-display text-4xl md:text-5xl font-bold text-hf-ice">
+                            Blog & <span className="text-hf-gold">Notícias</span>
                         </h2>
                         <p className="text-zinc-400 text-lg max-w-xl">
                             Fique por dentro das últimas novidades sobre o mundo do judô, dicas de treino e análises técnicas.
@@ -77,7 +77,7 @@ export default function LatestPosts() {
 
                     <Link
                         to="/blog"
-                        className="hidden md:flex items-center gap-2 px-6 py-3 bg-zinc-900/50 border border-zinc-800 rounded-full text-white font-medium hover:bg-zinc-800 hover:border-primary/50 transition-all group"
+                        className="hidden md:flex items-center gap-2 px-6 py-3 bg-zinc-900/50 border border-zinc-800 rounded-full text-hf-ice font-medium hover:bg-zinc-800 hover:border-hf-gold/50 transition-all group"
                     >
                         Ver todos os posts
                         <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
@@ -100,7 +100,7 @@ export default function LatestPosts() {
                             >
                                 <Link
                                     to={`/blog/${post.slug}`}
-                                    className="group block relative h-[400px] rounded-2xl overflow-hidden bg-zinc-900 border border-zinc-800 hover:border-primary/50 transition-all duration-500"
+                                    className="group block relative h-[400px] rounded-2xl overflow-hidden bg-zinc-900 border border-zinc-800 hover:border-hf-gold/50 transition-all duration-500"
                                 >
                                     {/* Image Background */}
                                     <div className="absolute inset-0">
@@ -121,7 +121,7 @@ export default function LatestPosts() {
                                         <div className="transform translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
                                             {/* Meta */}
                                             <div className="flex items-center gap-3 text-xs text-zinc-400 mb-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300 delay-100">
-                                                <span className="bg-primary/20 text-primary px-2 py-0.5 rounded border border-primary/20">
+                                                <span className="bg-hf-gold/20 text-hf-gold px-2 py-0.5 rounded border border-hf-gold/20">
                                                     {CATEGORY_LABELS[post.category.toLowerCase()] || 'Geral'}
                                                 </span>
                                                 <span className="flex items-center gap-1">
@@ -131,7 +131,7 @@ export default function LatestPosts() {
                                             </div>
 
                                             {/* Title */}
-                                            <h3 className="font-display text-2xl font-bold text-white mb-2 line-clamp-2 leading-tight group-hover:text-primary transition-colors">
+                                            <h3 className="font-display text-2xl font-bold text-hf-ice mb-2 line-clamp-2 leading-tight group-hover:text-hf-gold transition-colors">
                                                 {post.title}
                                             </h3>
 
@@ -141,7 +141,7 @@ export default function LatestPosts() {
                                             </p>
 
                                             {/* Read More Link */}
-                                            <div className="flex items-center gap-2 text-primary font-medium text-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300 delay-200">
+                                            <div className="flex items-center gap-2 text-hf-gold font-medium text-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300 delay-200">
                                                 Ler artigo completo
                                                 <ChevronRight className="w-4 h4" />
                                             </div>
@@ -156,7 +156,7 @@ export default function LatestPosts() {
                 <div className="mt-8 text-center md:hidden">
                     <Link
                         to="/blog"
-                        className="inline-flex items-center gap-2 px-6 py-3 bg-zinc-900 border border-zinc-800 rounded-full text-white font-medium shadow-lg"
+                        className="inline-flex items-center gap-2 px-6 py-3 bg-zinc-900 border border-zinc-800 rounded-full text-hf-ice font-medium shadow-lg"
                     >
                         Ver todos os posts
                         <ArrowRight className="w-4 h-4" />

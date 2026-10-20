@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Trophy, Target, Flame, Star, Instagram, Loader2, X, Play, MapPin, Calendar, ChevronLeft, ChevronRight, Image as ImageIcon, Film } from 'lucide-react';
-import SectionNav from '../components/SectionNav';
+import PublicHeader from '../components/PublicHeader';
 import TopContent from '../components/TopContent';
 import Footer from '../components/Footer';
 import StickyCTA from '../components/StickyCTA';
@@ -56,11 +56,11 @@ const MILESTONE_ICONS = [
 ];
 
 
-function StatCard({ value, label }: { value: string; label: string }) {
+const StatCard: React.FC<{ value: string; label: string }> = ({ value, label }) => {
     return (
-        <div className="rounded-2xl border border-white/[0.07] bg-coal p-4 text-center transition-all hover:border-lime/25">
-            <div className="mb-1 font-grotesk text-xl font-semibold text-white sm:text-2xl">{value}</div>
-            <div className="font-grotesk text-[11px] font-medium uppercase tracking-wide text-white/45">{label}</div>
+        <div className="rounded-2xl border border-hf-line/70 bg-hf-surface p-4 text-center transition-all hover:border-hf-gold/25">
+            <div className="mb-1 font-ui text-xl font-semibold text-hf-ice sm:text-2xl">{value}</div>
+            <div className="font-ui text-[11px] font-medium uppercase tracking-wide text-hf-ice/45">{label}</div>
         </div>
     );
 }
@@ -103,14 +103,14 @@ function MediaModal({ media, onClose }: { media: SelectedMedia; onClose: () => v
             >
                 {/* Header row */}
                 <div className="flex items-center justify-between mb-3">
-                    <p className="font-grotesk text-sm font-semibold text-white">{media.title}</p>
+                    <p className="font-ui text-sm font-semibold text-hf-ice">{media.title}</p>
                     <div className="flex items-center gap-3">
                         {total > 1 && (
-                            <span className="font-grotesk text-xs text-white/55">{currentIdx + 1} / {total}</span>
+                            <span className="font-ui text-xs text-hf-ice/55">{currentIdx + 1} / {total}</span>
                         )}
                         <button
                             onClick={onClose}
-                            className="w-8 h-8 bg-white/10 border border-white/15 rounded-full flex items-center justify-center text-white hover:bg-white/20 transition-colors"
+                            className="w-8 h-8 bg-hf-ice/10 border border-hf-ice/15 rounded-full flex items-center justify-center text-hf-ice hover:bg-hf-ice/20 transition-colors"
                         >
                             <X className="w-4 h-4" />
                         </button>
@@ -124,7 +124,7 @@ function MediaModal({ media, onClose }: { media: SelectedMedia; onClose: () => v
                         <button
                             onClick={() => setCurrentIdx(i => Math.max(i - 1, 0))}
                             disabled={currentIdx === 0}
-                            className="absolute left-0 z-10 -translate-x-12 w-10 h-10 bg-white/10 border border-white/15 rounded-full flex items-center justify-center text-white hover:bg-white/20 disabled:opacity-30 transition-all"
+                            className="absolute left-0 z-10 -translate-x-12 w-10 h-10 bg-hf-ice/10 border border-hf-ice/15 rounded-full flex items-center justify-center text-hf-ice hover:bg-hf-ice/20 disabled:opacity-30 transition-all"
                         >
                             <ChevronLeft className="w-5 h-5" />
                         </button>
@@ -161,7 +161,7 @@ function MediaModal({ media, onClose }: { media: SelectedMedia; onClose: () => v
                         <button
                             onClick={() => setCurrentIdx(i => Math.min(i + 1, total - 1))}
                             disabled={currentIdx === total - 1}
-                            className="absolute right-0 z-10 translate-x-12 w-10 h-10 bg-white/10 border border-white/15 rounded-full flex items-center justify-center text-white hover:bg-white/20 disabled:opacity-30 transition-all"
+                            className="absolute right-0 z-10 translate-x-12 w-10 h-10 bg-hf-ice/10 border border-hf-ice/15 rounded-full flex items-center justify-center text-hf-ice hover:bg-hf-ice/20 disabled:opacity-30 transition-all"
                         >
                             <ChevronRight className="w-5 h-5" />
                         </button>
@@ -172,7 +172,7 @@ function MediaModal({ media, onClose }: { media: SelectedMedia; onClose: () => v
                 {(current.caption || total > 1) && (
                     <div className="mt-3 text-center space-y-2">
                         {current.caption && (
-                            <p className="font-grotesk text-sm text-white/55">{current.caption}</p>
+                            <p className="font-ui text-sm text-hf-ice/55">{current.caption}</p>
                         )}
                         {total > 1 && (
                             <div className="flex justify-center gap-1.5">
@@ -180,7 +180,7 @@ function MediaModal({ media, onClose }: { media: SelectedMedia; onClose: () => v
                                     <button
                                         key={i}
                                         onClick={() => setCurrentIdx(i)}
-                                        className={`w-1.5 h-1.5 rounded-full transition-all ${i === currentIdx ? 'bg-lime scale-125' : 'bg-white/30 hover:bg-white/50'}`}
+                                        className={`w-1.5 h-1.5 rounded-full transition-all ${i === currentIdx ? 'bg-hf-gold scale-125' : 'bg-hf-ice/30 hover:bg-hf-ice/50'}`}
                                     />
                                 ))}
                             </div>
@@ -230,10 +230,10 @@ export default function ConteudoPage() {
 
     if (loading) {
         return (
-            <main className="relative min-h-screen w-full overflow-x-hidden bg-night">
-                <SectionNav title="Conheça o Henrique" subtitle="A história por trás do atleta" />
-                <div className="flex items-center justify-center h-[60vh]">
-                    <Loader2 className="w-8 h-8 text-lime animate-spin" />
+            <main className="relative min-h-screen w-full overflow-x-hidden bg-hf-navy">
+                <PublicHeader />
+                <div className="flex h-[70vh] items-center justify-center pt-16">
+                    <Loader2 className="w-8 h-8 text-hf-gold animate-spin" />
                 </div>
             </main>
         );
@@ -241,9 +241,9 @@ export default function ConteudoPage() {
 
     if (!profile) {
         return (
-            <main className="relative min-h-screen w-full overflow-x-hidden bg-night">
-                <SectionNav title="Conheça o Henrique" subtitle="A história por trás do atleta" />
-                <div className="flex items-center justify-center h-[60vh] font-grotesk text-white/55">
+            <main className="relative min-h-screen w-full overflow-x-hidden bg-hf-navy">
+                <PublicHeader />
+                <div className="flex h-[70vh] items-center justify-center pt-16 font-ui text-hf-ice/55">
                     Conteúdo não disponível no momento.
                 </div>
                 <Footer />
@@ -253,8 +253,8 @@ export default function ConteudoPage() {
 
 
     return (
-        <main className="relative min-h-screen w-full overflow-x-hidden bg-night">
-            <SectionNav title="Conheça o Henrique" subtitle="A história por trás do atleta" />
+        <main className="relative min-h-screen w-full overflow-x-hidden bg-hf-navy">
+            <PublicHeader />
 
             {/* Media Modal */}
             <AnimatePresence>
@@ -264,27 +264,27 @@ export default function ConteudoPage() {
             </AnimatePresence>
 
             {/* Bio Hero Section */}
-            <section className="relative py-12 px-4">
+            <section className="relative px-4 pb-12 pt-28 sm:pt-32">
                 <div className="max-w-4xl mx-auto">
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         className="text-center mb-10"
                     >
-                        <p className="mb-4 font-grotesk text-[12px] font-semibold uppercase tracking-[0.16em] text-lime">
+                        <p className="mb-4 font-ui text-[12px] font-semibold uppercase tracking-[0.16em] text-hf-gold">
                             A jornada
                         </p>
-                        <h2 className="font-grotesk text-3xl md:text-5xl font-semibold text-white mb-4 leading-tight tracking-tight">
+                        <h2 className="font-brand text-3xl md:text-5xl font-semibold text-hf-ice mb-4 leading-tight tracking-tight">
                             {profile.bio_title.includes(' ') ? (
                                 <>
                                     {profile.bio_title.split(' ').slice(0, -1).join(' ')}{' '}
-                                    <span className="font-editorial font-normal italic text-lime">{profile.bio_title.split(' ').slice(-1)}</span>
+                                    <span className="text-hf-gold">{profile.bio_title.split(' ').slice(-1)}</span>
                                 </>
                             ) : (
-                                <span className="font-editorial font-normal italic text-lime">{profile.bio_title}</span>
+                                <span className="text-hf-gold">{profile.bio_title}</span>
                             )}
                         </h2>
-                        <p className="max-w-2xl mx-auto font-grotesk text-base md:text-lg leading-relaxed text-white/70">
+                        <p className="max-w-2xl mx-auto font-ui text-base md:text-lg leading-relaxed text-hf-ice/70">
                             {profile.bio_description}
                         </p>
                     </motion.div>
@@ -316,14 +316,14 @@ export default function ConteudoPage() {
                             initial={{ opacity: 0 }}
                             whileInView={{ opacity: 1 }}
                             viewport={{ once: true }}
-                            className="mb-8 text-center font-grotesk text-[12px] font-semibold uppercase tracking-[0.16em] text-lime"
+                            className="mb-8 text-center font-brand text-[12px] font-semibold uppercase tracking-[0.16em] text-hf-gold"
                         >
                             Linha do tempo
                         </motion.h3>
 
                         <div className="relative">
                             {/* Vertical line */}
-                            <div className="absolute left-6 top-0 bottom-0 w-px bg-gradient-to-b from-lime/50 via-lime/15 to-transparent" />
+                            <div className="absolute left-6 top-0 bottom-0 w-px bg-gradient-to-b from-hf-gold/50 via-hf-gold/15 to-transparent" />
 
                             <div className="space-y-8">
                                 {profile.milestones.map((milestone, index) => {
@@ -342,17 +342,17 @@ export default function ConteudoPage() {
                                             className="relative pl-16"
                                         >
                                             {/* Timeline dot */}
-                                            <div className="absolute left-[14px] top-1 w-7 h-7 rounded-full bg-lime/12 border-2 border-lime/40 flex items-center justify-center">
-                                                <div className="text-lime">
+                                            <div className="absolute left-[14px] top-1 w-7 h-7 rounded-full bg-hf-gold/12 border-2 border-hf-gold/40 flex items-center justify-center">
+                                                <div className="text-hf-gold">
                                                     {MILESTONE_ICONS[index % MILESTONE_ICONS.length]}
                                                 </div>
                                             </div>
 
                                             {/* Content */}
-                                            <div className="rounded-2xl border border-white/[0.07] bg-coal p-5 transition-all hover:border-lime/25">
-                                                <span className="font-grotesk text-xs font-semibold uppercase tracking-wide text-lime">{milestone.year}</span>
-                                                <h4 className="mt-1 mb-2 font-grotesk text-lg font-semibold text-white">{milestone.title}</h4>
-                                                <p className="font-grotesk text-sm leading-relaxed text-white/70">{milestone.description}</p>
+                                            <div className="rounded-2xl border border-hf-line/70 bg-hf-surface p-5 transition-all hover:border-hf-gold/25">
+                                                <span className="font-ui text-xs font-semibold uppercase tracking-wide text-hf-gold">{milestone.year}</span>
+                                                <h4 className="mt-1 mb-2 font-ui text-lg font-semibold text-hf-ice">{milestone.title}</h4>
+                                                <p className="font-ui text-sm leading-relaxed text-hf-ice/70">{milestone.description}</p>
 
                                                 {/* ── Media Gallery ── */}
                                                 {mediaItems.length > 0 && (
@@ -365,14 +365,14 @@ export default function ConteudoPage() {
                                                                     startIndex: 0,
                                                                     title: `${milestone.year} — ${milestone.title}`,
                                                                 })}
-                                                                className="relative group rounded-xl overflow-hidden border border-white/[0.07] hover:border-lime/30 transition-all inline-block"
+                                                                className="relative group rounded-xl overflow-hidden border border-hf-line/70 hover:border-hf-gold/30 transition-all inline-block"
                                                             >
                                                                 {mediaItems[0].type === 'video' ? (
                                                                     <div className="relative">
                                                                         <video src={mediaItems[0].url} className="h-28 w-auto max-w-[220px] object-cover rounded-xl" muted />
                                                                         <div className="absolute inset-0 bg-black/30 flex items-center justify-center group-hover:bg-black/10 transition-colors">
-                                                                            <div className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center group-hover:scale-110 transition-transform">
-                                                                                <Play className="w-5 h-5 text-white fill-white ml-0.5" />
+                                                                            <div className="w-10 h-10 rounded-full bg-hf-ice/20 backdrop-blur-md flex items-center justify-center group-hover:scale-110 transition-transform">
+                                                                                <Play className="w-5 h-5 text-hf-ice fill-hf-ice ml-0.5" />
                                                                             </div>
                                                                         </div>
                                                                     </div>
@@ -383,15 +383,15 @@ export default function ConteudoPage() {
                                                                     </div>
                                                                 )}
                                                                 {mediaItems[0].caption && (
-                                                                    <p className="mt-1 px-0.5 text-left font-grotesk text-[10px] text-white/45">{mediaItems[0].caption}</p>
+                                                                    <p className="mt-1 px-0.5 text-left font-ui text-[10px] text-hf-ice/45">{mediaItems[0].caption}</p>
                                                                 )}
                                                             </button>
                                                         ) : (
                                                             // Multi-media grid
                                                             <div>
                                                                 <div className="flex items-center gap-1.5 mb-2">
-                                                                    <ImageIcon className="w-3 h-3 text-white/45" />
-                                                                    <span className="font-grotesk text-[10px] font-medium uppercase tracking-wide text-white/45">{mediaItems.length} fotos/vídeos</span>
+                                                                    <ImageIcon className="w-3 h-3 text-hf-ice/45" />
+                                                                    <span className="font-ui text-[10px] font-medium uppercase tracking-wide text-hf-ice/45">{mediaItems.length} fotos/vídeos</span>
                                                                 </div>
                                                                 <div className="grid grid-cols-4 gap-1.5">
                                                                     {visibleItems.map((item, itemIdx) => (
@@ -402,12 +402,12 @@ export default function ConteudoPage() {
                                                                                 startIndex: itemIdx,
                                                                                 title: `${milestone.year} — ${milestone.title}`,
                                                                             })}
-                                                                            className="relative group aspect-square rounded-xl overflow-hidden border border-white/[0.07] hover:border-lime/30 transition-all"
+                                                                            className="relative group aspect-square rounded-xl overflow-hidden border border-hf-line/70 hover:border-hf-gold/30 transition-all"
                                                                         >
                                                                             {item.type === 'video' ? (
-                                                                                <div className="w-full h-full bg-coal-2 flex items-center justify-center">
+                                                                                <div className="w-full h-full bg-hf-surface-2 flex items-center justify-center">
                                                                                     <video src={item.url} className="absolute inset-0 w-full h-full object-cover opacity-60" muted />
-                                                                                    <Film className="w-4 h-4 text-white relative z-10 drop-shadow" />
+                                                                                    <Film className="w-4 h-4 text-hf-ice relative z-10 drop-shadow" />
                                                                                 </div>
                                                                             ) : (
                                                                                 <img src={item.url} alt={item.caption || ''} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
@@ -415,7 +415,7 @@ export default function ConteudoPage() {
                                                                             {/* Overflow badge on last visible */}
                                                                             {itemIdx === SHOW_LIMIT - 1 && overflow > 0 && (
                                                                                 <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
-                                                                                    <span className="font-grotesk text-sm font-semibold text-white">+{overflow}</span>
+                                                                                    <span className="font-ui text-sm font-semibold text-hf-ice">+{overflow}</span>
                                                                                 </div>
                                                                             )}
                                                                         </button>
@@ -444,15 +444,15 @@ export default function ConteudoPage() {
                             initial={{ opacity: 0, y: 20 }}
                             whileInView={{ opacity: 1, y: 0 }}
                             viewport={{ once: true }}
-                            className="rounded-3xl border border-white/[0.07] bg-coal p-8 text-center"
+                            className="rounded-2xl border border-hf-line/70 bg-hf-surface p-8 text-center"
                         >
                             <span className="text-4xl mb-4 block">🥋</span>
-                            <h3 className="mb-3 font-grotesk text-xl font-semibold text-white">Valores que guiam o Henrique</h3>
+                            <h3 className="mb-3 font-brand text-xl font-semibold text-hf-ice">Valores que guiam o Henrique</h3>
                             <div className="flex flex-wrap justify-center gap-3 mt-4">
                                 {profile.values_list.map((value, index) => (
                                     <span
                                         key={index}
-                                        className="rounded-full border border-white/[0.08] bg-white/5 px-4 py-1.5 font-grotesk text-sm font-medium text-white/80"
+                                        className="rounded-full border border-hf-line/70 bg-hf-ice/5 px-4 py-1.5 font-ui text-sm font-medium text-hf-ice/80"
                                     >
                                         {value}
                                     </span>
@@ -470,9 +470,9 @@ export default function ConteudoPage() {
                         href="https://instagram.com/henriquefujimoto"
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center gap-3 rounded-full border border-white/15 bg-white/5 px-6 py-3 font-grotesk text-sm font-semibold text-white transition-all hover:border-lime/40 hover:bg-white/10"
+                        className="inline-flex items-center gap-3 rounded-full border border-hf-ice/15 bg-hf-ice/5 px-6 py-3 font-ui text-sm font-semibold text-hf-ice transition-all hover:border-hf-gold/40 hover:bg-hf-ice/10"
                     >
-                        <Instagram className="w-5 h-5 text-lime" />
+                        <Instagram className="w-5 h-5 text-hf-gold" />
                         Acompanhe no Instagram
                     </a>
                 </div>

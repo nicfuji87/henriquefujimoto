@@ -1,10 +1,11 @@
 import React from 'react';
 import { motion } from 'framer-motion';
+import { hfKicker, hfLead, hfTitle } from '../ui/hf';
 
 interface SectionHeadingProps {
-    kicker?: string;           // optional small plain overline (no pill chrome)
-    title: React.ReactNode;    // chapter-like headline
-    lead?: React.ReactNode;    // optional narrative paragraph
+    kicker?: string;           // overline dourado opcional
+    title: React.ReactNode;    // titulo da secao (Montserrat, caixa alta)
+    lead?: React.ReactNode;    // paragrafo narrativo opcional
     align?: 'left' | 'center';
 }
 
@@ -17,7 +18,7 @@ export default function SectionHeading({ kicker, title, lead, align = 'left' }: 
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true, margin: '-60px' }}
                     transition={{ duration: 0.5 }}
-                    className="mb-3 font-grotesk text-[12px] font-semibold uppercase tracking-[0.16em] text-lime"
+                    className={`mb-3 ${hfKicker}`}
                 >
                     {kicker}
                 </motion.p>
@@ -28,10 +29,19 @@ export default function SectionHeading({ kicker, title, lead, align = 'left' }: 
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: '-60px' }}
                 transition={{ duration: 0.6 }}
-                className="font-grotesk text-[1.6rem] leading-[1.15] font-semibold tracking-tight text-white sm:text-[2rem] sm:leading-[1.08] md:text-[2.75rem]"
+                className={hfTitle}
             >
                 {title}
             </motion.h2>
+
+            {/* Filete dourado: assinatura discreta da marca sob cada titulo */}
+            <motion.div
+                initial={{ opacity: 0, scaleX: 0 }}
+                whileInView={{ opacity: 1, scaleX: 1 }}
+                viewport={{ once: true, margin: '-60px' }}
+                transition={{ duration: 0.6, delay: 0.12 }}
+                className={`hf-rule mt-5 origin-left ${align === 'center' ? 'mx-auto origin-center' : ''}`}
+            />
 
             {lead && (
                 <motion.p
@@ -39,9 +49,7 @@ export default function SectionHeading({ kicker, title, lead, align = 'left' }: 
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true, margin: '-60px' }}
                     transition={{ duration: 0.6, delay: 0.1 }}
-                    className={`mt-5 max-w-2xl font-grotesk text-base leading-relaxed text-white/60 sm:text-lg ${
-                        align === 'center' ? 'mx-auto' : ''
-                    }`}
+                    className={`mt-5 max-w-2xl ${hfLead} ${align === 'center' ? 'mx-auto' : ''}`}
                 >
                     {lead}
                 </motion.p>

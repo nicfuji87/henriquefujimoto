@@ -47,15 +47,15 @@ const TrustWall: React.FC = () => {
   };
 
   return (
-    <section className="bg-night px-6 py-16 md:py-20">
+    <section className="bg-hf-navy px-6 py-16 md:py-20">
       <div className="mb-8">
-        <p className="font-grotesk text-[12px] font-semibold uppercase tracking-[0.16em] text-white/45">Parceiros de confiança</p>
+        <p className="font-ui text-[12px] font-semibold uppercase tracking-[0.16em] text-hf-ice/45">Parceiros de confiança</p>
       </div>
 
       {/* Marquee Container */}
       <div className="w-full overflow-hidden relative group">
-        <div className="absolute left-0 top-0 bottom-0 w-16 bg-gradient-to-r from-night to-transparent z-10 pointer-events-none"></div>
-        <div className="absolute right-0 top-0 bottom-0 w-16 bg-gradient-to-l from-night to-transparent z-10 pointer-events-none"></div>
+        <div className="absolute left-0 top-0 bottom-0 w-16 bg-gradient-to-r from-hf-navy to-transparent z-10 pointer-events-none"></div>
+        <div className="absolute right-0 top-0 bottom-0 w-16 bg-gradient-to-l from-hf-navy to-transparent z-10 pointer-events-none"></div>
 
         <motion.div
           className="flex gap-12 px-6 items-center w-max"
@@ -76,10 +76,10 @@ const TrustWall: React.FC = () => {
                 ) : (
                   /* If no logo, show initial circle + name */
                   <>
-                    <div className="h-10 w-10 bg-white/10 rounded-full flex items-center justify-center text-white font-grotesk font-semibold text-lg">
+                    <div className="h-10 w-10 bg-hf-ice/10 rounded-full flex items-center justify-center text-hf-ice font-ui font-semibold text-lg">
                       {getInitials(partner.name)}
                     </div>
-                    <span className="font-grotesk text-lg font-semibold text-white/60">{partner.name}</span>
+                    <span className="font-ui text-lg font-semibold text-hf-ice/60">{partner.name}</span>
                   </>
                 );
 

@@ -70,10 +70,10 @@ export default function HowToSupportSection({ ctaLink }: HowToSupportSectionProp
     ];
 
     return (
-        <section id="apoiar" className="scroll-mt-16 bg-night px-6 py-14 sm:py-20 md:py-28">
+        <section id="apoiar" className="scroll-mt-16 bg-hf-navy px-6 py-14 sm:py-20 md:py-28">
             <div className="mx-auto max-w-4xl">
                 <SectionHeading
-                    title={<>Como você pode fazer parte <span className="font-editorial font-normal italic text-lime">dessa história</span></>}
+                    title={<>Como você pode fazer parte <span className="text-hf-gold">dessa história</span></>}
                     lead="Toda carreira começa com pessoas que decidiram apoiar quando o sonho ainda estava no começo. Hoje existem várias formas de participar dessa caminhada."
                 />
 
@@ -81,13 +81,13 @@ export default function HowToSupportSection({ ctaLink }: HowToSupportSectionProp
                     {ways.map((w, i) => {
                         const inner = (
                             <>
-                                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-lime/12 text-lime transition-colors group-hover:bg-lime group-hover:text-night">
+                                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-hf-gold/12 text-hf-gold transition-colors group-hover:bg-hf-gold group-hover:text-hf-navy">
                                     {w.icon}
                                 </div>
                                 <div className="min-w-0 flex-1">
-                                    <h3 className="font-grotesk text-lg font-semibold text-white">{w.title}</h3>
-                                    <p className="mt-1 font-grotesk text-sm leading-relaxed text-white/55">{w.text}</p>
-                                    <span className="mt-2.5 inline-flex items-center gap-1.5 font-grotesk text-[13px] font-semibold text-lime">
+                                    <h3 className="font-brand text-lg font-semibold text-hf-ice">{w.title}</h3>
+                                    <p className="mt-1 font-ui text-sm leading-relaxed text-hf-ice/55">{w.text}</p>
+                                    <span className="mt-2.5 inline-flex items-center gap-1.5 font-ui text-[13px] font-semibold text-hf-gold">
                                         {w.cta}
                                         {w.action === 'link' ? (
                                             <ArrowUpRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
@@ -98,7 +98,7 @@ export default function HowToSupportSection({ ctaLink }: HowToSupportSectionProp
                                 </div>
                             </>
                         );
-                        const cls = 'group flex items-start gap-4 rounded-3xl border border-white/[0.07] bg-coal p-5 text-left transition-all hover:border-lime/25 hover:bg-coal-2';
+                        const cls = 'group flex items-start gap-4 rounded-2xl border border-hf-line/70 bg-hf-surface p-5 text-left transition-all hover:border-hf-gold/25 hover:bg-hf-surface-2';
 
                         return (
                             <motion.div

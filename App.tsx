@@ -71,7 +71,18 @@ import NutriAnalytics from './pages/nutri/NutriAnalytics';
 function ScrollToTop() {
   const { pathname, hash } = useLocation();
   useEffect(() => {
-    if (!hash) window.scrollTo(0, 0);
+    if (!hash) {
+      window.scrollTo(0, 0);
+      return;
+    }
+    // Navegacao com ancora (ex.: /#historia vindo de outra pagina): o browser so
+    // resolve o hash no carregamento inicial, entao rolamos ate a secao aqui.
+    const id = decodeURIComponent(hash.slice(1));
+    const raf = requestAnimationFrame(() => {
+      const el = document.getElementById(id);
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+    return () => cancelAnimationFrame(raf);
   }, [pathname, hash]);
   return null;
 }
