@@ -20,8 +20,8 @@ export default function SponsorsStrip({ partners }: SponsorsStripProps) {
         <section className="bg-hf-navy px-6 py-14 sm:py-20 md:py-24">
             <div className="mx-auto max-w-6xl">
                 <SectionHeading
-                    title="Quem já acredita nessa jornada"
-                    lead="Não existe atleta de alto rendimento sozinho. Toda conquista passa pelas pessoas e empresas que decidiram acreditar antes dos grandes resultados."
+                    title="Quem já apoia"
+                    lead="Nenhum atleta de base se sustenta sozinho. Estas marcas e pessoas entraram antes de os resultados aparecerem."
                 />
 
                 <motion.div

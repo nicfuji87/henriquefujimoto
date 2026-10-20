@@ -8,25 +8,25 @@ const reasons = [
         icon: <User className="h-6 w-6" />,
         title: 'Caráter e disciplina',
         description:
-            'O esporte forja resiliência, foco e determinação — qualidades essenciais dentro e fora dos tatames.',
+            'Treino puxado em idade de formação cobra horário, organização e repetição. Isso sobra para a escola e para o resto.',
     },
     {
         icon: <Flag className="h-6 w-6" />,
         title: 'Representatividade',
         description:
-            'Cada competição leva o nome de Brasília e da comunidade do judô para o tatame.',
+            'Ele compete pelo Distrito Federal nas etapas estaduais e em torneios de outros cinco estados.',
     },
     {
         icon: <Lightbulb className="h-6 w-6" />,
         title: 'Inspiração',
         description:
-            'Apoiar um atleta em formação é investir em um exemplo real para a próxima geração.',
+            'Na academia, os mais novos acompanham de perto quem está um degrau à frente.',
     },
     {
         icon: <TrendingUp className="h-6 w-6" />,
         title: 'Alto rendimento',
         description:
-            'Talento não basta: viagens, inscrições, quimonos de competição e equipe multidisciplinar exigem estrutura.',
+            'Passagem, inscrição, quimono de competição, fisioterapia. A conta mensal existe mesmo em ano sem título.',
     },
 ];
 
@@ -43,8 +43,8 @@ const WhySupport: React.FC = () => {
                         baseado em valores reais.
                     </h2>
                     <p className={`mt-5 max-w-md ${hfLeadOnLight}`}>
-                        Mais que resultados, o que se busca é evolução contínua, respeito e impacto positivo
-                        através do judô.
+                        O objetivo é simples de enunciar e caro de executar: manter um atleta de 13 anos
+                        treinando, estudando e competindo pelos próximos anos.
                     </p>
                 </div>
 
