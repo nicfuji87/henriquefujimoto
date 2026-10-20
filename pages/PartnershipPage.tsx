@@ -1347,7 +1347,7 @@ export default function PartnershipPage() {
                     {p.show_metrics && (
                         <p className="mt-5 font-ui text-[13px] text-hf-ice/40">
                             {metrics && !metrics.isFullYear
-                                ? `Projeção anual com base na média real dos últimos ${Math.round(metrics.monthsOfData)} meses — dados do Instagram, atualizados automaticamente.`
+                                ? `Projeção anual com base na média real dos ${Math.round(metrics.monthsOfData)} meses medidos. Dados do Instagram, atualizados automaticamente.`
                                 : 'Dados reais do Instagram, atualizados automaticamente.'}
                         </p>
                     )}
