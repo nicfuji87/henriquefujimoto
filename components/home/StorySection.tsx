@@ -61,17 +61,18 @@ export default function StorySection({ portrait, facts }: StorySectionProps) {
                         className="mt-6 max-w-xl space-y-4"
                     >
                         <p className={hfBody}>
-                            O judô faz parte da história da família Fujimoto há gerações. Henrique representa a
-                            terceira geração dessa relação com o esporte — uma tradição construída com dedicação,
-                            respeito e amor pelo tatame.
+                            Henrique vestiu o primeiro kimono aos seis anos. O judô já estava na família antes
+                            disso: o avô foi campeão brasileiro e o tio-avô, campeão mundial. Ele é a terceira
+                            geração.
                         </p>
                         <p className={hfBody}>
-                            Mas carregar esse legado não significa ter um caminho pronto. Ele está escrevendo a
-                            própria história, enfrentando os desafios de quem escolheu levar o esporte a sério.
+                            Nada disso vale ponto no tatame. Em 2026 ele subiu para o Sub-15 e passou a enfrentar
+                            adversários mais velhos e mais pesados, o que também significou mudar de categoria de
+                            peso no meio do ano.
                         </p>
                         <p className={hfBody}>
-                            Entre treinos, escola, competições e a vida de um adolescente, descobre todos os dias
-                            o que significa evoluir como atleta e como pessoa.
+                            Hoje são 13 anos, faixa laranja e uma rotina que divide escola, treino e viagem de
+                            competição. É isso que está registrado aqui, incluindo as vezes em que não deu certo.
                         </p>
                     </motion.div>
 
@@ -83,7 +84,7 @@ export default function StorySection({ portrait, facts }: StorySectionProps) {
                         className="mt-7 border-l-2 border-hf-gold/60 pl-5"
                     >
                         <p className="font-brand text-lg font-bold uppercase leading-snug tracking-[0.01em] text-hf-ice sm:text-xl">
-                            O passado inspira. O futuro ainda está sendo construído.
+                            Sobrenome não pontua.
                         </p>
                     </motion.div>
 

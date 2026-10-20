@@ -73,7 +73,7 @@ const Footer: React.FC = () => {
                 </div>
 
                 <p className="font-ui text-[10px] font-medium uppercase tracking-[0.2em] text-hf-ice/30">
-                    © {new Date().getFullYear()} Henrique Fujimoto — Todos os direitos reservados.
+                    © {new Date().getFullYear()} Henrique Fujimoto. Todos os direitos reservados.
                 </p>
             </div>
         </footer>

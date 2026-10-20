@@ -54,7 +54,7 @@ export default function AffiliateProducts() {
                         Meus produtos <span className="text-hf-gold">favoritos</span>
                     </h2>
                     <p className="mx-auto mt-5 max-w-xl font-ui text-base leading-relaxed text-hf-ice/60 sm:text-lg">
-                        Esses são os produtos que uso no meu dia a dia de treino e competição. Ao comprar pelos links abaixo, além de garantir qualidade, você me ajuda diretamente na minha carreira — eu recebo uma comissão por cada compra.
+                        Produtos que uso no treino e em competição. Comprando por estes links eu recebo uma comissão, e o preço para você não muda.
                     </p>
                 </motion.div>
 

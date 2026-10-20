@@ -45,7 +45,7 @@ export default function ProductsSection() {
             <div className="mx-auto max-w-6xl">
                 <SectionHeading
                     title={<>O que ele usa <span className="text-hf-gold">de verdade</span></>}
-                    lead="Aqui não tem propaganda. São os equipamentos que fazem parte do treino do Henrique de verdade — cada item foi escolhido porque realmente é usado por ele. Comprando pelos links você não paga nada a mais e ainda ajuda diretamente."
+                    lead="Equipamento que ele usa no treino, nada além disso. O preço para você é o mesmo e uma parte da compra volta para o atleta."
                 />
 
                 <div className="mt-10 grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">

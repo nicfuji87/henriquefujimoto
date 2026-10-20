@@ -170,8 +170,9 @@ export default function AchievementsSection() {
                             Continua aqui.
                         </h2>
                         <p className={`mt-5 max-w-md ${hfLeadOnLight}`}>
-                            Cada competição deixa mais do que um resultado. Deixa aprendizado, próximos passos e
-                            novas perguntas. A jornada segue.
+                            A colocação é o que fica registrado. O que muda o treino da semana seguinte costuma
+                            ser outra coisa: a pegada que não funcionou contra um canhoto, o ritmo que caiu nos
+                            últimos trinta segundos.
                         </p>
                         <button
                             type="button"

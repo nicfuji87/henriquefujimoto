@@ -18,7 +18,7 @@ export default function NumerosPage() {
             <PageIntro
                 kicker="Números & métricas"
                 title={<>Impacto e <span className="text-hf-gold">alcance</span></>}
-                lead="Indicadores públicos da audiência de Henrique Fujimoto, sincronizados a partir da conta oficial do Instagram. Quando um dado não está disponível, ele não é exibido."
+                lead="Audiência do Instagram oficial, sincronizada automaticamente. Quando o período não tem medição suficiente, o indicador não aparece em vez de mostrar um número pela metade."
             />
             <div className="flex flex-col gap-10 pb-10">
                 <ROIDashboard />

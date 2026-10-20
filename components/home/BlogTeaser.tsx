@@ -46,8 +46,8 @@ export default function BlogTeaser() {
                     <p className={hfKicker}>Bastidores / Rotina / Reflexões</p>
                     <h2 className={`mt-4 ${hfTitle}`}>Não coube no Reels.</h2>
                     <p className={`mt-5 max-w-md ${hfLead}`}>
-                        Além dos resultados, existe o dia a dia. Treinos, viagens, pessoas, pensamentos e tudo o
-                        que também faz parte dessa história.
+                        O que não cabe em trinta segundos de vídeo fica aqui: a viagem, o treino, o que deu
+                        errado na competição e o que mudou depois.
                     </p>
                     <Link to="/blog" className={`group mt-7 ${hfLink}`}>
                         Ver mais conteúdos

@@ -23,7 +23,7 @@ export default function BeyondTatame({ photos = [] }: BeyondTatameProps) {
                     <br className="hidden sm:block" /> <span className="text-hf-gold">Henrique é.</span>
                 </>
             ),
-            text: 'Carrega um sobrenome que já abriu caminhos, mas escolhe construir o seu próprio. Mesma raiz. Outro percurso. Mais perguntas. Mais vontade.',
+            text: 'O sobrenome abriu portas para o avô e para o tio-avô. Para ele, abre no máximo a porta do dojo. O que vem depois que a luta começa é problema dele.',
             photo: photos[0] || null,
             alt: 'Henrique Fujimoto de costas, com o nome no kimono',
         },
@@ -34,7 +34,7 @@ export default function BeyondTatame({ photos = [] }: BeyondTatameProps) {
                     <br className="hidden sm:block" /> trailer. <span className="text-hf-gold">Tem treino.</span>
                 </>
             ),
-            text: 'É repetição. Detalhe. Correção. Disciplina. Dias bons e dias difíceis. O processo não aparece todo, mas é ele que constrói o que vem depois.',
+            text: 'Treino é repetição e correção, quase sempre do mesmo detalhe. Tem dia que sai. Tem semana inteira que não sai nada. Essa parte raramente vira vídeo, mas é ela que decide a competição seguinte.',
             photo: photos[1] || null,
             alt: 'Treino de judô',
         },

@@ -280,8 +280,8 @@ export default function BlogPage() {
                         no Reels.
                     </h1>
                     <p className={`mt-6 max-w-xl ${hfLead}`}>
-                        Histórias, bastidores, treinos e tudo o que também faz parte dessa jornada. Os momentos que
-                        não cabem em vídeos curtos, mas que constroem o caminho.
+                        Texto longo sobre o que não cabe em trinta segundos de vídeo: a viagem, o treino, o que
+                        deu errado na competição e o que mudou depois dela.
                     </p>
                 </motion.div>
             </section>
@@ -482,7 +482,7 @@ export default function BlogPage() {
                             Continua essa jornada.
                         </h2>
                         <p className="mt-4 max-w-md font-ui text-[15px] leading-relaxed text-hf-ice/70">
-                            Mais histórias, aprendizados e bastidores por aqui. A jornada segue, e você faz parte dela.
+                            Publicamos sempre que tem o que contar. Em geral, depois de uma competição ou de uma viagem.
                         </p>
                         <a
                             href="https://instagram.com/henriquefujimoto"

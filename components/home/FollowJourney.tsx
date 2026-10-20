@@ -7,9 +7,9 @@ import { hfCardHover, hfIconBox } from '../ui/hf';
 /** O que realmente muda, e que raramente aparece no placar. */
 const signs = [
     'Uma pegada melhor.',
-    'Um movimento que finalmente funciona.',
-    'A coragem de tentar novamente.',
-    'Reconhecer um erro e voltar ao treino disposto a melhorar.',
+    'Um golpe que enfim sai no randori.',
+    'Levar ippon, levantar e entrar de novo na sequência.',
+    'Reconhecer o erro e voltar no treino seguinte disposto a corrigir.',
 ];
 
 /** O que o visitante acompanha por aqui. */
@@ -31,7 +31,7 @@ export default function FollowJourney() {
                 <SectionHeading
                     kicker="Evolução"
                     title={<>O que realmente importa não aparece <span className="text-hf-gold">apenas no placar.</span></>}
-                    lead="Competir é colocar à prova tudo o que foi construído no treino. Algumas competições terminam com medalhas. Outras deixam lições que nenhum pódio poderia ensinar. Todas fazem parte da mesma caminhada."
+                    lead="Nos últimos doze meses foram 22 competições. Catorze terminaram em pódio. As outras ensinaram mais sobre o que precisa mudar no treino do que qualquer medalha ensinaria."
                 />
 
                 <div className="mt-10 grid grid-cols-1 gap-10 lg:grid-cols-[0.9fr_1.4fr] lg:gap-14">
@@ -49,7 +49,7 @@ export default function FollowJourney() {
                             </motion.p>
                         ))}
                         <p className="pt-4 font-ui text-sm uppercase tracking-[0.18em] text-hf-gold">
-                            Um treino de cada vez. Uma evolução de cada vez.
+                            Um treino de cada vez.
                         </p>
                     </div>
 

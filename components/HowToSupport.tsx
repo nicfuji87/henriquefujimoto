@@ -22,7 +22,7 @@ const options: Option[] = [
     {
         icon: <Handshake className="h-6 w-6" />,
         title: 'Parcerias',
-        description: 'Ações, ativações e projetos conjuntos construídos com quem compartilha os valores do esporte.',
+        description: 'Ações pontuais, permuta de serviço ou projeto conjunto. O formato se define na conversa.',
         message: 'Olá! Vim pelo site do Henrique e gostaria de propor uma parceria. Podemos conversar?',
     },
     {
@@ -34,7 +34,7 @@ const options: Option[] = [
     {
         icon: <Mail className="h-6 w-6" />,
         title: 'Preparação',
-        description: 'Nutrição, fisioterapia, equipamentos e educação. Toda estrutura conta na formação do atleta.',
+        description: 'Nutrição, fisioterapia, preparação física e material. A parte invisível do calendário.',
         message: 'Olá! Vim pelo site do Henrique e gostaria de apoiar a preparação dele (nutrição, fisioterapia, equipamentos...).',
     },
 ];
@@ -50,8 +50,8 @@ const HowToSupport: React.FC = () => {
                     <p className={hfKicker}>Como você pode fazer parte</p>
                     <h2 className={`mt-4 ${hfTitle}`}>Existem várias formas de apoiar.</h2>
                     <p className={`mt-5 max-w-md ${hfLead}`}>
-                        Cada parceria contribui para que o atleta siga evoluindo dentro e fora do tatame. As
-                        conversas institucionais são conduzidas pelos responsáveis.
+                        Cada formato abaixo resolve um item diferente da conta. As conversas são conduzidas pelos
+                        responsáveis pelo atleta.
                     </p>
                 </div>
 

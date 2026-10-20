@@ -84,11 +84,12 @@ export default function ApoiarPage() {
                             antes do <span className="text-hf-gold">ippon.</span>
                         </h1>
                         <p className="mt-5 font-brand text-lg font-semibold text-hf-ice/90 sm:text-xl">
-                            Mais que uma medalha, um projeto real em construção.
+                            Um projeto de formação esportiva com calendário, custo e resultado registrado.
                         </p>
                         <p className={`mt-5 max-w-xl ${hfLead}`}>
-                            Apoiar o Henrique é investir em um atleta em formação, com disciplina, propósito e um
-                            plano de longo prazo. É fazer parte de uma história que já está acontecendo.
+                            Henrique tem 13 anos e compete no Sub-15. O que já existe é calendário, rotina de
+                            treino e resultado registrado. O que falta é estrutura para sustentar isso nos
+                            próximos anos.
                         </p>
 
                         <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
@@ -124,19 +125,18 @@ export default function ApoiarPage() {
                     <div className="max-w-2xl space-y-4">
                         <p className="font-ui text-base leading-relaxed text-hf-ice/75">
                             Henrique Fujimoto{age ? ` tem ${age} anos,` : ''} treina em Brasília
-                            {category ? ` e compete na categoria ${category}` : ''}. Representa a terceira geração
-                            da família Fujimoto no judô e segue construindo o próprio caminho dentro do esporte.
+                            {category ? ` e compete no ${category}` : ''}. É a terceira geração da família no judô.
                         </p>
                         {competitions && firstYear && (
                             <p className="font-ui text-base leading-relaxed text-hf-ice/75">
-                                São {competitions} competições registradas desde {firstYear}, entre etapas do
-                                ranking do Distrito Federal, circuitos escolares e torneios em outros estados —
-                                todas publicadas neste site com data, categoria e resultado.
+                                São {competitions} competições registradas desde {firstYear}: etapas do ranking do
+                                Distrito Federal, circuitos escolares e torneios em outros cinco estados. Todas
+                                estão publicadas neste site com data, categoria e resultado, inclusive as que não
+                                terminaram em pódio.
                             </p>
                         )}
                         <p className="font-ui text-base leading-relaxed text-hf-ice/75">
-                            Este é um projeto de longo prazo, que une desempenho esportivo, educação e formação
-                            pessoal. As relações institucionais são conduzidas pelos responsáveis pelo atleta.
+                            As conversas institucionais são conduzidas pelos responsáveis pelo atleta.
                         </p>
                     </div>
                 </div>
@@ -166,7 +166,7 @@ export default function ApoiarPage() {
                             <br />a próxima medalha.
                         </h2>
                         <p className="mt-4 max-w-md font-ui text-[15px] leading-relaxed text-hf-ice/70">
-                            Mas já existe uma história acontecendo agora — e ela pode ter a sua marca ao lado.
+                            Mas o calendário já está em andamento, e dá para entrar nele agora.
                         </p>
                         <a href={wa} target="_blank" rel="noopener noreferrer" className={`mt-7 ${hfBtnPrimary}`}>
                             <MessageCircle className="h-4 w-4" />

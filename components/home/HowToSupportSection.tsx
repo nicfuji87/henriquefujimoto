@@ -31,7 +31,7 @@ export default function HowToSupportSection({ ctaLink }: HowToSupportSectionProp
         {
             icon: <Shirt className="h-5 w-5" />,
             title: 'Seja um patrocinador',
-            text: 'Sua marca acompanha uma história de dedicação, disciplina e crescimento — com presença em competições, uniformes, redes sociais e conteúdos exclusivos.',
+            text: 'Marca no quimono e no agasalho, presença nas fotos de competição e nos conteúdos publicados. O formato é combinado caso a caso.',
             action: 'link' as const,
             href: buildWaLink(ctaLink, 'Olá! Vim pelo site do Henrique e tenho interesse em ser patrocinador dele. Podemos conversar?'),
             cta: 'Conversar sobre patrocínio',
@@ -39,7 +39,7 @@ export default function HowToSupportSection({ ctaLink }: HowToSupportSectionProp
         {
             icon: <Plane className="h-5 w-5" />,
             title: 'Apoie uma competição',
-            text: 'Cada viagem representa uma oportunidade de evolução. Sua ajuda pode levar o Henrique ao próximo desafio.',
+            text: 'Uma etapa fora de Brasília custa passagem, hospedagem e inscrição. É o item que mais limita o calendário do ano.',
             action: 'link' as const,
             href: buildWaLink(ctaLink, 'Olá! Vim pelo site do Henrique e quero apoiar uma competição dele (viagem, inscrição, alimentação). Como funciona?'),
             cta: 'Apoiar uma viagem',
@@ -47,7 +47,7 @@ export default function HowToSupportSection({ ctaLink }: HowToSupportSectionProp
         {
             icon: <HeartPulse className="h-5 w-5" />,
             title: 'Faça parte da preparação',
-            text: 'Nutrição, fisioterapia, equipamentos, academia, educação. Toda estrutura faz diferença na formação do atleta.',
+            text: 'Nutrição, fisioterapia, preparação física e material de treino: a parte da conta que não aparece no pódio.',
             action: 'link' as const,
             href: buildWaLink(ctaLink, 'Olá! Vim pelo site do Henrique e gostaria de apoiar a preparação dele (nutrição, fisioterapia, equipamentos...). Vamos conversar?'),
             cta: 'Quero ajudar na preparação',
@@ -55,7 +55,7 @@ export default function HowToSupportSection({ ctaLink }: HowToSupportSectionProp
         {
             icon: <ShoppingBag className="h-5 w-5" />,
             title: 'Compre pelos links',
-            text: 'São exatamente os produtos que fazem parte da rotina de treinos. Você não paga nada a mais e ainda ajuda diretamente o atleta.',
+            text: 'São os produtos que ele usa no treino. O preço para você é o mesmo e uma parte da compra volta para o atleta.',
             action: 'anchor' as const,
             href: '#produtos',
             cta: 'Ver os produtos',
@@ -63,7 +63,7 @@ export default function HowToSupportSection({ ctaLink }: HowToSupportSectionProp
         {
             icon: <Share2 className="h-5 w-5" />,
             title: 'Compartilhe',
-            text: 'Às vezes um compartilhamento leva essa história para alguém que pode mudar o futuro dela.',
+            text: 'Mandar o link para alguém que trabalha com esporte costuma render mais do que parece.',
             action: 'share' as const,
             cta: 'Compartilhar a jornada',
         },
@@ -74,7 +74,7 @@ export default function HowToSupportSection({ ctaLink }: HowToSupportSectionProp
             <div className="mx-auto max-w-4xl">
                 <SectionHeading
                     title={<>Como você pode fazer parte <span className="text-hf-gold">dessa história</span></>}
-                    lead="Toda carreira começa com pessoas que decidiram apoiar quando o sonho ainda estava no começo. Hoje existem várias formas de participar dessa caminhada."
+                    lead="Apoio em categoria de base costuma ser prático: inscrição, passagem, quimono, fisioterapia. Abaixo estão as formas que funcionam hoje."
                 />
 
                 <div className="mt-12 flex flex-col gap-3">

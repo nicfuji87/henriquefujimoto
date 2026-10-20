@@ -96,14 +96,13 @@ export default function ProofSection({ metrics, loading = false }: ProofSectionP
                     lead={
                         hasData && reach > 0 ? (
                             <>
-                                {formatCompact(reach)} pessoas acompanharam o conteúdo do Henrique nos últimos 30 dias.
-                                Os números ajudam a registrar o caminho percorrido — mas não definem tudo o que o
-                                esporte representa.
+                                {formatCompact(reach)} pessoas viram o conteúdo do Henrique nos últimos 30 dias. O
+                                número mede o tamanho da audiência. Quem está do outro lado diz mais.
                             </>
                         ) : (
                             <>
-                                Os números ajudam a registrar o caminho percorrido — mas não definem tudo o que o
-                                esporte representa. Mais importante do que o alcance é quem está acompanhando.
+                                Boa parte de quem acompanha o Henrique está dentro do esporte, e é por isso que a
+                                audiência importa mais pelo perfil do que pelo tamanho.
                             </>
                         )
                     }
@@ -126,7 +125,7 @@ export default function ProofSection({ metrics, loading = false }: ProofSectionP
                         ))}
                     </div>
                     <p className="mt-4 max-w-xl font-ui text-sm text-hf-ice/45">
-                        Pessoas que acreditam no esporte como ferramenta de transformação.
+                        É uma audiência de nicho, construída em torno do judô.
                     </p>
                 </motion.div>
 
