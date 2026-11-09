@@ -23,6 +23,9 @@ interface PartnershipRow { marista: string; family: string; }
 interface AudienceMetric { value: string; label: string; sub?: string; }
 interface BuildItem { title: string; text: string; }
 interface PilotStep { label: string; text: string; }
+interface PresenterNote { slide: string; text: string; }
+interface RulerStep { label: string; value: string; note?: string; }
+interface Objection { q: string; a: string; }
 
 interface Project {
     id?: string;
@@ -107,7 +110,16 @@ interface Project {
     limits_body: string;
     limits_items: string[];
     section_order: string[];
+    presenter_notes: PresenterNote[];
+    presenter_ruler: RulerStep[];
+    presenter_objections: Objection[];
 }
+
+/** Telas da apresentacao em /parceria/[slug]/apresentacao, na ordem em que aparecem. */
+const PRESENTATION_SLIDES = [
+    'capa', 'aluno', 'semana', 'trajetoria', 'mapa', 'porque_agora', 'ja_juntos',
+    'audiencia', 'construir', 'piloto', 'apoio', 'limites', 'fecho',
+];
 
 /** Chaves aceitas em `section_order` — a pagina publica renderiza nesta ordem. */
 const SECTION_KEYS = [
@@ -137,6 +149,7 @@ const EMPTY: Project = {
     differentiators_title: '', build_title: '', build_body: '', build_items: [],
     pilot_title: '', pilot_body: '', pilot_steps: [],
     limits_title: '', limits_body: '', limits_items: [], section_order: [],
+    presenter_notes: [], presenter_ruler: [], presenter_objections: [],
 };
 
 const inputCls = 'w-full bg-zinc-800/50 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-emerald-500/50';
@@ -327,9 +340,14 @@ export default function PartnershipsTab() {
                             </h3>
                             <div className="flex items-center gap-2">
                                 {form.slug && (
-                                    <a href={`/parceria/${slugify(form.slug)}`} target="_blank" rel="noreferrer" className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-zinc-800 text-zinc-300 rounded-lg hover:bg-zinc-700 transition-colors">
-                                        <ExternalLink className="w-3.5 h-3.5" /> Ver página
-                                    </a>
+                                    <>
+                                        <a href={`/parceria/${slugify(form.slug)}`} target="_blank" rel="noreferrer" className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-zinc-800 text-zinc-300 rounded-lg hover:bg-zinc-700 transition-colors">
+                                            <ExternalLink className="w-3.5 h-3.5" /> Ver página
+                                        </a>
+                                        <a href={`/parceria/${slugify(form.slug)}/apresentacao`} target="_blank" rel="noreferrer" className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-zinc-800 text-zinc-300 rounded-lg hover:bg-zinc-700 transition-colors">
+                                            <ExternalLink className="w-3.5 h-3.5" /> Apresentação
+                                        </a>
+                                    </>
                                 )}
                                 <button onClick={cancel} className="p-1.5 text-zinc-400 hover:text-white rounded-lg hover:bg-zinc-800"><X className="w-4 h-4" /></button>
                             </div>
@@ -800,6 +818,60 @@ export default function PartnershipsTab() {
                             </div>
 
                             {/* Closing + contact */}
+                            {/* Apresentação — camada privada */}
+                            <GroupTitle>Apresentação · camada privada</GroupTitle>
+                            <p className="text-[11px] text-amber-400/80">
+                                Só aparece em <code className="text-amber-300">/parceria/{form.slug || 'slug'}/apresentacao</code> com
+                                o modo privado ligado (tecla P, toque longo no número da tela, ou ?modo=privado).
+                                Nunca entra na página pública nem no PDF.
+                            </p>
+                            <Labeled label="Roteiro de fala por tela">
+                                <div className="space-y-2">
+                                    {form.presenter_notes.map((n, i) => (
+                                        <div key={i} className="flex items-start gap-2">
+                                            <select
+                                                className={inputCls + ' w-36'}
+                                                value={n.slide}
+                                                onChange={e => patchItem('presenter_notes', i, { slide: e.target.value })}
+                                            >
+                                                <option value="">tela...</option>
+                                                {PRESENTATION_SLIDES.map(k => <option key={k} value={k}>{k}</option>)}
+                                            </select>
+                                            <textarea rows={2} className={inputCls + ' flex-1'} value={n.text} onChange={e => patchItem('presenter_notes', i, { text: e.target.value })} placeholder="O que falar nessa tela" />
+                                            <button onClick={() => removeItem('presenter_notes', i)} className="p-2 text-zinc-500 hover:text-red-400"><Trash2 className="w-4 h-4" /></button>
+                                        </div>
+                                    ))}
+                                    <button onClick={() => addItem<PresenterNote>('presenter_notes', { slide: '', text: '' })} className="text-xs text-emerald-400 hover:text-emerald-300 flex items-center gap-1"><Plus className="w-3 h-3" /> Adicionar roteiro</button>
+                                </div>
+                            </Labeled>
+                            <Labeled label="Régua de negociação" hint="Confidencial. Nunca colocar esses valores na página.">
+                                <div className="space-y-2">
+                                    {form.presenter_ruler.map((r, i) => (
+                                        <div key={i} className="flex items-center gap-2">
+                                            <input className={inputCls + ' flex-1'} value={r.label} onChange={e => patchItem('presenter_ruler', i, { label: e.target.value })} placeholder="Pedido inicial" />
+                                            <input className={inputCls + ' w-24'} value={r.value} onChange={e => patchItem('presenter_ruler', i, { value: e.target.value })} placeholder="30%" />
+                                            <input className={inputCls + ' flex-1'} value={r.note || ''} onChange={e => patchItem('presenter_ruler', i, { note: e.target.value })} placeholder="observação" />
+                                            <button onClick={() => removeItem('presenter_ruler', i)} className="p-2 text-zinc-500 hover:text-red-400"><Trash2 className="w-4 h-4" /></button>
+                                        </div>
+                                    ))}
+                                    <button onClick={() => addItem<RulerStep>('presenter_ruler', { label: '', value: '', note: '' })} className="text-xs text-emerald-400 hover:text-emerald-300 flex items-center gap-1"><Plus className="w-3 h-3" /> Adicionar degrau</button>
+                                </div>
+                            </Labeled>
+                            <Labeled label="Objeções e respostas">
+                                <div className="space-y-2">
+                                    {form.presenter_objections.map((o, i) => (
+                                        <div key={i} className="flex items-start gap-2">
+                                            <div className="flex-1 space-y-2">
+                                                <input className={inputCls} value={o.q} onChange={e => patchItem('presenter_objections', i, { q: e.target.value })} placeholder="O que eles podem dizer" />
+                                                <textarea rows={2} className={inputCls} value={o.a} onChange={e => patchItem('presenter_objections', i, { a: e.target.value })} placeholder="Como responder" />
+                                            </div>
+                                            <button onClick={() => removeItem('presenter_objections', i)} className="p-2 text-zinc-500 hover:text-red-400"><Trash2 className="w-4 h-4" /></button>
+                                        </div>
+                                    ))}
+                                    <button onClick={() => addItem<Objection>('presenter_objections', { q: '', a: '' })} className="text-xs text-emerald-400 hover:text-emerald-300 flex items-center gap-1"><Plus className="w-3 h-3" /> Adicionar objeção</button>
+                                </div>
+                            </Labeled>
+
                             {/* Ordem das seções */}
                             <GroupTitle>Ordem das seções (avançado)</GroupTitle>
                             <Labeled

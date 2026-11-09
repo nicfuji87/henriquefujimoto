@@ -6,7 +6,7 @@ interface BrazilMapProps {
 }
 
 // Map city state names from Instagram API to Brazilian state codes
-const stateNameToCode: Record<string, string> = {
+export const stateNameToCode: Record<string, string> = {
     'Acre': 'AC', 'Alagoas': 'AL', 'Amapá': 'AP', 'Amazonas': 'AM',
     'Bahia': 'BA', 'Ceará': 'CE', 'Federal District': 'DF',
     'Espírito Santo': 'ES', 'Goiás': 'GO', 'Maranhão': 'MA',
@@ -18,7 +18,7 @@ const stateNameToCode: Record<string, string> = {
     'São Paulo': 'SP', 'Sergipe': 'SE', 'Tocantins': 'TO',
 };
 
-const stateCodeToName: Record<string, string> = {
+export const stateCodeToName: Record<string, string> = {
     'AC': 'Acre', 'AL': 'Alagoas', 'AP': 'Amapá', 'AM': 'Amazonas',
     'BA': 'Bahia', 'CE': 'Ceará', 'DF': 'Distrito Federal',
     'ES': 'Espírito Santo', 'GO': 'Goiás', 'MA': 'Maranhão',
@@ -30,7 +30,7 @@ const stateCodeToName: Record<string, string> = {
 };
 
 // Simplified SVG paths for Brazilian states (low-detail for performance)
-const statePaths: Record<string, string> = {
+export const statePaths: Record<string, string> = {
     'AM': 'M46,80 L100,55 L155,55 L180,75 L185,105 L170,130 L140,140 L100,135 L60,120 L40,100Z',
     'PA': 'M185,65 L250,55 L270,80 L265,125 L240,140 L215,150 L185,140 L170,130 L185,105Z',
     'MA': 'M270,80 L300,70 L310,90 L300,120 L280,130 L265,125Z',

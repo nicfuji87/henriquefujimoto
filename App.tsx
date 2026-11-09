@@ -9,6 +9,7 @@ import BlogPostPage from './pages/BlogPostPage';
 import AdminPage from './pages/AdminPage';
 import ProductPage from './pages/ProductPage';
 import PartnershipPage from './pages/PartnershipPage';
+import PresentationPage from './pages/PresentationPage';
 import { useTracking } from './hooks/useTracking';
 
 // Diário do Atleta App
@@ -87,6 +88,26 @@ function ScrollToTop() {
   return null;
 }
 
+function NotFound() {
+  const { pathname } = useLocation();
+  return (
+    <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-hf-navy px-6 text-center">
+      <p className="font-brand text-[2rem] font-extrabold uppercase leading-none tracking-tight text-hf-ice">
+        Página não encontrada
+      </p>
+      <p className="max-w-md font-ui text-sm leading-relaxed text-hf-ice/45">
+        Não existe nada em <span className="text-hf-ice/70">{pathname}</span>.
+      </p>
+      <a
+        href="/"
+        className="mt-2 font-ui text-sm font-semibold uppercase tracking-[0.1em] text-hf-gold"
+      >
+        Ir para o início
+      </a>
+    </div>
+  );
+}
+
 function AppRoutes() {
   // Centralized tracking hook inside Router context
   useTracking();
@@ -104,6 +125,7 @@ function AppRoutes() {
       <Route path="/admin" element={<AdminPage />} />
       <Route path="/produto/:slug" element={<ProductPage />} />
       <Route path="/parceria/:slug" element={<PartnershipPage />} />
+      <Route path="/parceria/:slug/apresentacao" element={<PresentationPage />} />
 
       {/* Diário do Atleta App Routes */}
       <Route element={<AppLayout />}>
@@ -164,6 +186,10 @@ function AppRoutes() {
         <Route path="/escola/biblioteca" element={<EscolaLibrary />} />
         <Route path="/escola/anamnese" element={<EscolaAnamnese />} />
       </Route>
+
+      {/* Qualquer endereco que nao casa com nada acima. Sem isto, um link
+          errado abre uma tela vazia e sem explicacao. */}
+      <Route path="*" element={<NotFound />} />
     </Routes>
     </>
   );
