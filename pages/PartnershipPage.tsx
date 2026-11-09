@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import PublicTopBar from '../components/PublicTopBar';
 import { useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowRight, Check, Download, Mail, MessageCircle, MapPin, Medal, Instagram, Youtube, Newspaper, Globe } from 'lucide-react';
+import { ArrowRight, Check, Download, Mail, MessageCircle, MapPin, Medal, Instagram, Youtube, Newspaper, Globe, ShieldCheck } from 'lucide-react';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { supabase } from '../lib/supabase';
@@ -77,6 +77,20 @@ interface PartnershipRow {
     marista: string;
     family: string;
 }
+/** Metrica curada: valor ja formatado a mao, com o periodo explicito no rotulo. */
+interface AudienceMetric {
+    value: string;
+    label: string;
+    sub?: string;
+}
+interface BuildItem {
+    title: string;
+    text: string;
+}
+interface PilotStep {
+    label: string;
+    text: string;
+}
 
 interface PartnershipProject {
     slug: string;
@@ -87,6 +101,7 @@ interface PartnershipProject {
     hero_kicker: string;
     hero_title: string;
     hero_subtitle: string;
+    hero_cta_label?: string | null;
     intro: string;
     // Executive summary + federation credibility
     executive_summary: string;
@@ -123,9 +138,15 @@ interface PartnershipProject {
     comms_title: string;
     comms_body: string;
     show_metrics: boolean;
+    /** Nota curta de contexto sobre os numeros (ex.: interrupcao do perfil). */
+    audience_note?: string | null;
+    /** Metricas curadas, conferidas a mao. Substituem os blocos automaticos. */
+    audience_metrics?: AudienceMetric[] | null;
     channels_note: string;
     channels: Channel[] | null;
     ecosystem_contrast: ContrastRow[] | null;
+    /** Quando preenchido, a tabela de contraste ganha secao propria com este titulo. */
+    differentiators_title?: string | null;
     partnership_table: PartnershipRow[] | null;
     partnership_table_note: string;
     pilot_note: string;
@@ -134,10 +155,25 @@ interface PartnershipProject {
     // Investment + scholarship
     costs: CostItem[] | null;
     costs_note: string;
+    scholarship_title?: string | null;
+    /** Ancora visual do pedido (ex.: "cerca de 30%"). Sem valor em reais. */
+    scholarship_anchor?: string | null;
     scholarship_label: string;
     scholarship_monthly: number;
     scholarship_body: string;
     ask_body: string;
+    // What the partnership can become (possibilidades, nao entregas contratadas)
+    build_title?: string | null;
+    build_body?: string | null;
+    build_items?: BuildItem[] | null;
+    // Projeto-piloto de 12 meses
+    pilot_title?: string | null;
+    pilot_body?: string | null;
+    pilot_steps?: PilotStep[] | null;
+    // Limites da parceria
+    limits_title?: string | null;
+    limits_body?: string | null;
+    limits_items?: string[] | null;
     // Deliverables — what the school receives over a school year
     deliverables_title?: string | null;
     deliverables?: string[] | null;
@@ -158,6 +194,8 @@ interface PartnershipProject {
     closing_title: string;
     closing_body: string;
     closing_image_url?: string | null;
+    /** Ordem das secoes. Vazio/ausente = DEFAULT_SECTION_ORDER. */
+    section_order?: string[] | null;
 }
 
 // ---- Helpers -------------------------------------------------------------
@@ -169,6 +207,45 @@ const fmtBRL = (n: number) =>
     }).format(Number.isFinite(n) ? n : 0);
 
 const ATHLETE = 'Henrique Fujimoto · Judoca Sub-15';
+
+/**
+ * Ordem padrao das secoes. Um projeto pode reordenar pela coluna `section_order`
+ * sem afetar os outros — propostas antigas continuam renderizando nesta ordem.
+ */
+type SectionOrderSource = { section_order?: string[] | null };
+
+/** Ordem efetiva das secoes de uma proposta: a definida no banco ou a padrao. */
+function sectionOrderFor(p: SectionOrderSource): string[] {
+    return Array.isArray(p.section_order) && p.section_order.length > 0
+        ? p.section_order
+        : [...DEFAULT_SECTION_ORDER];
+}
+
+const DEFAULT_SECTION_ORDER = [
+    'executive',
+    'intro',
+    'results',
+    'potential',
+    'why_partner',
+    'representation',
+    'academic',
+    'discipline',
+    'routine',
+    'comms',
+    'ecosystem',
+    'build',
+    'pilot',
+    'gallery',
+    'costs',
+    'scholarship',
+    'deliverables',
+    'partnership_table',
+    'institutional',
+    'family',
+    'limits',
+    'timeline',
+    'custom',
+] as const;
 
 // Paleta HF no PDF (mesmos valores do manual de marca).
 const PDF_NAVY: [number, number, number] = [11, 20, 38];
@@ -347,6 +424,34 @@ function PhotoStrip({ items }: { items: Photo[] }) {
     );
 }
 
+// Contraste "atleta tipico x Henrique" — usado dentro do bloco de comunicacao ou,
+// quando a proposta define um titulo proprio, como secao independente.
+function ContrastTable({ rows, className = '' }: { rows: ContrastRow[]; className?: string }) {
+    if (!rows.length) return null;
+    return (
+        <motion.div
+            {...reveal}
+            transition={{ duration: 0.6, delay: 0.15 }}
+            className={`overflow-hidden rounded-2xl border border-hf-line/70 bg-hf-surface ${className}`}
+        >
+            <div className="grid grid-cols-2 border-b border-hf-line/70 text-center">
+                <div className="p-3 font-ui text-[10px] font-semibold uppercase tracking-[0.12em] text-hf-ice/45 sm:p-4 sm:text-[11px]">
+                    Atleta típico da idade
+                </div>
+                <div className="border-l border-hf-line/70 p-3 font-ui text-[10px] font-semibold uppercase tracking-[0.12em] text-hf-gold sm:p-4 sm:text-[11px]">
+                    Henrique
+                </div>
+            </div>
+            {rows.map((r, i) => (
+                <div key={i} className="grid grid-cols-2 border-b border-hf-line/70 last:border-0">
+                    <div className="p-3 font-ui text-[13px] leading-snug text-hf-ice/50 sm:p-4 sm:text-sm">{r.typical}</div>
+                    <div className="border-l border-hf-line/70 p-3 font-ui text-[13px] font-medium leading-snug text-hf-ice sm:p-4 sm:text-sm">{r.henrique}</div>
+                </div>
+            ))}
+        </motion.div>
+    );
+}
+
 export default function PartnershipPage() {
     const { slug } = useParams<{ slug: string }>();
     const [project, setProject] = useState<PartnershipProject | null>(null);
@@ -450,12 +555,31 @@ export default function PartnershipPage() {
     const scholarshipAnnual = (project?.scholarship_monthly || 0) * 12;
     const pct = annualInvestment > 0 ? Math.round((scholarshipAnnual / annualInvestment) * 100) : 0;
 
-    // Derived competition stats
+    // Derived competition stats. Os totais sao historicos; o recorte de 12 meses
+    // sai junto para que nenhum numero apareca sem periodo declarado.
     const compStats = useMemo(() => {
         const golds = competitions.filter((c) => c.medal_type === 'gold').length;
         const silvers = competitions.filter((c) => c.medal_type === 'silver').length;
         const bronzes = competitions.filter((c) => c.medal_type === 'bronze').length;
-        return { golds, silvers, bronzes, podiums: golds + silvers + bronzes };
+
+        const cutoff = new Date();
+        cutoff.setFullYear(cutoff.getFullYear() - 1);
+        const last12 = competitions.filter((c) => new Date(c.date + 'T12:00:00') >= cutoff);
+        const last12Podiums = last12.filter((c) => !!c.medal_type).length;
+
+        const years = competitions
+            .map((c) => Number((c.date || '').slice(0, 4)))
+            .filter((y) => Number.isFinite(y) && y > 1900);
+
+        return {
+            golds,
+            silvers,
+            bronzes,
+            podiums: golds + silvers + bronzes,
+            firstYear: years.length > 0 ? Math.min(...years) : null,
+            last12: last12.length,
+            last12Podiums,
+        };
     }, [competitions]);
 
     // ---- PDF export ------------------------------------------------------
@@ -524,6 +648,18 @@ export default function PartnershipPage() {
         const deliverablesPdf = Array.isArray(project.deliverables)
             ? project.deliverables.filter((d) => typeof d === 'string' && d.trim() !== '')
             : [];
+        const audienceMetricsPdf = Array.isArray(project.audience_metrics)
+            ? project.audience_metrics.filter((m) => m && (m.value || m.label))
+            : [];
+        const buildItemsPdf = Array.isArray(project.build_items)
+            ? project.build_items.filter((b) => b && (b.title || b.text))
+            : [];
+        const pilotStepsPdf = Array.isArray(project.pilot_steps)
+            ? project.pilot_steps.filter((s) => s && (s.label || s.text))
+            : [];
+        const limitsItemsPdf = Array.isArray(project.limits_items)
+            ? project.limits_items.filter((l) => typeof l === 'string' && l.trim() !== '')
+            : [];
 
         // Faixa de marca no topo da primeira pagina
         const bandH = 116;
@@ -573,220 +709,292 @@ export default function PartnershipPage() {
         doc.text('Henrique Fujimoto — Judoca Sub-15', margin, y);
         y += 10;
 
-        // Executive summary
-        if (project.executive_summary || execHighlights.length > 0 || project.executive_objective) {
-            heading('Resumo executivo');
-            paragraph(project.executive_summary);
-            if (execHighlights.length > 0) {
-                paragraph('Nos últimos 12 meses:', 10.5, PDF_NAVY);
-                for (const h of execHighlights) paragraph(`•  ${h}`, 10);
-            }
-            if (project.executive_objective) {
-                paragraph('Objetivo', 11, [18, 20, 23]);
-                paragraph(project.executive_objective);
-            }
-        }
-
-        // Thesis
-        paragraph(project.intro);
-
-        // Results (the lead argument)
-        if (project.results_intro || project.federation_info || competitions.length > 0) {
-            heading(project.results_title || 'Resultados que comprovam a trajetória');
-            paragraph(project.results_intro);
-            paragraph(project.federation_info);
-            if (competitions.length > 0) {
-                paragraph(
-                    `${competitions.length} competições, ${compStats.podiums} pódios ` +
-                        `(${compStats.golds} ouros, ${compStats.silvers} pratas, ${compStats.bronzes} bronzes).`,
-                    10.5,
-                    [18, 20, 23],
-                );
-            }
-        }
-
-        // Potential + goals
-        if (project.why_now_body || goals.length > 0) {
-            heading(project.why_now_title || 'Potencial e metas');
-            paragraph(project.why_now_body);
-            if (goals.length > 0) {
-                if (project.goals_title) paragraph(project.goals_title, 11, [18, 20, 23]);
-                for (const g of goals) paragraph(`${g.horizon} — ${g.text}`, 10);
-            }
-        }
-
-        // Why the Marista school
-        if (project.why_marista_body) {
-            heading(project.why_marista_title || 'Por que o Marista?');
-            paragraph(project.why_marista_body);
-        }
-
-        // How the athlete represents the school
-        if (project.representation_body || (Array.isArray(project.counterparts) && project.counterparts.length > 0)) {
-            heading(project.representation_title || 'Como o Henrique representa a escola');
-            paragraph(project.representation_body);
-            if (Array.isArray(project.counterparts)) {
-                for (const c of project.counterparts) {
-                    if (c.category) paragraph(c.category, 11, [18, 20, 23]);
-                    for (const item of c.items || []) paragraph(`•  ${item}`, 10);
+        // Cada bloco do PDF e nomeado com a mesma chave das secoes da pagina,
+        // para que a ordem impressa acompanhe `section_order`.
+        const pdfSections: Record<string, () => void> = {
+            executive: () => {
+                // Executive summary
+                if (project.executive_summary || execHighlights.length > 0 || project.executive_objective) {
+                    heading('Resumo executivo');
+                    paragraph(project.executive_summary);
+                    if (execHighlights.length > 0) {
+                        paragraph('Nos últimos 12 meses:', 10.5, PDF_NAVY);
+                        for (const h of execHighlights) paragraph(`•  ${h}`, 10);
+                    }
+                    if (project.executive_objective) {
+                        paragraph('Objetivo', 11, [18, 20, 23]);
+                        paragraph(project.executive_objective);
+                    }
                 }
-            }
-        }
-
-        // Academic
-        if (project.academic_body || academicCardsPdf.length > 0) {
-            heading(project.academic_title || 'Vida acadêmica');
-            paragraph(project.academic_body);
-            for (const c of academicCardsPdf) {
-                const line = c.title && c.text ? `${c.title}: ${c.text}` : c.title || c.text || '';
-                paragraph(line, 10);
-            }
-        }
-        // Discipline
-        if (project.discipline_body) {
-            heading(project.discipline_title || 'Disciplina e comportamento');
-            paragraph(project.discipline_body);
-        }
-        // Routine
-        if (project.routine_body || routineWeekPdf.length > 0 || routineTimelinePdf.length > 0) {
-            heading(project.routine_title || 'Rotina de treinamento');
-            paragraph(project.routine_body);
-            if (routineWeekPdf.length > 0) {
-                for (const d of routineWeekPdf) {
-                    paragraph(`${d.day}: ${d.blocks.map((b) => `${b.time} ${b.label}`).join('  ·  ')}`, 10);
+            },
+            intro: () => {
+                // Thesis
+                paragraph(project.intro);
+            },
+            results: () => {
+                // Results (the lead argument)
+                if (project.results_intro || project.federation_info || competitions.length > 0) {
+                    heading(project.results_title || 'Resultados que comprovam a trajetória');
+                    paragraph(project.results_intro);
+                    paragraph(project.federation_info);
+                    if (competitions.length > 0) {
+                        paragraph(
+                            `${competitions.length} resultados registrados${compStats.firstYear ? ` desde ${compStats.firstYear}` : ''}, ` +
+                                `${compStats.podiums} podios (${compStats.golds} ouros, ${compStats.silvers} pratas, ${compStats.bronzes} bronzes). ` +
+                                `Nos ultimos 12 meses: ${compStats.last12} competicoes e ${compStats.last12Podiums} podios.`,
+                            10.5,
+                            [18, 20, 23],
+                        );
+                    }
                 }
-            } else {
-                for (const r of routineTimelinePdf) paragraph(`${r.time} — ${r.label}`, 10);
-            }
-        }
+            },
+            potential: () => {
+                // Potential + goals
+                if (project.why_now_body || goals.length > 0) {
+                    heading(project.why_now_title || 'Potencial e metas');
+                    paragraph(project.why_now_body);
+                    if (goals.length > 0) {
+                        if (project.goals_title) paragraph(project.goals_title, 11, [18, 20, 23]);
+                        for (const g of goals) paragraph(`${g.horizon} — ${g.text}`, 10);
+                    }
+                }
+            },
+            why_partner: () => {
+                // Why the Marista school
+                if (project.why_marista_body) {
+                    heading(project.why_marista_title || 'Por que o Marista?');
+                    paragraph(project.why_marista_body);
+                }
+            },
+            representation: () => {
+                // How the athlete represents the school
+                if (project.representation_body || (Array.isArray(project.counterparts) && project.counterparts.length > 0)) {
+                    heading(project.representation_title || 'Como o Henrique representa a escola');
+                    paragraph(project.representation_body);
+                    if (Array.isArray(project.counterparts)) {
+                        for (const c of project.counterparts) {
+                            if (c.category) paragraph(c.category, 11, [18, 20, 23]);
+                            for (const item of c.items || []) paragraph(`•  ${item}`, 10);
+                        }
+                    }
+                }
+            },
+            academic: () => {
+                // Academic
+                if (project.academic_body || academicCardsPdf.length > 0) {
+                    heading(project.academic_title || 'Vida acadêmica');
+                    paragraph(project.academic_body);
+                    for (const c of academicCardsPdf) {
+                        const line = c.title && c.text ? `${c.title}: ${c.text}` : c.title || c.text || '';
+                        paragraph(line, 10);
+                    }
+                }
+            },
+            discipline: () => {
+                // Discipline
+                if (project.discipline_body) {
+                    heading(project.discipline_title || 'Disciplina e comportamento');
+                    paragraph(project.discipline_body);
+                }
+            },
+            routine: () => {
+                // Routine
+                if (project.routine_body || routineWeekPdf.length > 0 || routineTimelinePdf.length > 0) {
+                    heading(project.routine_title || 'Rotina de treinamento');
+                    paragraph(project.routine_body);
+                    if (routineWeekPdf.length > 0) {
+                        for (const d of routineWeekPdf) {
+                            paragraph(`${d.day}: ${d.blocks.map((b) => `${b.time} ${b.label}`).join('  ·  ')}`, 10);
+                        }
+                    } else {
+                        for (const r of routineTimelinePdf) paragraph(`${r.time} — ${r.label}`, 10);
+                    }
+                }
+            },
+            comms: () => {
+                // Image return + communication
+                if (project.comms_body || project.show_metrics || audienceMetricsPdf.length > 0 || project.audience_note) {
+                    heading(project.comms_title || 'Retorno de imagem e comunicação');
+                    paragraph(project.comms_body);
+                    if (project.audience_note) paragraph(project.audience_note, 9.5, PDF_MUTED);
+                    for (const m of audienceMetricsPdf) {
+                        paragraph(`${m.value} — ${m.label}${m.sub ? ` (${m.sub})` : ''}`, 10, PDF_NAVY);
+                    }
+                    if (project.show_metrics && metrics) {
+                        paragraph(
+                            `Alcance por ano: ${metrics.annualReach.toLocaleString('pt-BR')} (media de ${metrics.monthlyAvgReach.toLocaleString('pt-BR')}/mes)  ·  ` +
+                                `Interacoes por ano: ${metrics.annualInteractions.toLocaleString('pt-BR')} (media de ${metrics.monthlyAvgInteractions.toLocaleString('pt-BR')}/mes)  ·  ` +
+                                `Seguidores hoje: ${metrics.totalFollowers.toLocaleString('pt-BR')} (crescendo ~${metrics.monthlyFollowerGain.toLocaleString('pt-BR')}/mes, projecao de ${metrics.projectedFollowers12mo.toLocaleString('pt-BR')} em 12 meses)` +
+                                (metrics.isFullYear ? '' : `  ·  Alcance/interacoes: projecao anual com base na media real dos ultimos ${Math.round(metrics.monthsOfData)} meses`),
+                            9.5,
+                            [90, 90, 95],
+                        );
+                    }
+                    const channelsPdf = Array.isArray(project.channels) ? project.channels.filter((c) => c && c.name) : [];
+                    if (project.channels_note || channelsPdf.length > 0) {
+                        if (project.channels_note) paragraph(project.channels_note, 9.5, [90, 90, 95]);
+                        for (const c of channelsPdf) paragraph(`${c.name}: ${c.detail || ''}`, 9.5);
+                    }
+                    const contrastPdf = Array.isArray(project.ecosystem_contrast) ? project.ecosystem_contrast.filter((r) => r && (r.typical || r.henrique)) : [];
+                    if (contrastPdf.length > 0) {
+                        paragraph(
+                            project.differentiators_title || 'Atleta tipico da idade  vs.  Henrique:',
+                            9.5,
+                            [90, 90, 95],
+                        );
+                        for (const r of contrastPdf) paragraph(`- ${r.typical}  ->  ${r.henrique}`, 9.5);
+                    }
+                }
+            },
+            build: () => {
+                // What we can build together
+                if (project.build_body || buildItemsPdf.length > 0) {
+                    heading(project.build_title || 'O que podemos construir juntos');
+                    paragraph(project.build_body || '');
+                    for (const b of buildItemsPdf) {
+                        if (b.title) paragraph(b.title, 10.5, [18, 20, 23]);
+                        if (b.text) paragraph(b.text, 10);
+                    }
+                }
+            },
+            pilot: () => {
+                // 12-month pilot
+                if (project.pilot_body || pilotStepsPdf.length > 0) {
+                    heading(project.pilot_title || 'Projeto-piloto de 12 meses');
+                    paragraph(project.pilot_body || '');
+                    for (const s of pilotStepsPdf) paragraph(`${s.label || ''} — ${s.text || ''}`, 10);
+                }
+            },
+            costs: () => {
+                // Costs table
+                if (costs.length > 0) {
+                    heading('Investimento');
+                    const body: any[] = costs.map((c) => [
+                        c.label,
+                        c.period === 'mensal' ? 'Mensal' : 'Anual',
+                        fmtBRL(c.amount || 0),
+                        fmtBRL((c.amount || 0) * (c.period === 'mensal' ? 12 : 1)),
+                    ]);
+                    body.push([
+                        { content: 'Investimento anual', colSpan: 3, styles: { fontStyle: 'bold', halign: 'right' } },
+                        { content: fmtBRL(annualInvestment), styles: { fontStyle: 'bold' } },
+                    ]);
+                    autoTable(doc, {
+                        startY: y,
+                        head: [['Item', 'Período', 'Valor', 'Valor anual']],
+                        body,
+                        margin: { left: margin, right: margin },
+                        styles: { fontSize: 9, cellPadding: 5, textColor: [45, 45, 50] },
+                        headStyles: { fillColor: PDF_NAVY, textColor: PDF_ICE, fontStyle: 'bold' },
+                        theme: 'grid',
+                    });
+                    y = (doc as any).lastAutoTable.finalY + 14;
+                    if (project.costs_note) paragraph(project.costs_note, 9, [120, 120, 125]);
+                }
+            },
+            scholarship: () => {
+                // Scholarship
+                heading(project.scholarship_title || 'A proposta de bolsa');
+                if (project.scholarship_anchor) {
+                    paragraph(
+                        `${project.scholarship_anchor} ${project.scholarship_label || ''}`.trim(),
+                        12,
+                        PDF_NAVY,
+                    );
+                }
+                if (project.scholarship_label && (project.scholarship_monthly || 0) > 0) {
+                    paragraph(
+                        `${project.scholarship_label}: ${fmtBRL(project.scholarship_monthly || 0)}/mês  ` +
+                            `(${fmtBRL(scholarshipAnnual)}/ano)`,
+                        10.5,
+                        [18, 20, 23],
+                    );
+                }
+                if (annualInvestment > 0) {
+                    paragraph(
+                        `A bolsa representa ${pct}% do investimento anual total do projeto.`,
+                        10.5,
+                        [18, 20, 23],
+                    );
+                }
+                paragraph(project.scholarship_body);
+                paragraph(project.ask_body);
+            },
+            deliverables: () => {
+                // Deliverables — what the school receives over a school year
+                if (deliverablesPdf.length > 0 || project.pilot_note) {
+                    heading(project.deliverables_title || 'O que o Marista recebe na parceria');
+                    for (const d of deliverablesPdf) paragraph(`•  ${d}`, 10);
+                    if (project.pilot_note) paragraph(project.pilot_note, 10, [90, 90, 95]);
+                }
+            },
+            partnership_table: () => {
+                // Balanced partnership
+                const partnershipPdf = Array.isArray(project.partnership_table) ? project.partnership_table.filter((r) => r && (r.marista || r.family)) : [];
+                if (partnershipPdf.length > 0) {
+                    heading('Uma parceria equilibrada');
+                    autoTable(doc, {
+                        startY: y,
+                        head: [[`${project.partner_name || 'O parceiro'} oferece`, 'O Henrique e a familia oferecem']],
+                        body: partnershipPdf.map((r) => [r.marista || '', r.family || '']),
+                        margin: { left: margin, right: margin },
+                        styles: { fontSize: 9, cellPadding: 5, textColor: [45, 45, 50] },
+                        headStyles: { fillColor: PDF_NAVY, textColor: PDF_ICE, fontStyle: 'bold' },
+                        theme: 'grid',
+                    });
+                    y = (doc as any).lastAutoTable.finalY + 14;
+                    if (project.partnership_table_note) paragraph(project.partnership_table_note, 9, [120, 120, 125]);
+                }
+            },
+            institutional: () => {
+                // Institutional
+                if (Array.isArray(project.institutional) && project.institutional.length > 0) {
+                    heading('Institucional');
+                    for (const it of project.institutional) {
+                        if (it.title) paragraph(it.title, 11, [18, 20, 23]);
+                        paragraph(it.text, 10);
+                    }
+                }
+            },
+            family: () => {
+                // Family letter + commitments
+                if (project.family_letter || familyCommitments.length > 0) {
+                    heading('Compromisso da família');
+                    paragraph(project.family_letter);
+                    if (project.family_letter_signature) paragraph(project.family_letter_signature, 10.5, [18, 20, 23]);
+                    for (const item of familyCommitments) paragraph(`•  ${item}`, 10);
+                }
+            },
+            limits: () => {
+                // Limits of the partnership
+                if (project.limits_body || limitsItemsPdf.length > 0) {
+                    heading(project.limits_title || 'Limites da parceria');
+                    paragraph(project.limits_body || '');
+                    for (const item of limitsItemsPdf) paragraph(`•  ${item}`, 10);
+                }
+            },
+            timeline: () => {
+                // Timeline
+                if (Array.isArray(project.timeline) && project.timeline.length > 0) {
+                    heading('Linha do tempo');
+                    for (const t of project.timeline) paragraph(`${t.year} — ${t.label}`, 10);
+                    if (project.timeline_note) paragraph(project.timeline_note, 9, [120, 120, 125]);
+                }
+            },
+            custom: () => {
+                // Custom sections
+                if (Array.isArray(project.custom_sections)) {
+                    for (const s of project.custom_sections) {
+                        if (!s?.title && !s?.body) continue;
+                        heading(s.title || '');
+                        paragraph(s.body || '');
+                    }
+                }
+            },
+        };
 
-        // Image return + communication
-        if (project.comms_body || project.show_metrics) {
-            heading(project.comms_title || 'Retorno de imagem e comunicação');
-            paragraph(project.comms_body);
-            if (project.show_metrics && metrics) {
-                paragraph(
-                    `Alcance por ano: ${metrics.annualReach.toLocaleString('pt-BR')} (media de ${metrics.monthlyAvgReach.toLocaleString('pt-BR')}/mes)  ·  ` +
-                        `Interacoes por ano: ${metrics.annualInteractions.toLocaleString('pt-BR')} (media de ${metrics.monthlyAvgInteractions.toLocaleString('pt-BR')}/mes)  ·  ` +
-                        `Seguidores hoje: ${metrics.totalFollowers.toLocaleString('pt-BR')} (crescendo ~${metrics.monthlyFollowerGain.toLocaleString('pt-BR')}/mes, projecao de ${metrics.projectedFollowers12mo.toLocaleString('pt-BR')} em 12 meses)` +
-                        (metrics.isFullYear ? '' : `  ·  Alcance/interacoes: projecao anual com base na media real dos ultimos ${Math.round(metrics.monthsOfData)} meses`),
-                    9.5,
-                    [90, 90, 95],
-                );
-            }
-            const channelsPdf = Array.isArray(project.channels) ? project.channels.filter((c) => c && c.name) : [];
-            if (project.channels_note || channelsPdf.length > 0) {
-                if (project.channels_note) paragraph(project.channels_note, 9.5, [90, 90, 95]);
-                for (const c of channelsPdf) paragraph(`${c.name}: ${c.detail || ''}`, 9.5);
-            }
-            const contrastPdf = Array.isArray(project.ecosystem_contrast) ? project.ecosystem_contrast.filter((r) => r && (r.typical || r.henrique)) : [];
-            if (contrastPdf.length > 0) {
-                paragraph('Atleta tipico da idade  vs.  Henrique:', 9.5, [90, 90, 95]);
-                for (const r of contrastPdf) paragraph(`- ${r.typical}  ->  ${r.henrique}`, 9.5);
-            }
-        }
-
-        // Costs table
-        if (costs.length > 0) {
-            heading('Investimento');
-            const body: any[] = costs.map((c) => [
-                c.label,
-                c.period === 'mensal' ? 'Mensal' : 'Anual',
-                fmtBRL(c.amount || 0),
-                fmtBRL((c.amount || 0) * (c.period === 'mensal' ? 12 : 1)),
-            ]);
-            body.push([
-                { content: 'Investimento anual', colSpan: 3, styles: { fontStyle: 'bold', halign: 'right' } },
-                { content: fmtBRL(annualInvestment), styles: { fontStyle: 'bold' } },
-            ]);
-            autoTable(doc, {
-                startY: y,
-                head: [['Item', 'Período', 'Valor', 'Valor anual']],
-                body,
-                margin: { left: margin, right: margin },
-                styles: { fontSize: 9, cellPadding: 5, textColor: [45, 45, 50] },
-                headStyles: { fillColor: PDF_NAVY, textColor: PDF_ICE, fontStyle: 'bold' },
-                theme: 'grid',
-            });
-            y = (doc as any).lastAutoTable.finalY + 14;
-            if (project.costs_note) paragraph(project.costs_note, 9, [120, 120, 125]);
-        }
-
-        // Scholarship
-        heading('A proposta de bolsa');
-        if (project.scholarship_label) {
-            paragraph(
-                `${project.scholarship_label}: ${fmtBRL(project.scholarship_monthly || 0)}/mês  ` +
-                    `(${fmtBRL(scholarshipAnnual)}/ano)`,
-                10.5,
-                [18, 20, 23],
-            );
-        }
-        if (annualInvestment > 0) {
-            paragraph(
-                `A bolsa representa ${pct}% do investimento anual total do projeto.`,
-                10.5,
-                [18, 20, 23],
-            );
-        }
-        paragraph(project.scholarship_body);
-        paragraph(project.ask_body);
-
-        // Deliverables — what the school receives over a school year
-        if (deliverablesPdf.length > 0 || project.pilot_note) {
-            heading(project.deliverables_title || 'O que o Marista recebe na parceria');
-            for (const d of deliverablesPdf) paragraph(`•  ${d}`, 10);
-            if (project.pilot_note) paragraph(project.pilot_note, 10, [90, 90, 95]);
-        }
-
-        // Balanced partnership
-        const partnershipPdf = Array.isArray(project.partnership_table) ? project.partnership_table.filter((r) => r && (r.marista || r.family)) : [];
-        if (partnershipPdf.length > 0) {
-            heading('Uma parceria equilibrada');
-            autoTable(doc, {
-                startY: y,
-                head: [[`${project.partner_name || 'O parceiro'} oferece`, 'O Henrique e a familia oferecem']],
-                body: partnershipPdf.map((r) => [r.marista || '', r.family || '']),
-                margin: { left: margin, right: margin },
-                styles: { fontSize: 9, cellPadding: 5, textColor: [45, 45, 50] },
-                headStyles: { fillColor: PDF_NAVY, textColor: PDF_ICE, fontStyle: 'bold' },
-                theme: 'grid',
-            });
-            y = (doc as any).lastAutoTable.finalY + 14;
-            if (project.partnership_table_note) paragraph(project.partnership_table_note, 9, [120, 120, 125]);
-        }
-
-        // Institutional
-        if (Array.isArray(project.institutional) && project.institutional.length > 0) {
-            heading('Institucional');
-            for (const it of project.institutional) {
-                if (it.title) paragraph(it.title, 11, [18, 20, 23]);
-                paragraph(it.text, 10);
-            }
-        }
-
-        // Family letter + commitments
-        if (project.family_letter || familyCommitments.length > 0) {
-            heading('Compromisso da família');
-            paragraph(project.family_letter);
-            if (project.family_letter_signature) paragraph(project.family_letter_signature, 10.5, [18, 20, 23]);
-            for (const item of familyCommitments) paragraph(`•  ${item}`, 10);
-        }
-
-        // Timeline
-        if (Array.isArray(project.timeline) && project.timeline.length > 0) {
-            heading('Linha do tempo');
-            for (const t of project.timeline) paragraph(`${t.year} — ${t.label}`, 10);
-            if (project.timeline_note) paragraph(project.timeline_note, 9, [120, 120, 125]);
-        }
-
-        // Custom sections
-        if (Array.isArray(project.custom_sections)) {
-            for (const s of project.custom_sections) {
-                if (!s?.title && !s?.body) continue;
-                heading(s.title || '');
-                paragraph(s.body || '');
-            }
+        for (const key of sectionOrderFor(project)) {
+            pdfSections[key]?.();
         }
 
         // Closing
@@ -872,14 +1080,25 @@ export default function PartnershipPage() {
         : [];
 
     const showCompetitions = p.show_competitions && competitions.length > 0;
-    const recentComps = competitions.slice(0, 8);
+    const recentComps = competitions.slice(0, 12);
     const compSummary = [
-        { label: 'Competições', value: competitions.length, accent: false },
-        { label: 'Pódios', value: compStats.podiums, accent: true },
+        {
+            label: compStats.firstYear ? `Resultados desde ${compStats.firstYear}` : 'Resultados',
+            value: competitions.length,
+            accent: false,
+        },
+        { label: 'Pódios no total', value: compStats.podiums, accent: true },
         { label: 'Ouros', value: compStats.golds, accent: false },
         { label: 'Pratas', value: compStats.silvers, accent: false },
         { label: 'Bronzes', value: compStats.bronzes, accent: false },
     ];
+    const compPeriodNote =
+        compStats.last12 > 0
+            ? `Nos últimos 12 meses: ${compStats.last12} competições e ${compStats.last12Podiums} pódios. ` +
+              `Os totais acima cobrem todo o histórico registrado${
+                  compStats.firstYear ? `, desde ${compStats.firstYear}` : ''
+              }.`
+            : '';
 
     const hasResults = showCompetitions || !!p.results_intro || !!p.federation_info;
     const hasPotential = !!p.why_now_body || goals.length > 0;
@@ -916,6 +1135,928 @@ export default function PartnershipPage() {
     const partnershipTable = Array.isArray(p.partnership_table)
         ? p.partnership_table.filter((r) => r && (r.marista || r.family))
         : [];
+    const audienceMetrics = Array.isArray(p.audience_metrics)
+        ? p.audience_metrics.filter((m) => m && (m.value || m.label))
+        : [];
+    const buildItems = Array.isArray(p.build_items)
+        ? p.build_items.filter((b) => b && (b.title || b.text))
+        : [];
+    const pilotSteps = Array.isArray(p.pilot_steps)
+        ? p.pilot_steps.filter((s) => s && (s.label || s.text))
+        : [];
+    const limitsItems = Array.isArray(p.limits_items)
+        ? p.limits_items.filter((l) => typeof l === 'string' && l.trim() !== '')
+        : [];
+    // A tabela de contraste sai do bloco de comunicacao so quando ganha titulo proprio.
+    const standaloneEcosystem = !!(p.differentiators_title && p.differentiators_title.trim());
+    const sectionOrder = sectionOrderFor(p);
+
+    // Cada secao e um no nomeado; a ordem vem de `sectionOrder`, nunca da posicao
+    // aqui. Assim uma proposta pode reorganizar a narrativa sem afetar as outras.
+    const sectionNodes: Record<string, React.ReactNode> = {
+        // ---- Executive summary ----
+        executive: (p.executive_summary || executiveHighlights.length > 0 || p.executive_objective) ? (
+            <Section className="py-16 md:py-20">
+                <Kicker>Resumo executivo</Kicker>
+                {p.executive_summary && (
+                    <motion.p
+                        {...reveal}
+                        transition={{ duration: 0.7 }}
+                        className="max-w-3xl whitespace-pre-line font-ui text-xl leading-relaxed text-hf-ice/85 sm:text-2xl"
+                    >
+                        {p.executive_summary}
+                    </motion.p>
+                )}
+
+                {executiveHighlights.length > 0 && (
+                    <div className="mt-10">
+                        <p className="mb-4 font-ui text-[12px] font-semibold uppercase tracking-[0.16em] text-hf-gold">
+                            Nos últimos 12 meses
+                        </p>
+                        <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                            {executiveHighlights.map((h, i) => (
+                                <motion.li
+                                    key={i}
+                                    initial={{ opacity: 0, y: 14 }}
+                                    whileInView={{ opacity: 1, y: 0 }}
+                                    viewport={{ once: true, margin: '-50px' }}
+                                    transition={{ duration: 0.45, delay: (i % 2) * 0.06 }}
+                                    className="flex items-start gap-2.5 rounded-2xl border border-hf-line/70 bg-hf-surface px-5 py-4 transition-colors hover:border-hf-gold/25"
+                                >
+                                    <Check className="mt-0.5 h-4 w-4 shrink-0 text-hf-gold" />
+                                    <span className="font-ui text-sm leading-relaxed text-hf-ice/70">{h}</span>
+                                </motion.li>
+                            ))}
+                        </ul>
+                    </div>
+                )}
+
+                {p.executive_objective && (
+                    <motion.div
+                        {...reveal}
+                        transition={{ duration: 0.6, delay: 0.1 }}
+                        className="mt-10 border-l-2 border-hf-gold/60 pl-4"
+                    >
+                        <p className="mb-1.5 font-ui text-[12px] font-semibold uppercase tracking-[0.16em] text-hf-gold">
+                            Objetivo
+                        </p>
+                        <p className="whitespace-pre-line font-ui text-base leading-relaxed text-hf-ice/80 sm:text-lg">
+                            {p.executive_objective}
+                        </p>
+                    </motion.div>
+                )}
+            </Section>
+        ) : null,
+
+        // ---- Thesis / intro ----
+        intro: p.intro ? (
+            <Section className="py-16 md:py-20">
+                <motion.p
+                    {...reveal}
+                    transition={{ duration: 0.7 }}
+                    className="max-w-3xl whitespace-pre-line font-ui text-xl leading-relaxed text-hf-ice/80 sm:text-2xl"
+                >
+                    {p.intro}
+                </motion.p>
+            </Section>
+        ) : null,
+
+        // ---- Sporting results ----
+        results: hasResults ? (
+            <Section>
+                <Heading>
+                    {p.results_title || (
+                        <>
+                            Resultados que{' '}
+                            <span className="text-hf-gold">
+                                comprovam a trajetória
+                            </span>
+                        </>
+                    )}
+                </Heading>
+
+                {p.results_intro && <Body>{p.results_intro}</Body>}
+
+                {p.federation_info && (
+                    <motion.p
+                        {...reveal}
+                        transition={{ duration: 0.6, delay: 0.14 }}
+                        className="mt-5 whitespace-pre-line font-ui text-[13px] leading-relaxed text-hf-ice/45"
+                    >
+                        {p.federation_info}
+                    </motion.p>
+                )}
+
+                {showCompetitions && (
+                    <>
+                        <div className="mt-10 grid grid-cols-3 gap-3 sm:grid-cols-5">
+                            {compSummary.map((s, i) => (
+                                <motion.div
+                                    key={s.label}
+                                    initial={{ opacity: 0, y: 14 }}
+                                    whileInView={{ opacity: 1, y: 0 }}
+                                    viewport={{ once: true }}
+                                    transition={{ duration: 0.4, delay: i * 0.06 }}
+                                    className="rounded-2xl border border-hf-line/70 bg-hf-surface p-4 text-center"
+                                >
+                                    <div
+                                        className={`font-ui text-3xl font-semibold ${
+                                            s.accent ? 'text-hf-gold' : 'text-hf-ice'
+                                        }`}
+                                    >
+                                        {s.value}
+                                    </div>
+                                    <div className="mt-1.5 font-ui text-[11px] font-medium text-hf-ice/45">
+                                        {s.label}
+                                    </div>
+                                </motion.div>
+                            ))}
+                        </div>
+
+                        {compPeriodNote && (
+                            <p className="mt-4 font-ui text-[13px] leading-relaxed text-hf-ice/45">
+                                {compPeriodNote}
+                            </p>
+                        )}
+
+                        <div className="mt-8 space-y-2">
+                            <h3 className="mb-3 font-brand text-[12px] font-semibold uppercase tracking-[0.12em] text-hf-ice/40">
+                                Mais recentes
+                            </h3>
+                            {recentComps.map((c: Competition) => (
+                                <React.Fragment key={c.id}>
+                                    <CompRow comp={c} />
+                                </React.Fragment>
+                            ))}
+                        </div>
+                    </>
+                )}
+                <PhotoStrip items={photosFor('results')} />
+            </Section>
+        ) : null,
+
+        // ---- Potential + goals ----
+        potential: hasPotential ? (
+            <Section>
+                <Heading>{p.why_now_title || 'Potencial e metas'}</Heading>
+                {p.why_now_body && <Body>{p.why_now_body}</Body>}
+
+                {/* Age-window graphic — fixed 12 → 16 development window */}
+                <motion.div
+                    {...reveal}
+                    transition={{ duration: 0.6, delay: 0.15 }}
+                    className="mt-10 rounded-2xl border border-hf-line/70 bg-hf-surface p-6 transition-colors hover:border-hf-gold/25 sm:p-8"
+                >
+                    <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:justify-center sm:overflow-visible">
+                        {[12, 13, 14, 15, 16].map((age, i, arr) => (
+                            <React.Fragment key={age}>
+                                <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-hf-gold/40 bg-hf-gold/[0.08] font-ui text-lg font-semibold text-hf-gold sm:h-14 sm:w-14 sm:text-xl">
+                                    {age}
+                                </span>
+                                {i < arr.length - 1 && (
+                                    <ArrowRight className="h-4 w-4 shrink-0 text-hf-ice/30" />
+                                )}
+                            </React.Fragment>
+                        ))}
+                    </div>
+                    <div className="mt-5 flex items-center justify-center rounded-full border border-hf-gold/25 bg-hf-gold/[0.06] px-4 py-2 text-center">
+                        <span className="font-ui text-[11px] font-semibold uppercase tracking-[0.12em] text-hf-gold sm:text-[13px]">
+                            Janela de maior desenvolvimento esportivo
+                        </span>
+                    </div>
+                </motion.div>
+
+                {goals.length > 0 && (
+                    <div className="mt-10">
+                        {p.goals_title && (
+                            <h3 className="mb-5 font-brand text-lg font-semibold text-hf-ice">
+                                {p.goals_title}
+                            </h3>
+                        )}
+                        <div className="space-y-3">
+                            {goals.map((g, i) => (
+                                <motion.div
+                                    key={`${g.horizon}-${i}`}
+                                    initial={{ opacity: 0, y: 16 }}
+                                    whileInView={{ opacity: 1, y: 0 }}
+                                    viewport={{ once: true, margin: '-50px' }}
+                                    transition={{ duration: 0.5, delay: (i % 3) * 0.06 }}
+                                    className="flex flex-col gap-1.5 rounded-2xl border border-hf-line/70 bg-hf-surface p-6 transition-colors hover:border-hf-gold/25 hover:bg-hf-surface-2 sm:flex-row sm:items-baseline sm:gap-6"
+                                >
+                                    {g.horizon && (
+                                        <span className="shrink-0 font-ui text-sm font-semibold text-hf-gold sm:w-44">
+                                            {g.horizon}
+                                        </span>
+                                    )}
+                                    <span className="whitespace-pre-line font-ui text-base leading-relaxed text-hf-ice/70">
+                                        {g.text}
+                                    </span>
+                                </motion.div>
+                            ))}
+                        </div>
+                    </div>
+                )}
+                <PhotoStrip items={photosFor('potential')} />
+            </Section>
+        ) : null,
+
+        // ---- Why the partner school ----
+        why_partner: (p.why_marista_body || photosFor('why_partner').length > 0) ? (
+            <Section>
+                <Heading>{p.why_marista_title || 'Por que o Marista?'}</Heading>
+                {p.why_marista_body && <Body>{p.why_marista_body}</Body>}
+                <PhotoStrip items={photosFor('why_partner')} />
+            </Section>
+        ) : null,
+
+        // ---- How the athlete represents the school ----
+        representation: hasRepresentation ? (
+            <Section>
+                <Heading>{p.representation_title || 'Como o Henrique representa a escola'}</Heading>
+                {p.representation_body && <Body>{p.representation_body}</Body>}
+
+                {counterparts.length > 0 && (
+                    <div className="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        {counterparts.map((c, i) => (
+                            <motion.div
+                                key={`${c.category}-${i}`}
+                                initial={{ opacity: 0, y: 16 }}
+                                whileInView={{ opacity: 1, y: 0 }}
+                                viewport={{ once: true, margin: '-50px' }}
+                                transition={{ duration: 0.5, delay: (i % 2) * 0.08 }}
+                                className="rounded-2xl border border-hf-line/70 bg-hf-surface p-6 transition-colors hover:border-hf-gold/25 hover:bg-hf-surface-2"
+                            >
+                                <h3 className="font-brand text-lg font-semibold text-hf-ice">{c.category}</h3>
+                                <ul className="mt-4 space-y-2.5">
+                                    {(c.items || []).map((item, j) => (
+                                        <li key={j} className="flex items-start gap-2.5">
+                                            <Check className="mt-0.5 h-4 w-4 shrink-0 text-hf-gold" />
+                                            <span className="font-ui text-sm leading-relaxed text-hf-ice/70">
+                                                {item}
+                                            </span>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </motion.div>
+                        ))}
+                    </div>
+                )}
+            </Section>
+        ) : null,
+
+        // ---- Academic life ----
+        academic: (p.academic_body || academicCards.length > 0) ? (
+            <Section>
+                <Heading>{p.academic_title || 'Vida acadêmica'}</Heading>
+                {p.academic_body && <Body>{p.academic_body}</Body>}
+
+                {academicCards.length > 0 && (
+                    <div className="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        {academicCards.map((c, i) => (
+                            <motion.div
+                                key={`${c.title}-${i}`}
+                                initial={{ opacity: 0, y: 16 }}
+                                whileInView={{ opacity: 1, y: 0 }}
+                                viewport={{ once: true, margin: '-50px' }}
+                                transition={{ duration: 0.5, delay: (i % 2) * 0.08 }}
+                                className="rounded-2xl border border-hf-line/70 bg-hf-surface p-6 transition-colors hover:border-hf-gold/25 hover:bg-hf-surface-2"
+                            >
+                                {c.title && (
+                                    <h3 className="font-brand text-lg font-semibold text-hf-ice">{c.title}</h3>
+                                )}
+                                {c.text && (
+                                    <p className="mt-2 whitespace-pre-line font-ui text-sm leading-relaxed text-hf-ice/60">
+                                        {c.text}
+                                    </p>
+                                )}
+                            </motion.div>
+                        ))}
+                    </div>
+                )}
+            </Section>
+        ) : null,
+
+        // ---- Discipline + behaviour ----
+        discipline: p.discipline_body ? (
+            <Section>
+                <Heading>{p.discipline_title || 'Disciplina e comportamento'}</Heading>
+                <Body>{p.discipline_body}</Body>
+            </Section>
+        ) : null,
+
+        // ---- Training routine ----
+        routine: (p.routine_body || routineWeek.length > 0 || routineTimeline.length > 0) ? (
+            <Section>
+                <Heading>{p.routine_title || 'Rotina de treinamento'}</Heading>
+                {p.routine_body && <Body>{p.routine_body}</Body>}
+
+                {routineWeek.length > 0 ? (
+                    <div className="mt-10 space-y-3">
+                        {routineWeek.map((d, i) => (
+                            <motion.div
+                                key={`${d.day}-${i}`}
+                                initial={{ opacity: 0, y: 16 }}
+                                whileInView={{ opacity: 1, y: 0 }}
+                                viewport={{ once: true, margin: '-50px' }}
+                                transition={{ duration: 0.5, delay: i * 0.06 }}
+                                className="rounded-2xl border border-hf-line/70 bg-hf-surface p-5 transition-colors hover:border-hf-gold/25 sm:flex sm:gap-6"
+                            >
+                                <div className="mb-3 shrink-0 font-ui text-sm font-semibold uppercase tracking-wide text-hf-gold sm:mb-0 sm:w-24">
+                                    {d.day}
+                                </div>
+                                <div className="flex flex-wrap gap-2">
+                                    {d.blocks.map((b, j) => (
+                                        <span key={j} className="inline-flex items-center gap-2 rounded-full border border-hf-line/70 bg-hf-navy px-3 py-1.5">
+                                            <span className="font-ui text-[11px] font-semibold text-hf-gold">{b.time}</span>
+                                            <span className="font-ui text-[13px] text-hf-ice/75">{b.label}</span>
+                                        </span>
+                                    ))}
+                                </div>
+                            </motion.div>
+                        ))}
+                    </div>
+                ) : routineTimeline.length > 0 ? (
+                    <motion.div {...reveal} transition={{ duration: 0.6, delay: 0.1 }} className="mt-10">
+                        {routineTimeline.map((r, i) => (
+                            <div key={`${r.time}-${i}`} className="relative flex gap-5 pb-6 last:pb-0">
+                                {i < routineTimeline.length - 1 && (
+                                    <span className="absolute left-[5px] top-4 h-full w-px border-l border-hf-ice/10" />
+                                )}
+                                <span className="relative mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full bg-hf-gold ring-4 ring-hf-gold/15" />
+                                <div className="flex min-w-0 flex-col gap-0.5 sm:flex-row sm:items-baseline sm:gap-4">
+                                    <span className="w-16 shrink-0 font-ui text-sm font-semibold text-hf-gold">
+                                        {r.time}
+                                    </span>
+                                    <span className="font-ui text-base leading-relaxed text-hf-ice/80">
+                                        {r.label}
+                                    </span>
+                                </div>
+                            </div>
+                        ))}
+                    </motion.div>
+                ) : null}
+            </Section>
+        ) : null,
+
+        // ---- Audience + communication ----
+        comms: (p.comms_body ||
+            p.show_metrics ||
+            p.audience_note ||
+            audienceMetrics.length > 0 ||
+            p.channels_note ||
+            channels.length > 0) ? (
+            <Section>
+                <Heading>{p.comms_title || 'Retorno de imagem e comunicação'}</Heading>
+                {p.comms_body && <Body>{p.comms_body}</Body>}
+
+                {p.audience_note && (
+                    <motion.p
+                        {...reveal}
+                        transition={{ duration: 0.6, delay: 0.12 }}
+                        className="mt-7 max-w-2xl whitespace-pre-line border-l-2 border-hf-ice/15 pl-4 font-ui text-[13px] leading-relaxed text-hf-ice/45 sm:text-sm"
+                    >
+                        {p.audience_note}
+                    </motion.p>
+                )}
+
+                {/* Metricas curadas: valores conferidos a mao, com o periodo no rotulo. */}
+                {audienceMetrics.length > 0 && (
+                    <div className="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        {audienceMetrics.map((m, i) => (
+                            <motion.div
+                                key={`${m.label}-${i}`}
+                                initial={{ opacity: 0, y: 18 }}
+                                whileInView={{ opacity: 1, y: 0 }}
+                                viewport={{ once: true }}
+                                transition={{ duration: 0.5, delay: (i % 2) * 0.08 }}
+                                className="rounded-2xl border border-hf-line/70 bg-hf-surface p-6"
+                            >
+                                <div className="font-ui text-3xl font-semibold tracking-tight text-hf-ice sm:text-4xl">
+                                    {m.value}
+                                </div>
+                                <div className="mt-2 font-ui text-sm font-medium text-hf-ice/65">{m.label}</div>
+                                {m.sub && (
+                                    <div className="mt-1 font-ui text-[12px] leading-relaxed text-hf-ice/40">
+                                        {m.sub}
+                                    </div>
+                                )}
+                            </motion.div>
+                        ))}
+                    </div>
+                )}
+
+                {p.show_metrics && (
+                    <div className="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-3">
+                        {metricTiles.map((t, i) => (
+                            <motion.div
+                                key={t.label}
+                                initial={{ opacity: 0, y: 20 }}
+                                whileInView={{ opacity: 1, y: 0 }}
+                                viewport={{ once: true }}
+                                transition={{ duration: 0.5, delay: i * 0.08 }}
+                                className="rounded-2xl border border-hf-line/70 bg-hf-surface p-6 transition-colors hover:border-hf-gold/25 hover:bg-hf-surface-2"
+                            >
+                                <div
+                                    className={`font-ui text-4xl font-semibold tracking-tight sm:text-5xl ${
+                                        t.accent ? 'text-hf-gold' : 'text-hf-ice'
+                                    }`}
+                                >
+                                    {formatCompact(t.value)}
+                                </div>
+                                <div className="mt-2 font-ui text-sm font-medium text-hf-ice/60">
+                                    {t.label}
+                                </div>
+                                {t.sub && (
+                                    <div className="mt-1 font-ui text-[12px] text-hf-ice/40">{t.sub}</div>
+                                )}
+                            </motion.div>
+                        ))}
+                    </div>
+                )}
+                {p.show_metrics && (
+                    <p className="mt-5 font-ui text-[13px] text-hf-ice/40">
+                        {metrics && !metrics.isFullYear
+                            ? `Projeção anual com base na média real dos ${Math.round(metrics.monthsOfData)} meses medidos. Dados do Instagram, atualizados automaticamente.`
+                            : 'Dados reais do Instagram, atualizados automaticamente.'}
+                    </p>
+                )}
+
+                {(p.channels_note || channels.length > 0) && (
+                    <motion.div
+                        {...reveal}
+                        transition={{ duration: 0.6, delay: 0.1 }}
+                        className="mt-8 rounded-2xl border border-hf-line/70 bg-hf-surface p-6 sm:p-7"
+                    >
+                        <p className="font-ui text-[11px] font-semibold uppercase tracking-[0.16em] text-hf-gold">
+                            Presença em múltiplos canais
+                        </p>
+                        {p.channels_note && (
+                            <p className="mt-3 max-w-2xl whitespace-pre-line font-ui text-sm leading-relaxed text-hf-ice/70 sm:text-base">
+                                {p.channels_note}
+                            </p>
+                        )}
+                        {channels.length > 0 && (
+                            <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-3">
+                                {channels.map((c, i) => {
+                                    const Icon = channelIcon(c.name);
+                                    return (
+                                        <div key={`${c.name}-${i}`} className="rounded-2xl border border-hf-line/70 bg-hf-navy/40 p-4">
+                                            <div className="flex items-center gap-2">
+                                                <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-hf-gold/12 text-hf-gold">
+                                                    <Icon className="h-4 w-4" />
+                                                </span>
+                                                <span className="font-ui text-sm font-semibold text-hf-ice">{c.name}</span>
+                                            </div>
+                                            {c.detail && (
+                                                <p className="mt-2 font-ui text-[13px] leading-relaxed text-hf-ice/55">{c.detail}</p>
+                                            )}
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        )}
+                    </motion.div>
+                )}
+
+                {!standaloneEcosystem && <ContrastTable rows={ecosystemContrast} className="mt-4" />}
+            </Section>
+        ) : null,
+
+        // ---- Why this is different (contraste em secao propria) ----
+        ecosystem: standaloneEcosystem && ecosystemContrast.length > 0 ? (
+            <Section>
+                <Heading>{p.differentiators_title}</Heading>
+                <ContrastTable rows={ecosystemContrast} className="mt-10" />
+                <p className="mt-5 max-w-2xl font-ui text-[13px] leading-relaxed text-hf-ice/40">
+                    Uma combinação ainda pouco comum no esporte de base.
+                </p>
+            </Section>
+        ) : null,
+
+        // ---- What we can build together ----
+        build: (p.build_body || buildItems.length > 0) ? (
+            <Section>
+                <Heading>{p.build_title || 'O que podemos construir juntos'}</Heading>
+                {p.build_body && <Body>{p.build_body}</Body>}
+                {buildItems.length > 0 && (
+                    <div className="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        {buildItems.map((b, i) => (
+                            <motion.div
+                                key={`${b.title}-${i}`}
+                                initial={{ opacity: 0, y: 16 }}
+                                whileInView={{ opacity: 1, y: 0 }}
+                                viewport={{ once: true, margin: '-50px' }}
+                                transition={{ duration: 0.5, delay: (i % 2) * 0.08 }}
+                                className="rounded-2xl border border-hf-line/70 bg-hf-surface p-6 transition-colors hover:border-hf-gold/25"
+                            >
+                                {b.title && (
+                                    <h3 className="font-brand text-lg font-semibold text-hf-ice">{b.title}</h3>
+                                )}
+                                {b.text && (
+                                    <p className="mt-2 whitespace-pre-line font-ui text-sm leading-relaxed text-hf-ice/60">
+                                        {b.text}
+                                    </p>
+                                )}
+                            </motion.div>
+                        ))}
+                    </div>
+                )}
+            </Section>
+        ) : null,
+
+        // ---- 12-month pilot ----
+        pilot: (p.pilot_body || pilotSteps.length > 0) ? (
+            <Section>
+                <Heading>{p.pilot_title || 'Projeto-piloto de 12 meses'}</Heading>
+                {p.pilot_body && <Body>{p.pilot_body}</Body>}
+
+                <motion.div
+                    {...reveal}
+                    transition={{ duration: 0.6, delay: 0.12 }}
+                    className="mt-10 flex flex-col items-start gap-5 rounded-2xl border border-hf-gold/25 bg-hf-surface p-7 sm:flex-row sm:items-center sm:gap-8 sm:p-9"
+                >
+                    <div className="shrink-0">
+                        <span className="font-brand text-5xl font-bold leading-none tracking-tight text-hf-gold sm:text-6xl">
+                            12
+                        </span>
+                        <span className="ml-2 font-ui text-lg text-hf-ice/60">meses</span>
+                    </div>
+                    <p className="font-ui text-sm leading-relaxed text-hf-ice/65 sm:text-base">
+                        Um ciclo com começo e fim definidos, acompanhamento a cada trimestre e uma
+                        conversa de revisão no encerramento. Sem renovação automática.
+                    </p>
+                </motion.div>
+
+                {pilotSteps.length > 0 && (
+                    <motion.div {...reveal} transition={{ duration: 0.6, delay: 0.16 }} className="mt-10">
+                        {pilotSteps.map((s, i) => (
+                            <div key={`${s.label}-${i}`} className="relative flex gap-5 pb-7 last:pb-0">
+                                {i < pilotSteps.length - 1 && (
+                                    <span className="absolute left-[5px] top-4 h-full w-px bg-hf-ice/10" />
+                                )}
+                                <span className="relative mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full bg-hf-gold ring-4 ring-hf-gold/15" />
+                                <div className="min-w-0">
+                                    {s.label && (
+                                        <div className="font-ui text-sm font-semibold uppercase tracking-[0.1em] text-hf-gold">
+                                            {s.label}
+                                        </div>
+                                    )}
+                                    {s.text && (
+                                        <div className="mt-1 font-ui text-base leading-relaxed text-hf-ice/70">
+                                            {s.text}
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        ))}
+                    </motion.div>
+                )}
+            </Section>
+        ) : null,
+
+        // ---- Limits of the partnership ----
+        limits: (p.limits_body || limitsItems.length > 0) ? (
+            <Section>
+                <Heading>{p.limits_title || 'Limites da parceria'}</Heading>
+                {p.limits_body && <Body>{p.limits_body}</Body>}
+                {limitsItems.length > 0 && (
+                    <motion.ul
+                        {...reveal}
+                        transition={{ duration: 0.6, delay: 0.12 }}
+                        className="mt-8 space-y-3"
+                    >
+                        {limitsItems.map((item, i) => (
+                            <li
+                                key={i}
+                                className="flex items-start gap-3 rounded-2xl border border-hf-line/70 bg-hf-surface px-5 py-4"
+                            >
+                                <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-hf-gold" />
+                                <span className="font-ui text-sm leading-relaxed text-hf-ice/70">{item}</span>
+                            </li>
+                        ))}
+                    </motion.ul>
+                )}
+            </Section>
+        ) : null,
+
+        // ---- Untagged photo gallery ----
+        gallery: photosFor('gallery').length > 0 ? (
+            <Section>
+                <Heading>
+                    O Henrique <span className="text-hf-gold">em ação</span>
+                </Heading>
+                <PhotoStrip items={photosFor('gallery')} />
+            </Section>
+        ) : null,
+
+        // ---- Costs ----
+        costs: costs.length > 0 ? (
+            <Section>
+                <Heading>
+                    O que o projeto <span className="text-hf-gold">custa</span>
+                </Heading>
+
+                <motion.div
+                    {...reveal}
+                    transition={{ duration: 0.6, delay: 0.1 }}
+                    className="mt-10 overflow-hidden rounded-2xl border border-hf-line/70 bg-hf-surface"
+                >
+                    {costs.map((c, i) => (
+                        <div
+                            key={`${c.label}-${i}`}
+                            className="flex items-center justify-between gap-4 border-b border-hf-line/70 px-5 py-4 sm:px-6"
+                        >
+                            <div className="min-w-0">
+                                <div className="truncate font-ui text-base font-medium text-hf-ice">
+                                    {c.label}
+                                </div>
+                                <div className="mt-0.5 font-ui text-[11px] font-medium uppercase tracking-wide text-hf-ice/40">
+                                    {c.period === 'mensal' ? 'Mensal' : 'Anual'}
+                                </div>
+                            </div>
+                            <div className="shrink-0 text-right">
+                                <div className="font-ui text-base font-semibold text-hf-ice">
+                                    {fmtBRL(c.amount || 0)}
+                                    <span className="font-normal text-hf-ice/40">
+                                        {c.period === 'mensal' ? '/mês' : '/ano'}
+                                    </span>
+                                </div>
+                                {c.period === 'mensal' && (
+                                    <div className="font-ui text-[11px] text-hf-ice/40">
+                                        {fmtBRL((c.amount || 0) * 12)}/ano
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    ))}
+
+                    <div className="flex items-center justify-between gap-4 bg-hf-gold/[0.06] px-5 py-5 sm:px-6">
+                        <div>
+                            <div className="font-ui text-base font-semibold text-hf-ice">
+                                Investimento anual
+                            </div>
+                            {monthlyTotal > 0 && (
+                                <div className="mt-0.5 font-ui text-[11px] text-hf-ice/45">
+                                    Custo mensal recorrente: {fmtBRL(monthlyTotal)}
+                                </div>
+                            )}
+                        </div>
+                        <div className="font-ui text-2xl font-semibold text-hf-gold sm:text-3xl">
+                            {fmtBRL(annualInvestment)}
+                        </div>
+                    </div>
+                </motion.div>
+
+                {p.costs_note && (
+                    <p className="mt-4 font-ui text-[13px] leading-relaxed text-hf-ice/40">{p.costs_note}</p>
+                )}
+            </Section>
+        ) : null,
+
+        // ---- Financial support ----
+        scholarship: (pct > 0 || p.scholarship_label || p.scholarship_body || p.ask_body) ? (
+        <Section>
+            <Heading>
+                {p.scholarship_title || (
+                    <>
+                        O impacto de uma <span className="text-hf-gold">bolsa</span>
+                    </>
+                )}
+            </Heading>
+
+            <motion.div
+                {...reveal}
+                transition={{ duration: 0.6, delay: 0.1 }}
+                className="mt-10 rounded-2xl border border-hf-gold/25 bg-hf-surface p-8 md:p-10"
+            >
+                {pct > 0 && (
+                    <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
+                        <span className="font-brand text-6xl font-bold leading-none tracking-tight text-hf-gold sm:text-7xl">
+                            {pct}%
+                        </span>
+                        <span className="font-ui text-lg text-hf-ice/60">do investimento anual</span>
+                    </div>
+                )}
+
+                {pct === 0 && p.scholarship_anchor && (
+                    <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
+                        <span className="font-brand text-5xl font-bold leading-none tracking-tight text-hf-gold sm:text-6xl">
+                            {p.scholarship_anchor}
+                        </span>
+                        {p.scholarship_label && (
+                            <span className="font-ui text-lg text-hf-ice/60">{p.scholarship_label}</span>
+                        )}
+                    </div>
+                )}
+
+                {p.scholarship_label && (p.scholarship_monthly || 0) > 0 && (
+                    <p className={`font-ui text-base text-hf-ice/80 ${pct > 0 ? 'mt-6' : ''}`}>
+                        <span className="font-semibold text-hf-ice">{p.scholarship_label}:</span>{' '}
+                        {fmtBRL(p.scholarship_monthly || 0)}/mês
+                        <span className="text-hf-ice/45"> · {fmtBRL(scholarshipAnnual)}/ano</span>
+                    </p>
+                )}
+
+                {p.scholarship_body && (
+                    <p className="mt-4 whitespace-pre-line font-ui text-base leading-relaxed text-hf-ice/70">
+                        {p.scholarship_body}
+                    </p>
+                )}
+
+                {p.ask_body && (
+                    <div className="mt-6 rounded-2xl border border-hf-line/70 bg-hf-navy/60 p-5 sm:p-6">
+                        <p className="whitespace-pre-line font-ui text-base leading-relaxed text-hf-ice/85">
+                            {p.ask_body}
+                        </p>
+                    </div>
+                )}
+            </motion.div>
+        </Section>
+        ) : null,
+
+        // ---- Deliverables ----
+        deliverables: (deliverables.length > 0 || p.pilot_note) ? (
+            <Section>
+                <Heading>
+                    {p.deliverables_title || 'O que o Marista receberá durante um ano letivo'}
+                </Heading>
+                <motion.p
+                    {...reveal}
+                    transition={{ duration: 0.6, delay: 0.1 }}
+                    className="mt-6 font-ui text-base leading-relaxed text-hf-ice/60 sm:text-lg"
+                >
+                    Entregas concretas ao longo do ano letivo:
+                </motion.p>
+                <div className="mt-8 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                    {deliverables.map((d, i) => (
+                        <motion.div
+                            key={i}
+                            initial={{ opacity: 0, y: 14 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true, margin: '-50px' }}
+                            transition={{ duration: 0.45, delay: (i % 2) * 0.06 }}
+                            className="flex items-start gap-2.5 rounded-2xl border border-hf-line/70 bg-hf-surface px-5 py-4 transition-colors hover:border-hf-gold/25"
+                        >
+                            <Check className="mt-0.5 h-4 w-4 shrink-0 text-hf-gold" />
+                            <span className="font-ui text-sm leading-relaxed text-hf-ice/80">{d}</span>
+                        </motion.div>
+                    ))}
+                </div>
+                {p.pilot_note && (
+                    <motion.div
+                        {...reveal}
+                        transition={{ duration: 0.6, delay: 0.1 }}
+                        className="mt-6 rounded-2xl border border-hf-gold/20 bg-hf-gold/[0.05] p-5 font-ui text-sm leading-relaxed text-hf-ice/75 sm:text-base"
+                    >
+                        {p.pilot_note}
+                    </motion.div>
+                )}
+            </Section>
+        ) : null,
+
+        // ---- Balanced partnership ----
+        partnership_table: partnershipTable.length > 0 ? (
+            <Section>
+                <Heading>
+                    Uma parceria <span className="text-hf-gold">equilibrada</span>
+                </Heading>
+                <div className="mt-8 overflow-hidden rounded-2xl border border-hf-line/70 bg-hf-surface">
+                    <div className="grid grid-cols-2 border-b border-hf-line/70">
+                        <div className="p-4 font-ui text-[10px] font-semibold uppercase tracking-[0.12em] text-hf-gold sm:p-5 sm:text-[11px]">
+                            {p.partner_name || 'O parceiro'} oferece
+                        </div>
+                        <div className="border-l border-hf-line/70 p-4 font-ui text-[10px] font-semibold uppercase tracking-[0.12em] text-hf-ice/70 sm:p-5 sm:text-[11px]">
+                            O Henrique e a família oferecem
+                        </div>
+                    </div>
+                    {partnershipTable.map((r, i) => (
+                        <div key={i} className="grid grid-cols-2 border-b border-hf-line/70 last:border-0">
+                            <div className="p-4 font-ui text-[13px] leading-snug text-hf-ice/80 sm:p-5 sm:text-sm">{r.marista}</div>
+                            <div className="border-l border-hf-line/70 p-4 font-ui text-[13px] leading-snug text-hf-ice/80 sm:p-5 sm:text-sm">{r.family}</div>
+                        </div>
+                    ))}
+                </div>
+                {p.partnership_table_note && (
+                    <p className="mt-5 max-w-2xl font-ui text-sm leading-relaxed text-hf-ice/50">{p.partnership_table_note}</p>
+                )}
+            </Section>
+        ) : null,
+
+        // ---- Institutional value ----
+        institutional: institutional.length > 0 ? (
+            <Section>
+                <Heading>Contexto institucional</Heading>
+                <div className="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    {institutional.map((it, i) => (
+                        <motion.div
+                            key={`${it.title}-${i}`}
+                            initial={{ opacity: 0, y: 16 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true, margin: '-50px' }}
+                            transition={{ duration: 0.5, delay: (i % 2) * 0.08 }}
+                            className="rounded-2xl border border-hf-line/70 bg-hf-surface p-6"
+                        >
+                            <h3 className="font-brand text-lg font-semibold text-hf-ice">{it.title}</h3>
+                            <p className="mt-2 whitespace-pre-line font-ui text-sm leading-relaxed text-hf-ice/60">
+                                {it.text}
+                            </p>
+                        </motion.div>
+                    ))}
+                </div>
+            </Section>
+        ) : null,
+
+        // ---- Family commitment ----
+        family: hasFamily ? (
+            <Section>
+                <Heading>Compromisso da família</Heading>
+                {p.family_letter && (
+                    <motion.div
+                        {...reveal}
+                        transition={{ duration: 0.6, delay: 0.1 }}
+                        className="mt-10 rounded-2xl border border-hf-line/70 bg-hf-surface p-8 md:p-12"
+                    >
+                        <p className="whitespace-pre-line font-brand text-lg leading-relaxed text-hf-ice/85 sm:text-xl">
+                            {p.family_letter}
+                        </p>
+                        {p.family_letter_signature && (
+                            <p className="mt-8 font-brand text-lg text-hf-ice">
+                                {p.family_letter_signature}
+                            </p>
+                        )}
+                    </motion.div>
+                )}
+
+                {familyCommitments.length > 0 && (
+                    <motion.ul
+                        {...reveal}
+                        transition={{ duration: 0.6, delay: 0.15 }}
+                        className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2"
+                    >
+                        {familyCommitments.map((item, i) => (
+                            <li
+                                key={i}
+                                className="flex items-start gap-2.5 rounded-2xl border border-hf-line/70 bg-hf-surface px-5 py-4"
+                            >
+                                <Check className="mt-0.5 h-4 w-4 shrink-0 text-hf-gold" />
+                                <span className="font-ui text-sm leading-relaxed text-hf-ice/70">{item}</span>
+                            </li>
+                        ))}
+                    </motion.ul>
+                )}
+            </Section>
+        ) : null,
+
+        // ---- Timeline ----
+        timeline: timeline.length > 0 ? (
+            <Section>
+                <Heading>A jornada até 2030</Heading>
+                <motion.div
+                    {...reveal}
+                    transition={{ duration: 0.6, delay: 0.1 }}
+                    className="mt-10"
+                >
+                    {timeline.map((t, i) => (
+                        <div key={`${t.year}-${i}`} className="relative flex gap-5 pb-8 last:pb-0">
+                            {i < timeline.length - 1 && (
+                                <span className="absolute left-[7px] top-5 h-full w-px bg-hf-ice/10" />
+                            )}
+                            <span className="relative mt-1.5 h-3.5 w-3.5 shrink-0 rounded-full bg-hf-gold ring-4 ring-hf-gold/15" />
+                            <div className="min-w-0">
+                                <div className="font-ui text-lg font-semibold text-hf-gold">{t.year}</div>
+                                <div className="mt-0.5 font-ui text-base leading-relaxed text-hf-ice/70">
+                                    {t.label}
+                                </div>
+                            </div>
+                        </div>
+                    ))}
+                </motion.div>
+                {p.timeline_note && (
+                    <p className="mt-2 font-ui text-[13px] leading-relaxed text-hf-ice/40">{p.timeline_note}</p>
+                )}
+            </Section>
+        ) : null,
+
+        // ---- Custom sections ----
+        custom: customSections.map((s, i) =>
+            s?.title || s?.body ? (
+                <React.Fragment key={`custom-${i}`}>
+                    <Section>
+                        {s.title && <Heading>{s.title}</Heading>}
+                        {s.body && (
+                            <motion.p
+                                {...reveal}
+                                transition={{ duration: 0.6, delay: 0.1 }}
+                                className="mt-6 whitespace-pre-line font-ui text-base leading-relaxed text-hf-ice/70 sm:text-lg"
+                            >
+                                {s.body}
+                            </motion.p>
+                        )}
+                    </Section>
+                </React.Fragment>
+            ) : null,
+        ),
+    };
 
     return (
         <div className="min-h-screen bg-hf-navy font-ui text-hf-ice">
@@ -969,753 +2110,38 @@ export default function PartnershipPage() {
                             {p.hero_subtitle}
                         </motion.p>
                     )}
+
+                    {p.hero_cta_label && (
+                        <motion.div
+                            {...reveal}
+                            transition={{ duration: 0.6, delay: 0.24 }}
+                            className="mt-9 flex flex-col gap-3 sm:flex-row sm:items-center"
+                        >
+                            <a href="#projeto" className={hfBtnPrimary}>
+                                {p.hero_cta_label}
+                                <ArrowRight className="h-4 w-4" />
+                            </a>
+                            {p.contact_whatsapp && (
+                                <a
+                                    href={p.contact_whatsapp}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className={hfBtnSecondary}
+                                >
+                                    <MessageCircle className="h-4 w-4" />
+                                    Vamos conversar
+                                </a>
+                            )}
+                        </motion.div>
+                    )}
                 </div>
             </section>
 
-            {/* ---- 2. Executive summary ---- */}
-            {(p.executive_summary || executiveHighlights.length > 0 || p.executive_objective) && (
-                <Section className="py-16 md:py-20">
-                    <Kicker>Resumo executivo</Kicker>
-                    {p.executive_summary && (
-                        <motion.p
-                            {...reveal}
-                            transition={{ duration: 0.7 }}
-                            className="max-w-3xl whitespace-pre-line font-ui text-xl leading-relaxed text-hf-ice/85 sm:text-2xl"
-                        >
-                            {p.executive_summary}
-                        </motion.p>
-                    )}
+            <span id="projeto" className="block scroll-mt-20" aria-hidden="true" />
 
-                    {executiveHighlights.length > 0 && (
-                        <div className="mt-10">
-                            <p className="mb-4 font-ui text-[12px] font-semibold uppercase tracking-[0.16em] text-hf-gold">
-                                Nos últimos 12 meses
-                            </p>
-                            <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                                {executiveHighlights.map((h, i) => (
-                                    <motion.li
-                                        key={i}
-                                        initial={{ opacity: 0, y: 14 }}
-                                        whileInView={{ opacity: 1, y: 0 }}
-                                        viewport={{ once: true, margin: '-50px' }}
-                                        transition={{ duration: 0.45, delay: (i % 2) * 0.06 }}
-                                        className="flex items-start gap-2.5 rounded-2xl border border-hf-line/70 bg-hf-surface px-5 py-4 transition-colors hover:border-hf-gold/25"
-                                    >
-                                        <Check className="mt-0.5 h-4 w-4 shrink-0 text-hf-gold" />
-                                        <span className="font-ui text-sm leading-relaxed text-hf-ice/70">{h}</span>
-                                    </motion.li>
-                                ))}
-                            </ul>
-                        </div>
-                    )}
-
-                    {p.executive_objective && (
-                        <motion.div
-                            {...reveal}
-                            transition={{ duration: 0.6, delay: 0.1 }}
-                            className="mt-10 border-l-2 border-hf-gold/60 pl-4"
-                        >
-                            <p className="mb-1.5 font-ui text-[12px] font-semibold uppercase tracking-[0.16em] text-hf-gold">
-                                Objetivo
-                            </p>
-                            <p className="whitespace-pre-line font-ui text-base leading-relaxed text-hf-ice/80 sm:text-lg">
-                                {p.executive_objective}
-                            </p>
-                        </motion.div>
-                    )}
-                </Section>
-            )}
-
-            {/* ---- 3. Thesis / intro ---- */}
-            {p.intro && (
-                <Section className="py-16 md:py-20">
-                    <motion.p
-                        {...reveal}
-                        transition={{ duration: 0.7 }}
-                        className="max-w-3xl whitespace-pre-line font-ui text-xl leading-relaxed text-hf-ice/80 sm:text-2xl"
-                    >
-                        {p.intro}
-                    </motion.p>
-                </Section>
-            )}
-
-            {/* ---- 4. Sporting results — the lead argument ---- */}
-            {hasResults && (
-                <Section>
-                    <Heading>
-                        {p.results_title || (
-                            <>
-                                Resultados que{' '}
-                                <span className="text-hf-gold">
-                                    comprovam a trajetória
-                                </span>
-                            </>
-                        )}
-                    </Heading>
-
-                    {p.results_intro && <Body>{p.results_intro}</Body>}
-
-                    {p.federation_info && (
-                        <motion.p
-                            {...reveal}
-                            transition={{ duration: 0.6, delay: 0.14 }}
-                            className="mt-5 whitespace-pre-line font-ui text-[13px] leading-relaxed text-hf-ice/45"
-                        >
-                            {p.federation_info}
-                        </motion.p>
-                    )}
-
-                    {showCompetitions && (
-                        <>
-                            <div className="mt-10 grid grid-cols-3 gap-3 sm:grid-cols-5">
-                                {compSummary.map((s, i) => (
-                                    <motion.div
-                                        key={s.label}
-                                        initial={{ opacity: 0, y: 14 }}
-                                        whileInView={{ opacity: 1, y: 0 }}
-                                        viewport={{ once: true }}
-                                        transition={{ duration: 0.4, delay: i * 0.06 }}
-                                        className="rounded-2xl border border-hf-line/70 bg-hf-surface p-4 text-center"
-                                    >
-                                        <div
-                                            className={`font-ui text-3xl font-semibold ${
-                                                s.accent ? 'text-hf-gold' : 'text-hf-ice'
-                                            }`}
-                                        >
-                                            {s.value}
-                                        </div>
-                                        <div className="mt-1.5 font-ui text-[11px] font-medium text-hf-ice/45">
-                                            {s.label}
-                                        </div>
-                                    </motion.div>
-                                ))}
-                            </div>
-
-                            <div className="mt-8 space-y-2">
-                                <h3 className="mb-3 font-brand text-[12px] font-semibold uppercase tracking-[0.12em] text-hf-ice/40">
-                                    Mais recentes
-                                </h3>
-                                {recentComps.map((c: Competition) => (
-                                    <React.Fragment key={c.id}>
-                                        <CompRow comp={c} />
-                                    </React.Fragment>
-                                ))}
-                            </div>
-                        </>
-                    )}
-                    <PhotoStrip items={photosFor('results')} />
-                </Section>
-            )}
-
-            {/* ---- 5. Potential + goals ---- */}
-            {hasPotential && (
-                <Section>
-                    <Heading>{p.why_now_title || 'Potencial e metas'}</Heading>
-                    {p.why_now_body && <Body>{p.why_now_body}</Body>}
-
-                    {/* Age-window graphic — fixed 12 → 16 development window */}
-                    <motion.div
-                        {...reveal}
-                        transition={{ duration: 0.6, delay: 0.15 }}
-                        className="mt-10 rounded-2xl border border-hf-line/70 bg-hf-surface p-6 transition-colors hover:border-hf-gold/25 sm:p-8"
-                    >
-                        <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:justify-center sm:overflow-visible">
-                            {[12, 13, 14, 15, 16].map((age, i, arr) => (
-                                <React.Fragment key={age}>
-                                    <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-hf-gold/40 bg-hf-gold/[0.08] font-ui text-lg font-semibold text-hf-gold sm:h-14 sm:w-14 sm:text-xl">
-                                        {age}
-                                    </span>
-                                    {i < arr.length - 1 && (
-                                        <ArrowRight className="h-4 w-4 shrink-0 text-hf-ice/30" />
-                                    )}
-                                </React.Fragment>
-                            ))}
-                        </div>
-                        <div className="mt-5 flex items-center justify-center rounded-full border border-hf-gold/25 bg-hf-gold/[0.06] px-4 py-2 text-center">
-                            <span className="font-ui text-[11px] font-semibold uppercase tracking-[0.12em] text-hf-gold sm:text-[13px]">
-                                Janela de maior desenvolvimento esportivo
-                            </span>
-                        </div>
-                    </motion.div>
-
-                    {goals.length > 0 && (
-                        <div className="mt-10">
-                            {p.goals_title && (
-                                <h3 className="mb-5 font-brand text-lg font-semibold text-hf-ice">
-                                    {p.goals_title}
-                                </h3>
-                            )}
-                            <div className="space-y-3">
-                                {goals.map((g, i) => (
-                                    <motion.div
-                                        key={`${g.horizon}-${i}`}
-                                        initial={{ opacity: 0, y: 16 }}
-                                        whileInView={{ opacity: 1, y: 0 }}
-                                        viewport={{ once: true, margin: '-50px' }}
-                                        transition={{ duration: 0.5, delay: (i % 3) * 0.06 }}
-                                        className="flex flex-col gap-1.5 rounded-2xl border border-hf-line/70 bg-hf-surface p-6 transition-colors hover:border-hf-gold/25 hover:bg-hf-surface-2 sm:flex-row sm:items-baseline sm:gap-6"
-                                    >
-                                        {g.horizon && (
-                                            <span className="shrink-0 font-ui text-sm font-semibold text-hf-gold sm:w-44">
-                                                {g.horizon}
-                                            </span>
-                                        )}
-                                        <span className="whitespace-pre-line font-ui text-base leading-relaxed text-hf-ice/70">
-                                            {g.text}
-                                        </span>
-                                    </motion.div>
-                                ))}
-                            </div>
-                        </div>
-                    )}
-                    <PhotoStrip items={photosFor('potential')} />
-                </Section>
-            )}
-
-            {/* ---- Why the Marista school ---- */}
-            {(p.why_marista_body || photosFor('why_partner').length > 0) && (
-                <Section>
-                    <Heading>{p.why_marista_title || 'Por que o Marista?'}</Heading>
-                    {p.why_marista_body && <Body>{p.why_marista_body}</Body>}
-                    <PhotoStrip items={photosFor('why_partner')} />
-                </Section>
-            )}
-
-            {/* ---- 6. How the athlete represents the school ---- */}
-            {hasRepresentation && (
-                <Section>
-                    <Heading>{p.representation_title || 'Como o Henrique representa a escola'}</Heading>
-                    {p.representation_body && <Body>{p.representation_body}</Body>}
-
-                    {counterparts.length > 0 && (
-                        <div className="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-2">
-                            {counterparts.map((c, i) => (
-                                <motion.div
-                                    key={`${c.category}-${i}`}
-                                    initial={{ opacity: 0, y: 16 }}
-                                    whileInView={{ opacity: 1, y: 0 }}
-                                    viewport={{ once: true, margin: '-50px' }}
-                                    transition={{ duration: 0.5, delay: (i % 2) * 0.08 }}
-                                    className="rounded-2xl border border-hf-line/70 bg-hf-surface p-6 transition-colors hover:border-hf-gold/25 hover:bg-hf-surface-2"
-                                >
-                                    <h3 className="font-brand text-lg font-semibold text-hf-ice">{c.category}</h3>
-                                    <ul className="mt-4 space-y-2.5">
-                                        {(c.items || []).map((item, j) => (
-                                            <li key={j} className="flex items-start gap-2.5">
-                                                <Check className="mt-0.5 h-4 w-4 shrink-0 text-hf-gold" />
-                                                <span className="font-ui text-sm leading-relaxed text-hf-ice/70">
-                                                    {item}
-                                                </span>
-                                            </li>
-                                        ))}
-                                    </ul>
-                                </motion.div>
-                            ))}
-                        </div>
-                    )}
-                </Section>
-            )}
-
-            {/* ---- 7. Academic life ---- */}
-            {(p.academic_body || academicCards.length > 0) && (
-                <Section>
-                    <Heading>{p.academic_title || 'Vida acadêmica'}</Heading>
-                    {p.academic_body && <Body>{p.academic_body}</Body>}
-
-                    {academicCards.length > 0 && (
-                        <div className="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-2">
-                            {academicCards.map((c, i) => (
-                                <motion.div
-                                    key={`${c.title}-${i}`}
-                                    initial={{ opacity: 0, y: 16 }}
-                                    whileInView={{ opacity: 1, y: 0 }}
-                                    viewport={{ once: true, margin: '-50px' }}
-                                    transition={{ duration: 0.5, delay: (i % 2) * 0.08 }}
-                                    className="rounded-2xl border border-hf-line/70 bg-hf-surface p-6 transition-colors hover:border-hf-gold/25 hover:bg-hf-surface-2"
-                                >
-                                    {c.title && (
-                                        <h3 className="font-brand text-lg font-semibold text-hf-ice">{c.title}</h3>
-                                    )}
-                                    {c.text && (
-                                        <p className="mt-2 whitespace-pre-line font-ui text-sm leading-relaxed text-hf-ice/60">
-                                            {c.text}
-                                        </p>
-                                    )}
-                                </motion.div>
-                            ))}
-                        </div>
-                    )}
-                </Section>
-            )}
-
-            {/* ---- 8. Discipline + behaviour ---- */}
-            {p.discipline_body && (
-                <Section>
-                    <Heading>{p.discipline_title || 'Disciplina e comportamento'}</Heading>
-                    <Body>{p.discipline_body}</Body>
-                </Section>
-            )}
-
-            {/* ---- 9. Training routine ---- */}
-            {(p.routine_body || routineWeek.length > 0 || routineTimeline.length > 0) && (
-                <Section>
-                    <Heading>{p.routine_title || 'Rotina de treinamento'}</Heading>
-                    {p.routine_body && <Body>{p.routine_body}</Body>}
-
-                    {routineWeek.length > 0 ? (
-                        <div className="mt-10 space-y-3">
-                            {routineWeek.map((d, i) => (
-                                <motion.div
-                                    key={`${d.day}-${i}`}
-                                    initial={{ opacity: 0, y: 16 }}
-                                    whileInView={{ opacity: 1, y: 0 }}
-                                    viewport={{ once: true, margin: '-50px' }}
-                                    transition={{ duration: 0.5, delay: i * 0.06 }}
-                                    className="rounded-2xl border border-hf-line/70 bg-hf-surface p-5 transition-colors hover:border-hf-gold/25 sm:flex sm:gap-6"
-                                >
-                                    <div className="mb-3 shrink-0 font-ui text-sm font-semibold uppercase tracking-wide text-hf-gold sm:mb-0 sm:w-24">
-                                        {d.day}
-                                    </div>
-                                    <div className="flex flex-wrap gap-2">
-                                        {d.blocks.map((b, j) => (
-                                            <span key={j} className="inline-flex items-center gap-2 rounded-full border border-hf-line/70 bg-hf-navy px-3 py-1.5">
-                                                <span className="font-ui text-[11px] font-semibold text-hf-gold">{b.time}</span>
-                                                <span className="font-ui text-[13px] text-hf-ice/75">{b.label}</span>
-                                            </span>
-                                        ))}
-                                    </div>
-                                </motion.div>
-                            ))}
-                        </div>
-                    ) : routineTimeline.length > 0 ? (
-                        <motion.div {...reveal} transition={{ duration: 0.6, delay: 0.1 }} className="mt-10">
-                            {routineTimeline.map((r, i) => (
-                                <div key={`${r.time}-${i}`} className="relative flex gap-5 pb-6 last:pb-0">
-                                    {i < routineTimeline.length - 1 && (
-                                        <span className="absolute left-[5px] top-4 h-full w-px border-l border-hf-ice/10" />
-                                    )}
-                                    <span className="relative mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full bg-hf-gold ring-4 ring-hf-gold/15" />
-                                    <div className="flex min-w-0 flex-col gap-0.5 sm:flex-row sm:items-baseline sm:gap-4">
-                                        <span className="w-16 shrink-0 font-ui text-sm font-semibold text-hf-gold">
-                                            {r.time}
-                                        </span>
-                                        <span className="font-ui text-base leading-relaxed text-hf-ice/80">
-                                            {r.label}
-                                        </span>
-                                    </div>
-                                </div>
-                            ))}
-                        </motion.div>
-                    ) : null}
-                </Section>
-            )}
-
-            {/* ---- 10. Image return + communication (metric tiles moved here) ---- */}
-            {(p.comms_body || p.show_metrics || p.channels_note || channels.length > 0) && (
-                <Section>
-                    <Heading>{p.comms_title || 'Retorno de imagem e comunicação'}</Heading>
-                    {p.comms_body && <Body>{p.comms_body}</Body>}
-
-                    {p.show_metrics && (
-                        <div className="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-3">
-                            {metricTiles.map((t, i) => (
-                                <motion.div
-                                    key={t.label}
-                                    initial={{ opacity: 0, y: 20 }}
-                                    whileInView={{ opacity: 1, y: 0 }}
-                                    viewport={{ once: true }}
-                                    transition={{ duration: 0.5, delay: i * 0.08 }}
-                                    className="rounded-2xl border border-hf-line/70 bg-hf-surface p-6 transition-colors hover:border-hf-gold/25 hover:bg-hf-surface-2"
-                                >
-                                    <div
-                                        className={`font-ui text-4xl font-semibold tracking-tight sm:text-5xl ${
-                                            t.accent ? 'text-hf-gold' : 'text-hf-ice'
-                                        }`}
-                                    >
-                                        {formatCompact(t.value)}
-                                    </div>
-                                    <div className="mt-2 font-ui text-sm font-medium text-hf-ice/60">
-                                        {t.label}
-                                    </div>
-                                    {t.sub && (
-                                        <div className="mt-1 font-ui text-[12px] text-hf-ice/40">{t.sub}</div>
-                                    )}
-                                </motion.div>
-                            ))}
-                        </div>
-                    )}
-                    {p.show_metrics && (
-                        <p className="mt-5 font-ui text-[13px] text-hf-ice/40">
-                            {metrics && !metrics.isFullYear
-                                ? `Projeção anual com base na média real dos ${Math.round(metrics.monthsOfData)} meses medidos. Dados do Instagram, atualizados automaticamente.`
-                                : 'Dados reais do Instagram, atualizados automaticamente.'}
-                        </p>
-                    )}
-
-                    {(p.channels_note || channels.length > 0) && (
-                        <motion.div
-                            {...reveal}
-                            transition={{ duration: 0.6, delay: 0.1 }}
-                            className="mt-8 rounded-2xl border border-hf-line/70 bg-hf-surface p-6 sm:p-7"
-                        >
-                            <p className="font-ui text-[11px] font-semibold uppercase tracking-[0.16em] text-hf-gold">
-                                Presença em múltiplos canais
-                            </p>
-                            {p.channels_note && (
-                                <p className="mt-3 max-w-2xl whitespace-pre-line font-ui text-sm leading-relaxed text-hf-ice/70 sm:text-base">
-                                    {p.channels_note}
-                                </p>
-                            )}
-                            {channels.length > 0 && (
-                                <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-3">
-                                    {channels.map((c, i) => {
-                                        const Icon = channelIcon(c.name);
-                                        return (
-                                            <div key={`${c.name}-${i}`} className="rounded-2xl border border-hf-line/70 bg-hf-navy/40 p-4">
-                                                <div className="flex items-center gap-2">
-                                                    <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-hf-gold/12 text-hf-gold">
-                                                        <Icon className="h-4 w-4" />
-                                                    </span>
-                                                    <span className="font-ui text-sm font-semibold text-hf-ice">{c.name}</span>
-                                                </div>
-                                                {c.detail && (
-                                                    <p className="mt-2 font-ui text-[13px] leading-relaxed text-hf-ice/55">{c.detail}</p>
-                                                )}
-                                            </div>
-                                        );
-                                    })}
-                                </div>
-                            )}
-                        </motion.div>
-                    )}
-
-                    {ecosystemContrast.length > 0 && (
-                        <motion.div
-                            {...reveal}
-                            transition={{ duration: 0.6, delay: 0.15 }}
-                            className="mt-4 overflow-hidden rounded-2xl border border-hf-line/70 bg-hf-surface"
-                        >
-                            <div className="grid grid-cols-2 border-b border-hf-line/70 text-center">
-                                <div className="p-3 font-ui text-[10px] font-semibold uppercase tracking-[0.12em] text-hf-ice/45 sm:p-4 sm:text-[11px]">
-                                    Atleta típico da idade
-                                </div>
-                                <div className="border-l border-hf-line/70 p-3 font-ui text-[10px] font-semibold uppercase tracking-[0.12em] text-hf-gold sm:p-4 sm:text-[11px]">
-                                    Henrique
-                                </div>
-                            </div>
-                            {ecosystemContrast.map((r, i) => (
-                                <div key={i} className="grid grid-cols-2 border-b border-hf-line/70 last:border-0">
-                                    <div className="p-3 font-ui text-[13px] leading-snug text-hf-ice/50 sm:p-4 sm:text-sm">{r.typical}</div>
-                                    <div className="border-l border-hf-line/70 p-3 font-ui text-[13px] font-medium leading-snug text-hf-ice sm:p-4 sm:text-sm">{r.henrique}</div>
-                                </div>
-                            ))}
-                        </motion.div>
-                    )}
-                </Section>
-            )}
-
-            {/* ---- 11. Photos (untagged gallery — contextual photos are rendered inside their sections) ---- */}
-            {photosFor('gallery').length > 0 && (
-                <Section>
-                    <Heading>
-                        O Henrique <span className="text-hf-gold">em ação</span>
-                    </Heading>
-                    <PhotoStrip items={photosFor('gallery')} />
-                </Section>
-            )}
-
-            {/* ---- 12. Investment + scholarship ---- */}
-            {costs.length > 0 && (
-                <Section>
-                    <Heading>
-                        O que o projeto <span className="text-hf-gold">custa</span>
-                    </Heading>
-
-                    <motion.div
-                        {...reveal}
-                        transition={{ duration: 0.6, delay: 0.1 }}
-                        className="mt-10 overflow-hidden rounded-2xl border border-hf-line/70 bg-hf-surface"
-                    >
-                        {costs.map((c, i) => (
-                            <div
-                                key={`${c.label}-${i}`}
-                                className="flex items-center justify-between gap-4 border-b border-hf-line/70 px-5 py-4 sm:px-6"
-                            >
-                                <div className="min-w-0">
-                                    <div className="truncate font-ui text-base font-medium text-hf-ice">
-                                        {c.label}
-                                    </div>
-                                    <div className="mt-0.5 font-ui text-[11px] font-medium uppercase tracking-wide text-hf-ice/40">
-                                        {c.period === 'mensal' ? 'Mensal' : 'Anual'}
-                                    </div>
-                                </div>
-                                <div className="shrink-0 text-right">
-                                    <div className="font-ui text-base font-semibold text-hf-ice">
-                                        {fmtBRL(c.amount || 0)}
-                                        <span className="font-normal text-hf-ice/40">
-                                            {c.period === 'mensal' ? '/mês' : '/ano'}
-                                        </span>
-                                    </div>
-                                    {c.period === 'mensal' && (
-                                        <div className="font-ui text-[11px] text-hf-ice/40">
-                                            {fmtBRL((c.amount || 0) * 12)}/ano
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-                        ))}
-
-                        <div className="flex items-center justify-between gap-4 bg-hf-gold/[0.06] px-5 py-5 sm:px-6">
-                            <div>
-                                <div className="font-ui text-base font-semibold text-hf-ice">
-                                    Investimento anual
-                                </div>
-                                {monthlyTotal > 0 && (
-                                    <div className="mt-0.5 font-ui text-[11px] text-hf-ice/45">
-                                        Custo mensal recorrente: {fmtBRL(monthlyTotal)}
-                                    </div>
-                                )}
-                            </div>
-                            <div className="font-ui text-2xl font-semibold text-hf-gold sm:text-3xl">
-                                {fmtBRL(annualInvestment)}
-                            </div>
-                        </div>
-                    </motion.div>
-
-                    {p.costs_note && (
-                        <p className="mt-4 font-ui text-[13px] leading-relaxed text-hf-ice/40">{p.costs_note}</p>
-                    )}
-                </Section>
-            )}
-
-            {/* ---- Scholarship impact ---- */}
-            {(pct > 0 || p.scholarship_label || p.scholarship_body || p.ask_body) && (
-            <Section>
-                <Heading>
-                    O impacto de uma <span className="text-hf-gold">bolsa</span>
-                </Heading>
-
-                <motion.div
-                    {...reveal}
-                    transition={{ duration: 0.6, delay: 0.1 }}
-                    className="mt-10 rounded-2xl border border-hf-gold/25 bg-hf-surface p-8 md:p-10"
-                >
-                    {pct > 0 && (
-                        <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
-                            <span className="font-brand text-6xl font-bold leading-none tracking-tight text-hf-gold sm:text-7xl">
-                                {pct}%
-                            </span>
-                            <span className="font-ui text-lg text-hf-ice/60">do investimento anual</span>
-                        </div>
-                    )}
-
-                    {p.scholarship_label && (p.scholarship_monthly || 0) > 0 && (
-                        <p className={`font-ui text-base text-hf-ice/80 ${pct > 0 ? 'mt-6' : ''}`}>
-                            <span className="font-semibold text-hf-ice">{p.scholarship_label}:</span>{' '}
-                            {fmtBRL(p.scholarship_monthly || 0)}/mês
-                            <span className="text-hf-ice/45"> · {fmtBRL(scholarshipAnnual)}/ano</span>
-                        </p>
-                    )}
-
-                    {p.scholarship_body && (
-                        <p className="mt-4 whitespace-pre-line font-ui text-base leading-relaxed text-hf-ice/70">
-                            {p.scholarship_body}
-                        </p>
-                    )}
-
-                    {p.ask_body && (
-                        <div className="mt-6 rounded-2xl border border-hf-line/70 bg-hf-navy/60 p-5 sm:p-6">
-                            <p className="whitespace-pre-line font-ui text-base leading-relaxed text-hf-ice/85">
-                                {p.ask_body}
-                            </p>
-                        </div>
-                    )}
-                </motion.div>
-            </Section>
-            )}
-
-            {/* ---- What the school receives over a school year ---- */}
-            {(deliverables.length > 0 || p.pilot_note) && (
-                <Section>
-                    <Heading>
-                        {p.deliverables_title || 'O que o Marista receberá durante um ano letivo'}
-                    </Heading>
-                    <motion.p
-                        {...reveal}
-                        transition={{ duration: 0.6, delay: 0.1 }}
-                        className="mt-6 font-ui text-base leading-relaxed text-hf-ice/60 sm:text-lg"
-                    >
-                        Entregas concretas ao longo do ano letivo:
-                    </motion.p>
-                    <div className="mt-8 grid grid-cols-1 gap-3 sm:grid-cols-2">
-                        {deliverables.map((d, i) => (
-                            <motion.div
-                                key={i}
-                                initial={{ opacity: 0, y: 14 }}
-                                whileInView={{ opacity: 1, y: 0 }}
-                                viewport={{ once: true, margin: '-50px' }}
-                                transition={{ duration: 0.45, delay: (i % 2) * 0.06 }}
-                                className="flex items-start gap-2.5 rounded-2xl border border-hf-line/70 bg-hf-surface px-5 py-4 transition-colors hover:border-hf-gold/25"
-                            >
-                                <Check className="mt-0.5 h-4 w-4 shrink-0 text-hf-gold" />
-                                <span className="font-ui text-sm leading-relaxed text-hf-ice/80">{d}</span>
-                            </motion.div>
-                        ))}
-                    </div>
-                    {p.pilot_note && (
-                        <motion.div
-                            {...reveal}
-                            transition={{ duration: 0.6, delay: 0.1 }}
-                            className="mt-6 rounded-2xl border border-hf-gold/20 bg-hf-gold/[0.05] p-5 font-ui text-sm leading-relaxed text-hf-ice/75 sm:text-base"
-                        >
-                            {p.pilot_note}
-                        </motion.div>
-                    )}
-                </Section>
-            )}
-
-            {/* ---- Balanced partnership (Marista offers x family offers) ---- */}
-            {partnershipTable.length > 0 && (
-                <Section>
-                    <Heading>
-                        Uma parceria <span className="text-hf-gold">equilibrada</span>
-                    </Heading>
-                    <div className="mt-8 overflow-hidden rounded-2xl border border-hf-line/70 bg-hf-surface">
-                        <div className="grid grid-cols-2 border-b border-hf-line/70">
-                            <div className="p-4 font-ui text-[10px] font-semibold uppercase tracking-[0.12em] text-hf-gold sm:p-5 sm:text-[11px]">
-                                {p.partner_name || 'O parceiro'} oferece
-                            </div>
-                            <div className="border-l border-hf-line/70 p-4 font-ui text-[10px] font-semibold uppercase tracking-[0.12em] text-hf-ice/70 sm:p-5 sm:text-[11px]">
-                                O Henrique e a família oferecem
-                            </div>
-                        </div>
-                        {partnershipTable.map((r, i) => (
-                            <div key={i} className="grid grid-cols-2 border-b border-hf-line/70 last:border-0">
-                                <div className="p-4 font-ui text-[13px] leading-snug text-hf-ice/80 sm:p-5 sm:text-sm">{r.marista}</div>
-                                <div className="border-l border-hf-line/70 p-4 font-ui text-[13px] leading-snug text-hf-ice/80 sm:p-5 sm:text-sm">{r.family}</div>
-                            </div>
-                        ))}
-                    </div>
-                    {p.partnership_table_note && (
-                        <p className="mt-5 max-w-2xl font-ui text-sm leading-relaxed text-hf-ice/50">{p.partnership_table_note}</p>
-                    )}
-                </Section>
-            )}
-
-            {/* ---- 13. Institutional value ---- */}
-            {institutional.length > 0 && (
-                <Section>
-                    <Heading>Contexto institucional</Heading>
-                    <div className="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-2">
-                        {institutional.map((it, i) => (
-                            <motion.div
-                                key={`${it.title}-${i}`}
-                                initial={{ opacity: 0, y: 16 }}
-                                whileInView={{ opacity: 1, y: 0 }}
-                                viewport={{ once: true, margin: '-50px' }}
-                                transition={{ duration: 0.5, delay: (i % 2) * 0.08 }}
-                                className="rounded-2xl border border-hf-line/70 bg-hf-surface p-6"
-                            >
-                                <h3 className="font-brand text-lg font-semibold text-hf-ice">{it.title}</h3>
-                                <p className="mt-2 whitespace-pre-line font-ui text-sm leading-relaxed text-hf-ice/60">
-                                    {it.text}
-                                </p>
-                            </motion.div>
-                        ))}
-                    </div>
-                </Section>
-            )}
-
-            {/* ---- 14. Family commitment ---- */}
-            {hasFamily && (
-                <Section>
-                    <Heading>Compromisso da família</Heading>
-                    {p.family_letter && (
-                        <motion.div
-                            {...reveal}
-                            transition={{ duration: 0.6, delay: 0.1 }}
-                            className="mt-10 rounded-2xl border border-hf-line/70 bg-hf-surface p-8 md:p-12"
-                        >
-                            <p className="whitespace-pre-line font-brand text-lg leading-relaxed text-hf-ice/85 sm:text-xl">
-                                {p.family_letter}
-                            </p>
-                            {p.family_letter_signature && (
-                                <p className="mt-8 font-brand text-lg text-hf-ice">
-                                    {p.family_letter_signature}
-                                </p>
-                            )}
-                        </motion.div>
-                    )}
-
-                    {familyCommitments.length > 0 && (
-                        <motion.ul
-                            {...reveal}
-                            transition={{ duration: 0.6, delay: 0.15 }}
-                            className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2"
-                        >
-                            {familyCommitments.map((item, i) => (
-                                <li
-                                    key={i}
-                                    className="flex items-start gap-2.5 rounded-2xl border border-hf-line/70 bg-hf-surface px-5 py-4"
-                                >
-                                    <Check className="mt-0.5 h-4 w-4 shrink-0 text-hf-gold" />
-                                    <span className="font-ui text-sm leading-relaxed text-hf-ice/70">{item}</span>
-                                </li>
-                            ))}
-                        </motion.ul>
-                    )}
-                </Section>
-            )}
-
-            {/* ---- 15. Timeline ---- */}
-            {timeline.length > 0 && (
-                <Section>
-                    <Heading>A jornada até 2030</Heading>
-                    <motion.div
-                        {...reveal}
-                        transition={{ duration: 0.6, delay: 0.1 }}
-                        className="mt-10"
-                    >
-                        {timeline.map((t, i) => (
-                            <div key={`${t.year}-${i}`} className="relative flex gap-5 pb-8 last:pb-0">
-                                {i < timeline.length - 1 && (
-                                    <span className="absolute left-[7px] top-5 h-full w-px bg-hf-ice/10" />
-                                )}
-                                <span className="relative mt-1.5 h-3.5 w-3.5 shrink-0 rounded-full bg-hf-gold ring-4 ring-hf-gold/15" />
-                                <div className="min-w-0">
-                                    <div className="font-ui text-lg font-semibold text-hf-gold">{t.year}</div>
-                                    <div className="mt-0.5 font-ui text-base leading-relaxed text-hf-ice/70">
-                                        {t.label}
-                                    </div>
-                                </div>
-                            </div>
-                        ))}
-                    </motion.div>
-                    {p.timeline_note && (
-                        <p className="mt-2 font-ui text-[13px] leading-relaxed text-hf-ice/40">{p.timeline_note}</p>
-                    )}
-                </Section>
-            )}
-
-            {/* ---- 16. Custom sections ---- */}
-            {customSections.map((s, i) =>
-                s?.title || s?.body ? (
-                    <React.Fragment key={`custom-${i}`}>
-                        <Section>
-                            {s.title && <Heading>{s.title}</Heading>}
-                            {s.body && (
-                                <motion.p
-                                    {...reveal}
-                                    transition={{ duration: 0.6, delay: 0.1 }}
-                                    className="mt-6 whitespace-pre-line font-ui text-base leading-relaxed text-hf-ice/70 sm:text-lg"
-                                >
-                                    {s.body}
-                                </motion.p>
-                            )}
-                        </Section>
-                    </React.Fragment>
-                ) : null,
-            )}
+            {sectionOrder.map((key) => (
+                <React.Fragment key={key}>{sectionNodes[key] ?? null}</React.Fragment>
+            ))}
 
             {/* ---- 17. Closing + contact + PDF ---- */}
             <section className="relative overflow-hidden bg-hf-navy px-6 py-24 md:py-32">

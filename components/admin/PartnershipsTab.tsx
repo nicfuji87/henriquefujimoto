@@ -20,6 +20,9 @@ interface RoutineDay { day: string; blocks: { time: string; label: string }[]; }
 interface Channel { name: string; detail: string; }
 interface ContrastRow { typical: string; henrique: string; }
 interface PartnershipRow { marista: string; family: string; }
+interface AudienceMetric { value: string; label: string; sub?: string; }
+interface BuildItem { title: string; text: string; }
+interface PilotStep { label: string; text: string; }
 
 interface Project {
     id?: string;
@@ -88,7 +91,31 @@ interface Project {
     deliverables: string[];
     closing_image_url: string;
     routine_week: RoutineDay[];
+    hero_cta_label: string;
+    scholarship_title: string;
+    scholarship_anchor: string;
+    audience_note: string;
+    audience_metrics: AudienceMetric[];
+    differentiators_title: string;
+    build_title: string;
+    build_body: string;
+    build_items: BuildItem[];
+    pilot_title: string;
+    pilot_body: string;
+    pilot_steps: PilotStep[];
+    limits_title: string;
+    limits_body: string;
+    limits_items: string[];
+    section_order: string[];
 }
+
+/** Chaves aceitas em `section_order` — a pagina publica renderiza nesta ordem. */
+const SECTION_KEYS = [
+    'executive', 'intro', 'results', 'potential', 'why_partner', 'representation',
+    'academic', 'discipline', 'routine', 'comms', 'ecosystem', 'build', 'pilot',
+    'gallery', 'costs', 'scholarship', 'deliverables', 'partnership_table',
+    'institutional', 'family', 'limits', 'timeline', 'custom',
+];
 
 const EMPTY: Project = {
     slug: '', is_active: true, project_title: '', partner_name: '', partner_logo_url: '',
@@ -106,6 +133,10 @@ const EMPTY: Project = {
     executive_highlights: [], executive_objective: '', why_marista_title: '', why_marista_body: '',
     academic_cards: [], routine_timeline: [], deliverables_title: '', deliverables: [], closing_image_url: '',
     routine_week: [],
+    hero_cta_label: '', scholarship_title: '', scholarship_anchor: '', audience_note: '', audience_metrics: [],
+    differentiators_title: '', build_title: '', build_body: '', build_items: [],
+    pilot_title: '', pilot_body: '', pilot_steps: [],
+    limits_title: '', limits_body: '', limits_items: [], section_order: [],
 };
 
 const inputCls = 'w-full bg-zinc-800/50 border border-zinc-700 rounded-lg px-3 py-2 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-emerald-500/50';
@@ -336,6 +367,9 @@ export default function PartnershipsTab() {
                                 <Labeled label="Título"><input className={inputCls} value={form.hero_title} onChange={e => set('hero_title', e.target.value)} placeholder="Não é caridade. É parceria." /></Labeled>
                             </div>
                             <Labeled label="Subtítulo"><textarea rows={2} className={inputCls} value={form.hero_subtitle} onChange={e => set('hero_subtitle', e.target.value)} /></Labeled>
+                            <Labeled label="Botão do hero (opcional)" hint="Ex.: 'Conheça o projeto'. Vazio = hero sem botões. Com texto, aparece também um 'Vamos conversar' no WhatsApp.">
+                                <input className={inputCls} value={form.hero_cta_label} onChange={e => set('hero_cta_label', e.target.value)} placeholder="Conheça o projeto" />
+                            </Labeled>
 
                             {/* Intro / thesis */}
                             <GroupTitle>Tese de abertura</GroupTitle>
@@ -357,6 +391,24 @@ export default function PartnershipsTab() {
                                     <input type="checkbox" checked={form.show_metrics} onChange={e => set('show_metrics', e.target.checked)} className="w-4 h-4 rounded border-zinc-700 bg-zinc-800 text-emerald-500" />
                                     Mostrar números reais do Instagram (ao vivo)
                                 </label>
+                                <Labeled label="Nota de contexto dos números" hint="Ex.: período de conta bloqueada. Aparece em letra miúda antes das métricas.">
+                                    <textarea rows={3} className={inputCls} value={form.audience_note} onChange={e => set('audience_note', e.target.value)} />
+                                </Labeled>
+                                <Labeled label="Métricas curadas (valor + rótulo + fonte)" hint="Conferidas à mão, com o período sempre no rótulo ou na fonte. Use no lugar dos números ao vivo.">
+                                    <div className="space-y-2">
+                                        {form.audience_metrics.map((m, i) => (
+                                            <div key={i} className="flex items-start gap-2">
+                                                <input className={inputCls + ' w-28'} value={m.value} onChange={e => patchItem('audience_metrics', i, { value: e.target.value })} placeholder="10,7 mil" />
+                                                <div className="flex-1 space-y-2">
+                                                    <input className={inputCls} value={m.label} onChange={e => patchItem('audience_metrics', i, { label: e.target.value })} placeholder="contas alcançadas nos últimos 28 dias" />
+                                                    <input className={inputCls} value={m.sub || ''} onChange={e => patchItem('audience_metrics', i, { sub: e.target.value })} placeholder="Fonte e data (ex.: Instagram, 09/11/2026)" />
+                                                </div>
+                                                <button onClick={() => removeItem('audience_metrics', i)} className="p-2 text-zinc-500 hover:text-red-400"><Trash2 className="w-4 h-4" /></button>
+                                            </div>
+                                        ))}
+                                        <button onClick={() => addItem<AudienceMetric>('audience_metrics', { value: '', label: '', sub: '' })} className="text-xs text-emerald-400 hover:text-emerald-300 flex items-center gap-1"><Plus className="w-3 h-3" /> Adicionar métrica</button>
+                                    </div>
+                                </Labeled>
                                 <Labeled label="Presença em múltiplos canais — texto" hint="Diferencial: além do Instagram, também tem blog e YouTube (mesmo pequenos).">
                                     <textarea rows={3} className={inputCls} value={form.channels_note} onChange={e => set('channels_note', e.target.value)} />
                                 </Labeled>
@@ -383,6 +435,9 @@ export default function PartnershipsTab() {
                                         ))}
                                         <button onClick={() => addItem<ContrastRow>('ecosystem_contrast', { typical: '', henrique: '' })} className="text-xs text-emerald-400 hover:text-emerald-300 flex items-center gap-1"><Plus className="w-3 h-3" /> Adicionar linha</button>
                                     </div>
+                                </Labeled>
+                                <Labeled label="Título do contraste (opcional)" hint="Com título, a tabela vira seção própria (ex.: 'Por que isso é diferente'). Vazio = fica dentro da seção de comunicação.">
+                                    <input className={inputCls} value={form.differentiators_title} onChange={e => set('differentiators_title', e.target.value)} placeholder="Por que isso é diferente" />
                                 </Labeled>
                             </div>
 
@@ -597,10 +652,72 @@ export default function PartnershipsTab() {
                             </div>
                             <Labeled label="Observação sobre custos"><input className={inputCls} value={form.costs_note} onChange={e => set('costs_note', e.target.value)} /></Labeled>
 
+                            {/* O que podemos construir juntos */}
+                            <GroupTitle>O que podemos construir juntos (possibilidades)</GroupTitle>
+                            <div className="grid grid-cols-1 gap-4">
+                                <Labeled label="Título"><input className={inputCls} value={form.build_title} onChange={e => set('build_title', e.target.value)} placeholder="O que podemos construir juntos" /></Labeled>
+                                <Labeled label="Texto de abertura"><textarea rows={3} className={inputCls} value={form.build_body} onChange={e => set('build_body', e.target.value)} /></Labeled>
+                                <Labeled label="Possibilidades (título + descrição)" hint="São possibilidades a construir em conjunto, não entregas contratadas.">
+                                    <div className="space-y-2">
+                                        {form.build_items.map((b, i) => (
+                                            <div key={i} className="flex items-start gap-2">
+                                                <div className="flex-1 space-y-2">
+                                                    <input className={inputCls} value={b.title} onChange={e => patchItem('build_items', i, { title: e.target.value })} placeholder="Diário de um estudante-atleta" />
+                                                    <textarea rows={2} className={inputCls} value={b.text} onChange={e => patchItem('build_items', i, { text: e.target.value })} placeholder="Descrição curta" />
+                                                </div>
+                                                <button onClick={() => removeItem('build_items', i)} className="p-2 text-zinc-500 hover:text-red-400"><Trash2 className="w-4 h-4" /></button>
+                                            </div>
+                                        ))}
+                                        <button onClick={() => addItem<BuildItem>('build_items', { title: '', text: '' })} className="text-xs text-emerald-400 hover:text-emerald-300 flex items-center gap-1"><Plus className="w-3 h-3" /> Adicionar possibilidade</button>
+                                    </div>
+                                </Labeled>
+                            </div>
+
+                            {/* Projeto-piloto */}
+                            <GroupTitle>Projeto-piloto de 12 meses</GroupTitle>
+                            <div className="grid grid-cols-1 gap-4">
+                                <Labeled label="Título"><input className={inputCls} value={form.pilot_title} onChange={e => set('pilot_title', e.target.value)} placeholder="Projeto-piloto de 12 meses" /></Labeled>
+                                <Labeled label="Texto"><textarea rows={3} className={inputCls} value={form.pilot_body} onChange={e => set('pilot_body', e.target.value)} /></Labeled>
+                                <Labeled label="Etapas do piloto (etiqueta + descrição)">
+                                    <div className="space-y-2">
+                                        {form.pilot_steps.map((s, i) => (
+                                            <div key={i} className="flex items-start gap-2">
+                                                <input className={inputCls + ' w-32'} value={s.label} onChange={e => patchItem('pilot_steps', i, { label: e.target.value })} placeholder="1º trimestre" />
+                                                <textarea rows={2} className={inputCls + ' flex-1'} value={s.text} onChange={e => patchItem('pilot_steps', i, { text: e.target.value })} placeholder="O que acontece nessa etapa" />
+                                                <button onClick={() => removeItem('pilot_steps', i)} className="p-2 text-zinc-500 hover:text-red-400"><Trash2 className="w-4 h-4" /></button>
+                                            </div>
+                                        ))}
+                                        <button onClick={() => addItem<PilotStep>('pilot_steps', { label: '', text: '' })} className="text-xs text-emerald-400 hover:text-emerald-300 flex items-center gap-1"><Plus className="w-3 h-3" /> Adicionar etapa</button>
+                                    </div>
+                                </Labeled>
+                            </div>
+
+                            {/* Limites */}
+                            <GroupTitle>Limites da parceria</GroupTitle>
+                            <div className="grid grid-cols-1 gap-4">
+                                <Labeled label="Título"><input className={inputCls} value={form.limits_title} onChange={e => set('limits_title', e.target.value)} placeholder="Limites da parceria" /></Labeled>
+                                <Labeled label="Texto"><textarea rows={2} className={inputCls} value={form.limits_body} onChange={e => set('limits_body', e.target.value)} /></Labeled>
+                                <div className="space-y-2">
+                                    {form.limits_items.map((l, i) => (
+                                        <div key={i} className="flex items-center gap-2">
+                                            <input className={inputCls + ' flex-1'} value={l} onChange={e => setForm(f => ({ ...f, limits_items: f.limits_items.map((x, k) => k === i ? e.target.value : x) }))} placeholder="Nenhuma ação pode prejudicar estudo, treino ou saúde" />
+                                            <button onClick={() => setForm(f => ({ ...f, limits_items: f.limits_items.filter((_, k) => k !== i) }))} className="p-2 text-zinc-500 hover:text-red-400"><Trash2 className="w-4 h-4" /></button>
+                                        </div>
+                                    ))}
+                                    <button onClick={() => setForm(f => ({ ...f, limits_items: [...f.limits_items, ''] }))} className="text-xs text-emerald-400 hover:text-emerald-300 flex items-center gap-1"><Plus className="w-3 h-3" /> Adicionar limite</button>
+                                </div>
+                            </div>
+
                             {/* Scholarship */}
-                            <GroupTitle>Impacto da bolsa</GroupTitle>
+                            <GroupTitle>Apoio financeiro</GroupTitle>
+                            <Labeled label="Título da seção" hint="Ex.: 'Um apoio que tenha impacto real'. Vazio = 'O impacto de uma bolsa'.">
+                                <input className={inputCls} value={form.scholarship_title} onChange={e => set('scholarship_title', e.target.value)} placeholder="Um apoio que tenha impacto real" />
+                            </Labeled>
+                            <Labeled label="Âncora do pedido (sem reais)" hint="Ex.: 'cerca de 30%'. Vira o número grande da seção quando não há tabela de custos. O rótulo abaixo vira a legenda.">
+                                <input className={inputCls} value={form.scholarship_anchor} onChange={e => set('scholarship_anchor', e.target.value)} placeholder="cerca de 30%" />
+                            </Labeled>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <Labeled label="Rótulo da bolsa"><input className={inputCls} value={form.scholarship_label} onChange={e => set('scholarship_label', e.target.value)} placeholder="Bolsa de estudos (mensalidade)" /></Labeled>
+                                <Labeled label="Rótulo da bolsa" hint="Legenda da âncora, ou rótulo do valor em reais quando houver."><input className={inputCls} value={form.scholarship_label} onChange={e => set('scholarship_label', e.target.value)} placeholder="Bolsa de estudos (mensalidade)" /></Labeled>
                                 <Labeled label="Valor mensal da bolsa" hint={`Impacto calculado: ${pct}% do investimento anual`}>
                                     <input type="number" className={inputCls} value={form.scholarship_monthly} onChange={e => set('scholarship_monthly', parseFloat(e.target.value) || 0)} />
                                 </Labeled>
@@ -683,6 +800,26 @@ export default function PartnershipsTab() {
                             </div>
 
                             {/* Closing + contact */}
+                            {/* Ordem das seções */}
+                            <GroupTitle>Ordem das seções (avançado)</GroupTitle>
+                            <Labeled
+                                label="Ordem da narrativa"
+                                hint={`Uma chave por linha. Vazio = ordem padrão. Chaves válidas: ${SECTION_KEYS.join(', ')}.`}
+                            >
+                                <textarea
+                                    rows={4}
+                                    className={inputCls + ' font-mono text-xs'}
+                                    value={form.section_order.join('\n')}
+                                    onChange={e => set('section_order', e.target.value.split('\n').map(s => s.trim()).filter(Boolean))}
+                                    placeholder={'academic\nresults\npotential'}
+                                />
+                            </Labeled>
+                            {form.section_order.some(k => !SECTION_KEYS.includes(k)) && (
+                                <p className="text-[11px] text-amber-400">
+                                    Chave desconhecida — será ignorada: {form.section_order.filter(k => !SECTION_KEYS.includes(k)).join(', ')}
+                                </p>
+                            )}
+
                             <GroupTitle>Fechamento e contato</GroupTitle>
                             <div className="grid grid-cols-1 gap-4">
                                 <Labeled label="Título do fechamento"><input className={inputCls} value={form.closing_title} onChange={e => set('closing_title', e.target.value)} /></Labeled>
