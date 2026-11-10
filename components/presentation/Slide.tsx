@@ -18,6 +18,8 @@ export function Slide({
     children,
     align = 'start',
     photos,
+    watermark,
+    titleSize = 'md',
 }: {
     kicker?: string;
     title?: React.ReactNode;
@@ -26,6 +28,10 @@ export function Slide({
     align?: 'start' | 'center';
     /** Liga o formato de duas colunas, com as fotos na borda direita. */
     photos?: { url: string; caption?: string }[];
+    /** Numero gigante e apagado ao fundo, como marca d'agua da tela. */
+    watermark?: string;
+    /** 'lg' nas telas de frase, onde o titulo e o conteudo principal. */
+    titleSize?: 'md' | 'lg';
 }) {
     const body = (
         <>
@@ -36,7 +42,13 @@ export function Slide({
                 </p>
             )}
             {title && (
-                <h2 className="font-brand text-[1.75rem] font-bold uppercase leading-[1.03] tracking-[-0.02em] text-hf-ice sm:text-[2.4rem]">
+                <h2
+                    className={`font-brand font-bold uppercase leading-[1.0] tracking-[-0.025em] text-hf-ice [text-wrap:balance] ${
+                        titleSize === 'lg'
+                            ? 'text-[1.95rem] sm:text-[2.5rem] lg:text-[2.9rem]'
+                            : 'text-[1.75rem] sm:text-[2.4rem]'
+                    }`}
+                >
                     {title}
                 </h2>
             )}
@@ -69,13 +81,49 @@ export function Slide({
     }
 
     return (
-        <section
-            className={`mx-auto flex min-h-full w-full max-w-5xl flex-col px-7 pb-12 pt-20 sm:px-12 sm:pt-24 ${
-                align === 'center' ? 'justify-center' : ''
-            }`}
-        >
-            {body}
+        <section className="relative flex min-h-full w-full overflow-hidden">
+            {watermark && (
+                <span
+                    aria-hidden="true"
+                    className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 select-none font-brand text-[9rem] font-black leading-none tracking-[-0.06em] text-hf-gold/[0.07] sm:right-10 sm:text-[15rem] lg:text-[19rem]"
+                >
+                    {watermark}
+                </span>
+            )}
+            <div
+                className={`relative mx-auto flex w-full max-w-5xl flex-col px-7 pb-12 pt-20 sm:px-12 sm:pt-24 ${
+                    align === 'center' ? 'justify-center' : ''
+                }`}
+            >
+                {body}
+            </div>
         </section>
+    );
+}
+
+interface FigureCardProps {
+    figure: string;
+    label: string;
+    text?: string;
+}
+
+/**
+ * Cartao de numero em destaque: a cifra em dourado, o rotulo do que ela mede e
+ * uma linha explicando. Tres por tela, no maximo.
+ */
+export function FigureCard({ figure, label, text }: FigureCardProps) {
+    return (
+        <div className="flex min-h-[9.5rem] flex-col rounded-2xl border border-hf-line/70 bg-hf-surface p-6">
+            <span className="font-brand text-[2rem] font-black leading-none tracking-[-0.04em] text-hf-gold sm:text-[2.5rem]">
+                {figure}
+            </span>
+            <span className="mt-4 font-ui text-[11px] font-semibold uppercase tracking-[0.16em] text-hf-ice/55">
+                {label}
+            </span>
+            {text && (
+                <p className="mt-2.5 font-ui text-[13px] leading-relaxed text-hf-ice/60">{text}</p>
+            )}
+        </div>
     );
 }
 

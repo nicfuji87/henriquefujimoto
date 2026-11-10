@@ -5,7 +5,7 @@ import { ArrowRight, Check, Copy, ExternalLink } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { HFSymbol } from '../components/brand/HFLogo';
 import Deck, { type DeckSlide } from '../components/presentation/Deck';
-import { Slide, BigStat, PhotoRow } from '../components/presentation/Slide';
+import { Slide, BigStat, PhotoRow, FigureCard } from '../components/presentation/Slide';
 import CoverSlide from '../components/presentation/CoverSlide';
 import CompetitionsExplorer, {
     type PresentationCompetition,
@@ -36,6 +36,11 @@ interface PilotStep {
 interface AcademicCard {
     title: string;
     text: string;
+}
+interface StudentStat {
+    figure: string;
+    label: string;
+    text?: string;
 }
 interface RoutineDay {
     day: string;
@@ -95,6 +100,11 @@ interface PresentationProject {
     cover_title: string | null;
     cover_title_accent: string | null;
     cover_body: string | null;
+    student_title: string | null;
+    student_body: string | null;
+    student_watermark: string | null;
+    student_note: string | null;
+    student_stats: StudentStat[] | null;
     closing_question: string | null;
     photos: Photo[] | null;
     contact_whatsapp: string | null;
@@ -263,6 +273,10 @@ export default function PresentationPage() {
     );
 
     const buildItems = useMemo(() => arr<BuildItem>(p?.build_items).filter((b) => b.title || b.text), [p]);
+    const studentStats = useMemo(
+        () => arr<StudentStat>(p?.student_stats).filter((st) => st.figure || st.label),
+        [p],
+    );
     const audienceMetrics = useMemo(
         () => arr<AudienceMetric>(p?.audience_metrics).filter((m) => m.value || m.label),
         [p],
@@ -354,32 +368,44 @@ export default function PresentationPage() {
             ),
         });
 
-        if (p.academic_body || arr<AcademicCard>(p.academic_cards).length > 0) {
-            const cards = arr<AcademicCard>(p.academic_cards).filter((c) => c.title || c.text).slice(0, 4);
+        if (p.student_body || studentStats.length > 0 || p.academic_body) {
+            // Sem os campos proprios da tela, ela ainda se monta com o que a
+            // proposta escrita ja tem.
+            const cards = arr<AcademicCard>(p.academic_cards)
+                .filter((c) => c.title || c.text)
+                .slice(0, 3);
+            const stats: StudentStat[] =
+                studentStats.length > 0
+                    ? studentStats
+                    : cards.map((c) => ({ figure: c.title, label: '', text: c.text }));
+
             list.push({
                 key: 'aluno',
                 label: 'Aluno antes de atleta',
                 node: (
                     <Slide
-                        kicker={n()}
-                        title={p.academic_title || 'Aluno antes de atleta'}
-                        lead={(p.academic_body || '').split('. ').slice(0, 2).join('. ').trim()}
+                        kicker={`${n()} / O ponto de partida`}
+                        align="center"
+                        titleSize="lg"
+                        title={p.student_title || p.academic_title || 'Aluno antes de atleta'}
+                        lead={
+                            p.student_body ||
+                            (p.academic_body || '').split('. ').slice(0, 2).join('. ').trim()
+                        }
+                        watermark={p.student_watermark || undefined}
                     >
-                        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                            {cards.map((c, i) => (
-                                <div
-                                    key={i}
-                                    className="rounded-2xl border border-hf-line/70 bg-hf-surface p-5"
-                                >
-                                    <h3 className="font-brand text-[15px] font-bold uppercase text-hf-ice">
-                                        {c.title}
-                                    </h3>
-                                    <p className="mt-2 font-ui text-[13px] leading-relaxed text-hf-ice/60">
-                                        {c.text}
-                                    </p>
-                                </div>
+                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                            {stats.slice(0, 3).map((st, i) => (
+                                <React.Fragment key={`${st.figure}-${i}`}>
+                                    <FigureCard figure={st.figure} label={st.label} text={st.text} />
+                                </React.Fragment>
                             ))}
                         </div>
+                        {p.student_note && (
+                            <p className="mt-7 max-w-2xl border-l-2 border-hf-gold/50 pl-4 font-ui text-[13px] leading-relaxed text-hf-ice/55 sm:text-sm">
+                                {p.student_note}
+                            </p>
+                        )}
                     </Slide>
                 ),
             });
@@ -774,6 +800,7 @@ export default function PresentationPage() {
         partnerPhotos,
         audienceMetrics,
         buildItems,
+        studentStats,
         pilotSteps,
         picked,
         togglePicked,
