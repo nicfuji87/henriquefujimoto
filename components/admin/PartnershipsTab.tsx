@@ -112,6 +112,9 @@ interface Project {
     section_order: string[];
     presentation_label: string;
     closing_question: string;
+    cover_title: string;
+    cover_title_accent: string;
+    cover_body: string;
     presenter_notes: PresenterNote[];
     presenter_ruler: RulerStep[];
     presenter_objections: Objection[];
@@ -152,6 +155,7 @@ const EMPTY: Project = {
     pilot_title: '', pilot_body: '', pilot_steps: [],
     limits_title: '', limits_body: '', limits_items: [], section_order: [],
     presentation_label: '', closing_question: '',
+    cover_title: '', cover_title_accent: '', cover_body: '',
     presenter_notes: [], presenter_ruler: [], presenter_objections: [],
 };
 
@@ -823,6 +827,18 @@ export default function PartnershipsTab() {
                             {/* Closing + contact */}
                             {/* Apresentação — telas */}
                             <GroupTitle>Apresentação · telas</GroupTitle>
+                            <Labeled label="Chamada da capa — parte em branco" hint="Vazio = usa o título do projeto.">
+                                <input className={inputCls} value={form.cover_title} onChange={e => set('cover_title', e.target.value)} placeholder="O Marista já faz parte da história." />
+                            </Labeled>
+                            <Labeled label="Chamada da capa — parte em dourado">
+                                <input className={inputCls} value={form.cover_title_accent} onChange={e => set('cover_title_accent', e.target.value)} placeholder="Vamos escrever o próximo capítulo?" />
+                            </Labeled>
+                            <Labeled label="Texto da capa" hint="Vazio = usa o subtítulo do hero.">
+                                <textarea rows={2} className={inputCls} value={form.cover_body} onChange={e => set('cover_body', e.target.value)} />
+                            </Labeled>
+                            <p className="text-[11px] text-zinc-500">
+                                As fotos da capa são as marcadas como <strong className="text-zinc-300">Por que o parceiro</strong> na seção Fotos. Sem elas, a capa usa as de Resultados.
+                            </p>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <Labeled label="Etiqueta do topo" hint="Canto superior direito de toda tela.">
                                     <input className={inputCls} value={form.presentation_label} onChange={e => set('presentation_label', e.target.value)} placeholder="Apresentação de parceria · 2027" />

@@ -6,6 +6,7 @@ import { supabase } from '../lib/supabase';
 import { HFSymbol } from '../components/brand/HFLogo';
 import Deck, { type DeckSlide } from '../components/presentation/Deck';
 import { Slide, BigStat, PhotoRow } from '../components/presentation/Slide';
+import CoverSlide from '../components/presentation/CoverSlide';
 import CompetitionsExplorer, {
     type PresentationCompetition,
 } from '../components/presentation/CompetitionsExplorer';
@@ -91,6 +92,9 @@ interface PresentationProject {
     closing_body: string | null;
     closing_image_url: string | null;
     presentation_label: string | null;
+    cover_title: string | null;
+    cover_title_accent: string | null;
+    cover_body: string | null;
     closing_question: string | null;
     photos: Photo[] | null;
     contact_whatsapp: string | null;
@@ -276,10 +280,11 @@ export default function PresentationPage() {
     // Paineis de borda da capa e do fechamento. Retrato cai melhor numa faixa
     // alta, entao priorizamos as fotos de podio e a foto marcada como final.
     const resultPhotos = useMemo(() => photos.filter((ph) => ph.section === 'results'), [photos]);
-    const coverPhotos = useMemo(
-        () => (resultPhotos.length > 0 ? resultPhotos.slice(0, 2) : photos.slice(0, 2)),
-        [resultPhotos, photos],
-    );
+    const coverPhotos = useMemo(() => {
+        const partner = photos.filter((ph) => ph.section === 'why_partner');
+        const pool = partner.length > 0 ? partner : resultPhotos.length > 0 ? resultPhotos : photos;
+        return pool.slice(0, 2);
+    }, [photos, resultPhotos]);
     const closingPhotos = useMemo(() => {
         const marked = (p?.closing_image_url && p.closing_image_url.trim())
             ? [{ url: p.closing_image_url.trim() }]
@@ -338,26 +343,14 @@ export default function PresentationPage() {
             key: 'capa',
             label: 'Abertura',
             node: (
-                <Slide photos={coverPhotos}>
-                    {p.hero_kicker && (
-                        <p className="mb-5 flex items-center gap-3 font-ui text-[11px] font-semibold uppercase tracking-[0.22em] text-hf-gold">
-                            <span className="h-px w-6 bg-hf-gold" />
-                            {p.hero_kicker}
-                        </p>
-                    )}
-                    <h1 className="font-brand text-[2.1rem] font-extrabold uppercase leading-[0.95] tracking-[-0.03em] text-hf-ice sm:text-[3.2rem]">
-                        {p.project_title}
-                    </h1>
-                    {p.hero_subtitle && (
-                        <p className="mt-7 max-w-xl font-ui text-[16px] leading-relaxed text-hf-ice/60 sm:text-[19px]">
-                            {p.hero_subtitle}
-                        </p>
-                    )}
-                    <span className="mt-10 block h-px w-16 bg-hf-gold/50" />
-                    <p className="mt-5 font-ui text-[11px] uppercase tracking-[0.2em] text-hf-ice/35">
-                        henriquefujimoto.com.br
-                    </p>
-                </Slide>
+                <CoverSlide
+                    kicker={p.hero_kicker || undefined}
+                    title={p.cover_title || p.project_title}
+                    titleAccent={p.cover_title_accent || undefined}
+                    body={p.cover_body || p.hero_subtitle || undefined}
+                    footer="henriquefujimoto.com.br"
+                    photos={coverPhotos}
+                />
             ),
         });
 
