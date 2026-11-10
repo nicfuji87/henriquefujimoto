@@ -104,6 +104,7 @@ interface PresentationProject {
     student_body: string | null;
     student_watermark: string | null;
     student_note: string | null;
+    student_backdrop_url: string | null;
     student_stats: StudentStat[] | null;
     closing_question: string | null;
     photos: Photo[] | null;
@@ -393,6 +394,7 @@ export default function PresentationPage() {
                             (p.academic_body || '').split('. ').slice(0, 2).join('. ').trim()
                         }
                         watermark={p.student_watermark || undefined}
+                        backdrop={p.student_backdrop_url || undefined}
                     >
                         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                             {stats.slice(0, 3).map((st, i) => (

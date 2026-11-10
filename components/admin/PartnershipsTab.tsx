@@ -26,6 +26,7 @@ interface PilotStep { label: string; text: string; }
 interface PresenterNote { slide: string; text: string; }
 interface RulerStep { label: string; value: string; note?: string; }
 interface Objection { q: string; a: string; }
+interface StudentStat { figure: string; label: string; text?: string; }
 
 interface Project {
     id?: string;
@@ -115,6 +116,12 @@ interface Project {
     cover_title: string;
     cover_title_accent: string;
     cover_body: string;
+    student_title: string;
+    student_body: string;
+    student_note: string;
+    student_watermark: string;
+    student_backdrop_url: string;
+    student_stats: StudentStat[];
     presenter_notes: PresenterNote[];
     presenter_ruler: RulerStep[];
     presenter_objections: Objection[];
@@ -156,6 +163,7 @@ const EMPTY: Project = {
     limits_title: '', limits_body: '', limits_items: [], section_order: [],
     presentation_label: '', closing_question: '',
     cover_title: '', cover_title_accent: '', cover_body: '',
+    student_title: '', student_body: '', student_note: '', student_watermark: '', student_backdrop_url: '', student_stats: [],
     presenter_notes: [], presenter_ruler: [], presenter_objections: [],
 };
 
@@ -845,6 +853,35 @@ export default function PartnershipsTab() {
                                 </Labeled>
                                 <Labeled label="Pergunta final" hint="Linha em dourado na última tela, abaixo do fechamento.">
                                     <input className={inputCls} value={form.closing_question} onChange={e => set('closing_question', e.target.value)} placeholder="Existe espaço para construirmos esse piloto em 2027?" />
+                                </Labeled>
+                            </div>
+
+                            {/* Apresentação — tela 02 */}
+                            <GroupTitle>Apresentação · tela 02 (o ponto de partida)</GroupTitle>
+                            <Labeled label="Frase da tela"><input className={inputCls} value={form.student_title} onChange={e => set('student_title', e.target.value)} placeholder="Antes do pódio, há um aluno." /></Labeled>
+                            <Labeled label="Texto de apoio"><textarea rows={2} className={inputCls} value={form.student_body} onChange={e => set('student_body', e.target.value)} /></Labeled>
+                            <Labeled label="Três números (cifra + rótulo + explicação)">
+                                <div className="space-y-2">
+                                    {form.student_stats.map((st, i) => (
+                                        <div key={i} className="flex items-start gap-2">
+                                            <input className={inputCls + ' w-24'} value={st.figure} onChange={e => patchItem('student_stats', i, { figure: e.target.value })} placeholder="2019" />
+                                            <div className="flex-1 space-y-2">
+                                                <input className={inputCls} value={st.label} onChange={e => patchItem('student_stats', i, { label: e.target.value })} placeholder="No Marista desde" />
+                                                <textarea rows={2} className={inputCls} value={st.text || ''} onChange={e => patchItem('student_stats', i, { text: e.target.value })} placeholder="Uma linha explicando" />
+                                            </div>
+                                            <button onClick={() => removeItem('student_stats', i)} className="p-2 text-zinc-500 hover:text-red-400"><Trash2 className="w-4 h-4" /></button>
+                                        </div>
+                                    ))}
+                                    <button onClick={() => addItem<StudentStat>('student_stats', { figure: '', label: '', text: '' })} className="text-xs text-emerald-400 hover:text-emerald-300 flex items-center gap-1"><Plus className="w-3 h-3" /> Adicionar número</button>
+                                </div>
+                            </Labeled>
+                            <Labeled label="Nota de rodapé"><input className={inputCls} value={form.student_note} onChange={e => set('student_note', e.target.value)} /></Labeled>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <Labeled label="Imagem de fundo" hint="Caminho ou URL. Entra em marca d'água, sem cor e bem apagada.">
+                                    <input className={inputCls} value={form.student_backdrop_url} onChange={e => set('student_backdrop_url', e.target.value)} placeholder="/proposta/marista-portaria.webp" />
+                                </Labeled>
+                                <Labeled label="Número de fundo" hint="Só aparece quando não há imagem de fundo.">
+                                    <input className={inputCls} value={form.student_watermark} onChange={e => set('student_watermark', e.target.value)} placeholder="2019" />
                                 </Labeled>
                             </div>
 

@@ -19,6 +19,7 @@ export function Slide({
     align = 'start',
     photos,
     watermark,
+    backdrop,
     titleSize = 'md',
 }: {
     kicker?: string;
@@ -30,6 +31,8 @@ export function Slide({
     photos?: { url: string; caption?: string }[];
     /** Numero gigante e apagado ao fundo, como marca d'agua da tela. */
     watermark?: string;
+    /** Imagem de fundo em marca d'agua. Quando existe, substitui o numero. */
+    backdrop?: string;
     /** 'lg' nas telas de frase, onde o titulo e o conteudo principal. */
     titleSize?: 'md' | 'lg';
 }) {
@@ -82,13 +85,28 @@ export function Slide({
 
     return (
         <section className="relative flex min-h-full w-full overflow-hidden">
-            {watermark && (
-                <span
-                    aria-hidden="true"
-                    className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 select-none font-brand text-[9rem] font-black leading-none tracking-[-0.06em] text-hf-gold/[0.07] sm:right-10 sm:text-[15rem] lg:text-[19rem]"
-                >
-                    {watermark}
-                </span>
+            {/* Marca d'agua: imagem quando ha uma, senao o numero. As duas juntas
+                disputariam o mesmo espaco atras do texto. */}
+            {backdrop ? (
+                <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
+                    {/* Recorte da placa da escola, no alto a direita, sangrando pela
+                        borda. Sem cor propria: e so a forma, no branco gelo da marca. */}
+                    <img
+                        src={backdrop}
+                        alt=""
+                        loading="lazy"
+                        className="absolute -right-[5%] top-[9%] w-[72%] max-w-[620px] opacity-[0.14] sm:w-[52%] lg:w-[42%]"
+                    />
+                </div>
+            ) : (
+                watermark && (
+                    <span
+                        aria-hidden="true"
+                        className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 select-none font-brand text-[9rem] font-black leading-none tracking-[-0.06em] text-hf-gold/[0.07] sm:right-10 sm:text-[15rem] lg:text-[19rem]"
+                    >
+                        {watermark}
+                    </span>
+                )
             )}
             <div
                 className={`relative mx-auto flex w-full max-w-5xl flex-col px-7 pb-12 pt-20 sm:px-12 sm:pt-24 ${
