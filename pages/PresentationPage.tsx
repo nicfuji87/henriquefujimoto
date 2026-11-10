@@ -5,7 +5,7 @@ import { ArrowRight, Check, Copy, ExternalLink } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { HFSymbol } from '../components/brand/HFLogo';
 import Deck, { type DeckSlide } from '../components/presentation/Deck';
-import { Slide, BigStat } from '../components/presentation/Slide';
+import { Slide, BigStat, PhotoRow } from '../components/presentation/Slide';
 import CompetitionsExplorer, {
     type PresentationCompetition,
 } from '../components/presentation/CompetitionsExplorer';
@@ -90,6 +90,8 @@ interface PresentationProject {
     closing_title: string | null;
     closing_body: string | null;
     closing_image_url: string | null;
+    presentation_label: string | null;
+    closing_question: string | null;
     photos: Photo[] | null;
     contact_whatsapp: string | null;
     presenter_notes: PresenterNote[] | null;
@@ -271,11 +273,35 @@ export default function PresentationPage() {
         () => photos.filter((ph) => ph.section === 'why_partner').slice(0, 2),
         [photos],
     );
-    const coverPhoto =
-        (p?.closing_image_url && p.closing_image_url.trim()) ||
-        photoFor('closing')?.url ||
-        photoFor('results')?.url ||
-        '';
+    // Paineis de borda da capa e do fechamento. Retrato cai melhor numa faixa
+    // alta, entao priorizamos as fotos de podio e a foto marcada como final.
+    const resultPhotos = useMemo(() => photos.filter((ph) => ph.section === 'results'), [photos]);
+    const coverPhotos = useMemo(
+        () => (resultPhotos.length > 0 ? resultPhotos.slice(0, 2) : photos.slice(0, 2)),
+        [resultPhotos, photos],
+    );
+    const closingPhotos = useMemo(() => {
+        const marked = (p?.closing_image_url && p.closing_image_url.trim())
+            ? [{ url: p.closing_image_url.trim() }]
+            : photoFor('closing')
+              ? [photoFor('closing')!]
+              : [];
+        const extra = resultPhotos.filter((ph) => ph.url !== marked[0]?.url).slice(0, 1);
+        return [...marked, ...extra];
+    }, [p?.closing_image_url, photoFor, resultPhotos]);
+
+    // Estados em que ele competiu representando a propria escola.
+    const partnerStates = useMemo(() => {
+        if (!partnerWord) return {};
+        const out: Record<string, string> = {};
+        const needle = partnerWord.toLowerCase();
+        for (const c of competitions) {
+            if (!(c.name || '').toLowerCase().includes(needle)) continue;
+            const uf = (c.location || '').trim().slice(-2).toUpperCase();
+            if (uf) out[uf] = `pelo ${partnerWord}`;
+        }
+        return out;
+    }, [competitions, partnerWord]);
 
     const proposalUrl = `${typeof window !== 'undefined' ? window.location.origin : ''}/parceria/${slug}`;
 
@@ -312,30 +338,24 @@ export default function PresentationPage() {
             key: 'capa',
             label: 'Abertura',
             node: (
-                <Slide align="center">
-                    <div className="flex flex-wrap items-center gap-5">
-                        <HFSymbol className="h-12 w-auto text-hf-ice" title="Henrique Fujimoto" />
-                        {p.partner_logo_url && (
-                            <>
-                                <span className="h-10 w-px bg-hf-line" />
-                                <img
-                                    src={p.partner_logo_url}
-                                    alt={p.partner_name || ''}
-                                    className="h-14 w-auto max-w-[180px] object-contain"
-                                />
-                            </>
-                        )}
-                    </div>
-                    <h1 className="mt-10 font-brand text-[2.1rem] font-extrabold uppercase leading-[0.98] tracking-[-0.015em] text-hf-ice sm:text-[3.4rem]">
+                <Slide photos={coverPhotos}>
+                    {p.hero_kicker && (
+                        <p className="mb-5 flex items-center gap-3 font-ui text-[11px] font-semibold uppercase tracking-[0.22em] text-hf-gold">
+                            <span className="h-px w-6 bg-hf-gold" />
+                            {p.hero_kicker}
+                        </p>
+                    )}
+                    <h1 className="font-brand text-[2.1rem] font-extrabold uppercase leading-[0.95] tracking-[-0.03em] text-hf-ice sm:text-[3.2rem]">
                         {p.project_title}
                     </h1>
                     {p.hero_subtitle && (
-                        <p className="mt-6 max-w-2xl font-ui text-[17px] leading-relaxed text-hf-ice/65 sm:text-xl">
+                        <p className="mt-7 max-w-xl font-ui text-[16px] leading-relaxed text-hf-ice/60 sm:text-[19px]">
                             {p.hero_subtitle}
                         </p>
                     )}
-                    <p className="mt-10 font-ui text-[12px] uppercase tracking-[0.2em] text-hf-ice/35">
-                        Henrique Fujimoto · Judoca Sub-15
+                    <span className="mt-10 block h-px w-16 bg-hf-gold/50" />
+                    <p className="mt-5 font-ui text-[11px] uppercase tracking-[0.2em] text-hf-ice/35">
+                        henriquefujimoto.com.br
                     </p>
                 </Slide>
             ),
@@ -457,20 +477,23 @@ export default function PresentationPage() {
                 ),
             });
 
-            if (stats.last12.length > 0) {
-                list.push({
-                    key: 'mapa',
-                    label: 'Onde ele competiu',
-                    node: (
-                        <Slide kicker={n()} title="Onde ele competiu no último ano">
-                            <CompetitionMap
-                                competitions={stats.last12}
-                                caption={`${stats.last12.length} competições nos últimos 12 meses. Cada viagem significa inscrição, deslocamento, hospedagem e aula reposta na volta.`}
-                            />
-                        </Slide>
-                    ),
-                });
-            }
+            list.push({
+                key: 'mapa',
+                label: 'Onde ele competiu',
+                node: (
+                    <Slide kicker={n()} title="Onde ele competiu">
+                        <CompetitionMap
+                            competitions={competitions}
+                            highlight={partnerStates}
+                            caption={
+                                `${stats.total} competições desde ${stats.firstYear ?? 2023}, ` +
+                                `${stats.last12.length} delas nos últimos 12 meses. ` +
+                                'Cada estado fora do DF significa inscrição, estrada, hospedagem e aula reposta na volta.'
+                            }
+                        />
+                    </Slide>
+                ),
+            });
         }
 
         if (p.why_now_body) {
@@ -515,25 +538,7 @@ export default function PresentationPage() {
                         title={p.why_marista_title || `Por que o ${partnerWord}`}
                         lead={p.why_marista_body}
                     >
-                        {partnerPhotos.length > 0 && (
-                            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                                {partnerPhotos.map((ph, i) => (
-                                    <figure key={i}>
-                                        <img
-                                            src={ph.url}
-                                            alt={ph.caption || ''}
-                                            loading="lazy"
-                                            className="h-52 w-full rounded-2xl border border-hf-line/70 object-cover"
-                                        />
-                                        {ph.caption && (
-                                            <figcaption className="mt-2 font-ui text-[12px] text-hf-ice/45">
-                                                {ph.caption}
-                                            </figcaption>
-                                        )}
-                                    </figure>
-                                ))}
-                            </div>
-                        )}
+                        <PhotoRow photos={partnerPhotos} />
                     </Slide>
                 ),
             });
@@ -555,11 +560,8 @@ export default function PresentationPage() {
                                 ))}
                             </div>
                         )}
-                        {p.audience_note && (
-                            <p className="mt-4 max-w-3xl border-l-2 border-hf-ice/15 pl-4 font-ui text-[12px] leading-relaxed text-hf-ice/45">
-                                {p.audience_note}
-                            </p>
-                        )}
+                        {/* A nota longa sobre o bloqueio fica na proposta escrita. Aqui
+                            o proprio grafico mostra o buraco, e o roteiro explica. */}
                     </Slide>
                 ),
             });
@@ -699,28 +701,32 @@ export default function PresentationPage() {
             key: 'fecho',
             label: 'Fechamento',
             node: (
-                <Slide align="center">
-                    {coverPhoto && (
-                        <img
-                            src={coverPhoto}
-                            alt=""
-                            loading="lazy"
-                            className="mb-8 h-40 w-full rounded-2xl border border-hf-line/70 object-cover sm:h-52"
-                        />
-                    )}
-                    <h2 className="font-brand text-[1.9rem] font-extrabold uppercase leading-[1.02] tracking-[-0.015em] text-hf-ice sm:text-[2.8rem]">
+                <Slide photos={closingPhotos}>
+                    <p className="mb-5 flex items-center gap-3 font-ui text-[11px] font-semibold uppercase tracking-[0.22em] text-hf-gold">
+                        <span className="h-px w-6 bg-hf-gold" />
+                        O convite
+                    </p>
+                    <h2 className="font-brand text-[1.9rem] font-extrabold uppercase leading-[1.0] tracking-[-0.03em] text-hf-ice sm:text-[2.7rem]">
                         {p.closing_title || 'Vamos construir isso juntos'}
                     </h2>
                     {p.closing_body && (
-                        <p className="mt-5 max-w-2xl font-ui text-[16px] leading-relaxed text-hf-ice/65 sm:text-lg">
+                        <p className="mt-6 max-w-xl font-ui text-[15px] leading-relaxed text-hf-ice/60 sm:text-[17px]">
                             {p.closing_body}
                         </p>
                     )}
 
-                    <div className="mt-9 flex flex-col gap-6 sm:flex-row sm:items-start sm:gap-10">
+                    {/* A pergunta que fica no ar quando a tela parar aqui. Linha de
+                        texto, nao botao: ninguem clica numa apresentacao. */}
+                    {p.closing_question && (
+                        <p className="mt-7 max-w-xl border-t border-hf-gold/30 pt-5 font-brand text-[17px] font-bold leading-snug text-hf-gold sm:text-[21px]">
+                            {p.closing_question}
+                        </p>
+                    )}
+
+                    <div className="mt-8 flex flex-col gap-6 sm:flex-row sm:items-start sm:gap-8">
                         <div className="shrink-0">
-                            <QrCode value={proposalUrl} />
-                            <p className="mt-3 max-w-[168px] font-ui text-[11px] leading-relaxed text-hf-ice/40">
+                            <QrCode value={proposalUrl} size={132} />
+                            <p className="mt-3 max-w-[132px] font-ui text-[11px] leading-relaxed text-hf-ice/40">
                                 Aponte a câmera para abrir a proposta completa.
                             </p>
                         </div>
@@ -778,7 +784,9 @@ export default function PresentationPage() {
         pilotSteps,
         picked,
         togglePicked,
-        coverPhoto,
+        coverPhotos,
+        closingPhotos,
+        partnerStates,
         proposalUrl,
         copied,
     ]);
@@ -817,6 +825,16 @@ export default function PresentationPage() {
         <>
             <Deck
                 slides={slides}
+                brand={
+                    <>
+                        <HFSymbol className="h-7 w-auto text-hf-ice" title="Henrique Fujimoto" />
+                        <span className="h-4 w-px bg-hf-line" />
+                        <span className="truncate font-ui text-[10px] font-semibold uppercase tracking-[0.2em] text-hf-ice/55">
+                            Henrique Fujimoto {p.partner_name ? `× ${partnerWord}` : ''}
+                        </span>
+                    </>
+                }
+                brandRight={p.presentation_label || 'Apresentação de parceria'}
                 presenterOn={presenterOn}
                 onTogglePresenter={() => setPresenterOn((v) => !v)}
                 onSlideChange={(s) => setCurrentKey(s.key)}

@@ -13,9 +13,12 @@ import type { PresentationCompetition } from './CompetitionsExplorer';
 export default function CompetitionMap({
     competitions,
     caption,
+    highlight,
 }: {
     competitions: PresentationCompetition[];
     caption?: string;
+    /** UFs com marca propria na lista, ex.: onde competiu pela escola. */
+    highlight?: Record<string, string>;
 }) {
     const byState = useMemo<Record<string, number>>(() => {
         const result: Record<string, number> = {};
@@ -35,10 +38,12 @@ export default function CompetitionMap({
 
     if (entries.length === 0) return null;
 
+    // Raiz quadrada em vez de proporcao direta: com 23 competicoes no DF, uma
+    // escala linear deixaria os estados de uma competicao praticamente invisiveis.
     const fill = (code: string) => {
         const v = byState[code] || 0;
         if (!v) return 'rgba(244,246,248,0.07)';
-        return `rgba(212,163,54,${0.25 + (v / max) * 0.7})`;
+        return `rgba(212,163,54,${(0.38 + Math.sqrt(v / max) * 0.57).toFixed(3)})`;
     };
 
     return (
@@ -50,8 +55,14 @@ export default function CompetitionMap({
                             key={code}
                             d={d}
                             fill={fill(code)}
-                            stroke={byState[code] ? 'rgba(212,163,54,0.65)' : 'rgba(244,246,248,0.16)'}
-                            strokeWidth={byState[code] ? 1.4 : 0.8}
+                            stroke={
+                                highlight?.[code]
+                                    ? '#F4F6F8'
+                                    : byState[code]
+                                      ? 'rgba(212,163,54,0.65)'
+                                      : 'rgba(244,246,248,0.16)'
+                            }
+                            strokeWidth={highlight?.[code] ? 2 : byState[code] ? 1.4 : 0.8}
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             transition={{ duration: 0.5, delay: byState[code] ? 0.15 : 0 }}
@@ -91,10 +102,15 @@ export default function CompetitionMap({
                             transition={{ duration: 0.4, delay: 0.1 + i * 0.06 }}
                             className="flex items-baseline justify-between gap-4 border-b border-hf-line/60 pb-2 last:border-0"
                         >
-                            <span className="font-ui text-[15px] text-hf-ice/75">
+                            <span className="min-w-0 font-ui text-[15px] text-hf-ice/75">
                                 {stateCodeToName[code] || code}
+                                {highlight?.[code] && (
+                                    <span className="ml-2 font-ui text-[12px] text-hf-gold/80">
+                                        {highlight[code]}
+                                    </span>
+                                )}
                             </span>
-                            <span className="font-brand text-lg font-bold tabular-nums text-hf-gold">
+                            <span className="shrink-0 font-brand text-lg font-bold tabular-nums text-hf-gold">
                                 {count}
                             </span>
                         </motion.li>

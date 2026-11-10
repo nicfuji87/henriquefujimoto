@@ -91,6 +91,13 @@ export default function ReachChart() {
         return best && best.days >= 14 ? best : null;
     }, [data]);
 
+    // Uma marca por mes, escolhida antes de desenhar. Deixar o recharts decidir
+    // sobre 365 pontos faz os rotulos dancarem a cada redimensionamento.
+    const monthTicks = useMemo(
+        () => data.filter((d) => d.date.slice(-2) === '01').map((d) => d.date),
+        [data],
+    );
+
     if (loading) {
         return <div className="h-[220px] animate-pulse rounded-2xl bg-hf-surface-2" />;
     }
@@ -98,7 +105,7 @@ export default function ReachChart() {
 
     const tickFmt = (iso: string) => {
         const d = new Date(iso + 'T12:00:00');
-        return d.getDate() <= 7 ? MONTHS[d.getMonth()] : '';
+        return d.getMonth() === 0 ? `${MONTHS[0]}/${String(d.getFullYear()).slice(2)}` : MONTHS[d.getMonth()];
     };
 
     return (
@@ -106,7 +113,7 @@ export default function ReachChart() {
             <p className="font-ui text-[12px] font-semibold uppercase tracking-[0.16em] text-hf-gold">
                 Contas alcançadas a cada 28 dias
             </p>
-            <div className="mt-4 h-[200px] w-full sm:h-[240px]">
+            <div className="mt-4 h-[168px] w-full sm:h-[208px]">
                 <ResponsiveContainer width="100%" height="100%">
                     <AreaChart data={data} margin={{ top: 6, right: 6, left: -16, bottom: 0 }}>
                         <defs>
@@ -118,12 +125,13 @@ export default function ReachChart() {
                         <CartesianGrid stroke="rgba(244,246,248,0.07)" vertical={false} />
                         <XAxis
                             dataKey="date"
+                            ticks={monthTicks}
                             tickFormatter={tickFmt}
                             interval={0}
-                            tick={{ fill: 'rgba(244,246,248,0.4)', fontSize: 11 }}
+                            tick={{ fill: 'rgba(244,246,248,0.45)', fontSize: 11 }}
                             axisLine={false}
                             tickLine={false}
-                            minTickGap={0}
+                            padding={{ left: 2, right: 2 }}
                         />
                         <YAxis
                             tickFormatter={fmtShort}
@@ -149,6 +157,7 @@ export default function ReachChart() {
                             strokeWidth={2}
                             fill="url(#hfReach)"
                             connectNulls={false}
+                            isAnimationActive={false}
                             dot={false}
                             activeDot={{ r: 4, fill: '#D4A336' }}
                         />

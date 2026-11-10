@@ -110,6 +110,8 @@ interface Project {
     limits_body: string;
     limits_items: string[];
     section_order: string[];
+    presentation_label: string;
+    closing_question: string;
     presenter_notes: PresenterNote[];
     presenter_ruler: RulerStep[];
     presenter_objections: Objection[];
@@ -149,6 +151,7 @@ const EMPTY: Project = {
     differentiators_title: '', build_title: '', build_body: '', build_items: [],
     pilot_title: '', pilot_body: '', pilot_steps: [],
     limits_title: '', limits_body: '', limits_items: [], section_order: [],
+    presentation_label: '', closing_question: '',
     presenter_notes: [], presenter_ruler: [], presenter_objections: [],
 };
 
@@ -818,6 +821,17 @@ export default function PartnershipsTab() {
                             </div>
 
                             {/* Closing + contact */}
+                            {/* Apresentação — telas */}
+                            <GroupTitle>Apresentação · telas</GroupTitle>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <Labeled label="Etiqueta do topo" hint="Canto superior direito de toda tela.">
+                                    <input className={inputCls} value={form.presentation_label} onChange={e => set('presentation_label', e.target.value)} placeholder="Apresentação de parceria · 2027" />
+                                </Labeled>
+                                <Labeled label="Pergunta final" hint="Linha em dourado na última tela, abaixo do fechamento.">
+                                    <input className={inputCls} value={form.closing_question} onChange={e => set('closing_question', e.target.value)} placeholder="Existe espaço para construirmos esse piloto em 2027?" />
+                                </Labeled>
+                            </div>
+
                             {/* Apresentação — camada privada */}
                             <GroupTitle>Apresentação · camada privada</GroupTitle>
                             <p className="text-[11px] text-amber-400/80">

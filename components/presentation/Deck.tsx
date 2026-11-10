@@ -12,6 +12,10 @@ export interface DeckSlide {
 
 interface DeckProps {
     slides: DeckSlide[];
+    /** Marca fixa no topo esquerdo (simbolo + nome da parceria). */
+    brand?: React.ReactNode;
+    /** Etiqueta do topo direito (ex.: "Apresentação de parceria · 2027"). */
+    brandRight?: string;
     /** Camada do apresentador, desenhada por cima (ja filtrada pelo slide atual). */
     presenterLayer?: React.ReactNode;
     /** Chamado quando o slide muda, para o pai saber o que exibir no roteiro. */
@@ -31,6 +35,8 @@ interface DeckProps {
  */
 export default function Deck({
     slides,
+    brand,
+    brandRight,
     presenterLayer,
     onSlideChange,
     onTogglePresenter,
@@ -139,14 +145,24 @@ export default function Deck({
             onTouchStart={onTouchStart}
             onTouchEnd={onTouchEnd}
         >
-            {/* Trilha de progresso */}
-            <div className="absolute left-0 right-0 top-0 z-30 h-[3px] bg-hf-ice/10">
-                <motion.div
-                    className="h-full bg-hf-gold"
-                    animate={{ width: `${((index + 1) / total) * 100}%` }}
-                    transition={{ duration: 0.35, ease: 'easeOut' }}
-                />
-            </div>
+            {/* Assinatura: filete dourado curto no canto, como no material impresso. */}
+            <span className="pointer-events-none absolute left-0 top-0 z-30 h-[5px] w-28 bg-hf-gold sm:w-40" />
+
+            {/* Marca fixa: quem fala, e sobre o que, em toda tela. O veu atras
+                impede que o conteudo rolando passe por cima da marca. */}
+            {(brand || brandRight) && (
+                <>
+                    <div className="pointer-events-none absolute inset-x-0 top-0 z-20 h-24 bg-gradient-to-b from-hf-navy via-hf-navy/85 to-transparent" />
+                <div className="pointer-events-none absolute inset-x-0 top-0 z-30 flex items-center justify-between gap-4 px-7 pr-16 pt-7 sm:px-12 sm:pr-24 sm:pt-9">
+                    <div className="flex min-w-0 items-center gap-3.5">{brand}</div>
+                    {brandRight && (
+                        <span className="hidden shrink-0 font-ui text-[10px] font-semibold uppercase tracking-[0.22em] text-hf-ice/35 sm:block">
+                            {brandRight}
+                        </span>
+                    )}
+                </div>
+                </>
+            )}
 
             {/* Area do slide */}
             <div className="relative flex-1 overflow-hidden">
@@ -209,6 +225,15 @@ export default function Deck({
                     <LayoutGrid className="h-4 w-4" />
                     Telas
                 </button>
+            </div>
+
+            {/* Trilha de progresso rente a borda de baixo. */}
+            <div className="absolute inset-x-0 bottom-0 z-30 h-[3px] bg-hf-ice/8">
+                <motion.div
+                    className="h-full bg-hf-gold"
+                    animate={{ width: `${((index + 1) / total) * 100}%` }}
+                    transition={{ duration: 0.35, ease: 'easeOut' }}
+                />
             </div>
 
             {presenterLayer}
