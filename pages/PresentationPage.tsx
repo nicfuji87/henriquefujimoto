@@ -8,6 +8,7 @@ import Deck, { type DeckSlide } from '../components/presentation/Deck';
 import { Slide, BigStat, PhotoRow, FigureCard } from '../components/presentation/Slide';
 import CoverSlide from '../components/presentation/CoverSlide';
 import ResultsSlide from '../components/presentation/ResultsSlide';
+import WeekSlide from '../components/presentation/WeekSlide';
 import CostsSlide, { type CostAsk, type CostItem } from '../components/presentation/CostsSlide';
 import { type PresentationCompetition } from '../components/presentation/CompetitionsExplorer';
 import CompetitionMap from '../components/presentation/CompetitionMap';
@@ -41,6 +42,13 @@ interface StudentStat {
     figure: string;
     label: string;
     text?: string;
+}
+interface SlideWeek {
+    kicker?: string;
+    title?: string;
+    accent?: string;
+    lead?: string;
+    note?: string;
 }
 interface SlideResults {
     title?: string;
@@ -121,6 +129,7 @@ interface PresentationProject {
     student_note: string | null;
     student_backdrop_url: string | null;
     student_stats: StudentStat[] | null;
+    slide_week: SlideWeek | null;
     slide_results: SlideResults | null;
     slide_costs: SlideCosts | null;
     closing_question: string | null;
@@ -435,59 +444,26 @@ export default function PresentationPage() {
         }
 
         if (routineWeek.length > 0) {
+            const w = p.slide_week || {};
             list.push({
                 key: 'semana',
                 label: 'A semana',
                 node: (
-                    <Slide kicker={n()} title={p.routine_title || 'A semana'}>
-                        <div className="mb-6 flex flex-wrap gap-3">
-                            <BigStat value={`${String(trainingHours).replace('.', ',')}h`} label="de treino por semana" accent />
-                            {partnerBlocks > 0 && (
-                                <BigStat
-                                    value={partnerBlocks}
-                                    label={`treinos por semana dentro do ${partnerWord}`}
-                                />
-                            )}
-                        </div>
-                        <div className="space-y-2.5">
-                            {routineWeek.map((d, i) => (
-                                <div
-                                    key={i}
-                                    className="rounded-2xl border border-hf-line/70 bg-hf-surface p-4 sm:flex sm:gap-5"
-                                >
-                                    <div className="mb-2.5 shrink-0 font-ui text-[13px] font-semibold uppercase tracking-wide text-hf-gold sm:mb-0 sm:w-24">
-                                        {d.day}
-                                    </div>
-                                    <div className="flex flex-wrap gap-2">
-                                        {(d.blocks || []).map((b, j) => {
-                                            const here = partnerWord && b.label.includes(partnerWord);
-                                            return (
-                                                <span
-                                                    key={j}
-                                                    className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 ${
-                                                        here
-                                                            ? 'border-hf-gold/60 bg-hf-gold/10'
-                                                            : 'border-hf-line/70 bg-hf-navy'
-                                                    }`}
-                                                >
-                                                    <span className="font-ui text-[11px] font-semibold tabular-nums text-hf-gold">
-                                                        {b.time}
-                                                    </span>
-                                                    <span
-                                                        className={`font-ui text-[13px] ${
-                                                            here ? 'text-hf-ice' : 'text-hf-ice/70'
-                                                        }`}
-                                                    >
-                                                        {b.label}
-                                                    </span>
-                                                </span>
-                                            );
-                                        })}
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </Slide>
+                    <WeekSlide
+                        kicker={`${n()} / ${w.kicker || p.routine_title || 'A semana'}`}
+                        title={w.title || p.routine_title || 'A semana'}
+                        accent={w.accent}
+                        lead={w.lead}
+                        note={
+                            w.note ||
+                            (partnerBlocks > 0
+                                ? `${partnerBlocks} dos treinos da semana acontecem dentro do próprio ${partnerWord}.`
+                                : undefined)
+                        }
+                        week={routineWeek}
+                        hours={trainingHours}
+                        partnerWord={partnerWord}
+                    />
                 ),
             });
         }
