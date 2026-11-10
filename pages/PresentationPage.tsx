@@ -636,7 +636,8 @@ export default function PresentationPage() {
                     >
                         <BuildPicker items={buildItems} selected={picked} onToggle={togglePicked} />
                         <p className="mt-4 font-ui text-[12px] text-hf-ice/40">
-                            Marque aqui o que fizer sentido. O resumo sai na última tela.
+                            O que fizer sentido para o Marista, a gente marca aqui. O resumo fica
+                            na última tela.
                         </p>
                     </Slide>
                 ),
@@ -794,8 +795,7 @@ export default function PresentationPage() {
                             </p>
                             {picked.length === 0 ? (
                                 <p className="mt-3 font-ui text-[14px] leading-relaxed text-hf-ice/45">
-                                    Nada marcado ainda. Volte à tela das possibilidades para escolher
-                                    junto com a escola.
+                                    Nada marcado ainda.
                                 </p>
                             ) : (
                                 <>

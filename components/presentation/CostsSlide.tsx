@@ -90,9 +90,9 @@ export default function CostsSlide({
 
     return (
         <section className="relative flex min-h-full w-full overflow-hidden">
-            {photoUrl && <PortraitPanel url={photoUrl} className="w-[19%] opacity-75" />}
+            {photoUrl && <PortraitPanel url={photoUrl} variant="bust" className="w-[25%]" />}
 
-            <div className="relative mx-auto w-full max-w-6xl px-7 pb-10 pt-[72px] sm:px-12 sm:pt-20 lg:pr-[20%]">
+            <div className="relative mx-auto w-full max-w-6xl px-7 pb-10 pt-[72px] sm:px-12 sm:pt-20 lg:pr-[23%]">
                 <p className="mb-4 flex items-center gap-3 font-ui text-[11px] font-semibold uppercase tracking-[0.22em] text-hf-gold">
                     <span className="h-px w-6 bg-hf-gold" />
                     {kicker}
