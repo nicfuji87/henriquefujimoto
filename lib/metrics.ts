@@ -52,7 +52,7 @@ export async function getAggregatedMetrics(days: number): Promise<AggregatedMetr
     // Fetch current period data
     const { data: currentPeriod, error: currentError } = await supabase
         .from('daily_metrics')
-        .select('*')
+        .select('date, followers_count, reach_28d, impressions_28d, reach_daily, impressions_daily, profile_views_daily, email_contacts, phone_call_clicks, website_clicks, media_count, audience_city, audience_country, audience_gender_age, audience_locale')
         .gte('date', startDateStr)
         .lte('date', todayStr)
         .order('date', { ascending: true });
@@ -65,7 +65,7 @@ export async function getAggregatedMetrics(days: number): Promise<AggregatedMetr
     // Fetch previous period data
     const { data: previousPeriod, error: previousError } = await supabase
         .from('daily_metrics')
-        .select('*')
+        .select('date, followers_count, reach_28d, impressions_28d, reach_daily, impressions_daily, profile_views_daily, email_contacts, phone_call_clicks, website_clicks, media_count, audience_city, audience_country, audience_gender_age, audience_locale')
         .gte('date', previousStatsDateStr)
         .lt('date', startDateStr)
         .order('date', { ascending: true });

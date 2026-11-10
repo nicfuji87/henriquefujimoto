@@ -212,18 +212,9 @@ Deno.serve(async (_req) => {
             audience_gender_age: followerDemographicsGenderAge,
             audience_locale: {},
             online_followers: onlineFollowers,
+            // Nunca gravar a resposta crua da Meta: os links de paginacao dela
+            // vem com access_token embutido, e esta tabela e lida pelo site.
             raw_data: {
-                profile: profileData,
-                reach_day: reachDayData,
-                total_value_day: totalValueDayData,
-                reach_28d: reach28dData,
-                total_value_28d: totalValue28dData,
-                follower_demographics_city: followerDemoCity,
-                follower_demographics_country: followerDemoCountry,
-                follower_demographics_gender_age: followerDemoGenderAge,
-                engaged_demographics: engagedDemoData,
-                reached_demographics: reachedDemoData,
-                online_followers: onlineFollowersData,
                 parsed: {
                     daily: {
                         reach: reachDaily,
