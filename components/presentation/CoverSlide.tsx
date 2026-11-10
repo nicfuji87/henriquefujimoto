@@ -103,21 +103,24 @@ export default function CoverSlide({
                         duas cobrissem o painel inteiro, uma imagem deitada ficaria
                         espremida numa caixa em pe e perderia as laterais. */}
                     <div className="relative h-full w-full">
+                        {/* A faixa de cima comeca abaixo da marca fixa: colada no
+                            topo da tela, a foto encostava as cabecas na borda. */}
                         <div
-                            className="absolute inset-x-0 top-0 overflow-hidden"
+                            className="absolute inset-x-0 overflow-hidden"
                             style={
                                 split
                                     ? {
-                                          height: '52%',
-                                          clipPath: 'polygon(0% 0%, 100% 0%, 100% 80.8%, 0% 96.2%)',
+                                          top: '10%',
+                                          height: '42%',
+                                          clipPath: 'polygon(0% 0%, 100% 0%, 100% 76.2%, 0% 95.2%)',
                                       }
-                                    : { height: '100%' }
+                                    : { top: 0, height: '100%' }
                             }
                         >
                             <img
                                 src={items[0].url}
                                 alt={items[0].caption || ''}
-                                className="h-full w-full object-cover object-[50%_38%]"
+                                className="h-full w-full object-cover object-[50%_45%]"
                             />
                         </div>
 
