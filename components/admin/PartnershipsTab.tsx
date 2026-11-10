@@ -122,6 +122,8 @@ interface Project {
     student_watermark: string;
     student_backdrop_url: string;
     student_stats: StudentStat[];
+    slide_results: unknown;
+    slide_costs: unknown;
     presenter_notes: PresenterNote[];
     presenter_ruler: RulerStep[];
     presenter_objections: Objection[];
@@ -164,6 +166,7 @@ const EMPTY: Project = {
     presentation_label: '', closing_question: '',
     cover_title: '', cover_title_accent: '', cover_body: '',
     student_title: '', student_body: '', student_note: '', student_watermark: '', student_backdrop_url: '', student_stats: [],
+    slide_results: null, slide_costs: null,
     presenter_notes: [], presenter_ruler: [], presenter_objections: [],
 };
 
@@ -175,6 +178,36 @@ function Labeled({ label, children, hint }: { label: string; children: React.Rea
             <label className="block text-xs font-medium text-zinc-400 mb-1">{label}</label>
             {children}
             {hint && <p className="text-[10px] text-zinc-600 mt-1">{hint}</p>}
+        </div>
+    );
+}
+
+/**
+ * Campo de JSON com validacao na digitacao. Guarda o texto enquanto ele esta
+ * invalido, para o conteudo nao sumir no meio de uma edicao.
+ */
+function JsonField({ value, onChange, rows = 6 }: { value: unknown; onChange: (v: unknown) => void; rows?: number }) {
+    const [text, setText] = useState<string>(() => (value == null ? '' : JSON.stringify(value, null, 2)));
+    const [erro, setErro] = useState<string | null>(null);
+    useEffect(() => {
+        setText(value == null ? '' : JSON.stringify(value, null, 2));
+        setErro(null);
+    }, [value]);
+    return (
+        <div>
+            <textarea
+                rows={rows}
+                className={inputCls + ' font-mono text-[11px] leading-relaxed'}
+                value={text}
+                onChange={e => {
+                    const t = e.target.value;
+                    setText(t);
+                    if (t.trim() === '') { setErro(null); onChange(null); return; }
+                    try { onChange(JSON.parse(t)); setErro(null); }
+                    catch (err) { setErro((err as Error).message); }
+                }}
+            />
+            {erro && <p className="text-[11px] text-amber-400 mt-1">JSON inválido: {erro}</p>}
         </div>
     );
 }
@@ -884,6 +917,19 @@ export default function PartnershipsTab() {
                                     <input className={inputCls} value={form.student_watermark} onChange={e => set('student_watermark', e.target.value)} placeholder="2019" />
                                 </Labeled>
                             </div>
+
+                            {/* Apresentação — telas com conteúdo próprio */}
+                            <GroupTitle>Apresentação · telas 04 e 06 (JSON)</GroupTitle>
+                            <p className="text-[11px] text-zinc-500">
+                                Conteúdo em JSON porque essas duas telas têm estrutura própria. Os números
+                                de competição vêm do banco; aqui ficam só os textos e os custos.
+                            </p>
+                            <Labeled label="Tela 04 — trajetória" hint='{"title","accent","lead","photo_url"}'>
+                                <JsonField value={form.slide_results} onChange={v => set('slide_results', v)} rows={5} />
+                            </Labeled>
+                            <Labeled label="Tela 06 — custos" hint='{"title","accent","lead","items":[{"label","monthly","group"}],"highlight","ask":{"percent","base","base_label"},"photo_url"}'>
+                                <JsonField value={form.slide_costs} onChange={v => set('slide_costs', v)} rows={10} />
+                            </Labeled>
 
                             {/* Apresentação — camada privada */}
                             <GroupTitle>Apresentação · camada privada</GroupTitle>

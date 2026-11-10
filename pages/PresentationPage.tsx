@@ -7,9 +7,9 @@ import { HFSymbol } from '../components/brand/HFLogo';
 import Deck, { type DeckSlide } from '../components/presentation/Deck';
 import { Slide, BigStat, PhotoRow, FigureCard } from '../components/presentation/Slide';
 import CoverSlide from '../components/presentation/CoverSlide';
-import CompetitionsExplorer, {
-    type PresentationCompetition,
-} from '../components/presentation/CompetitionsExplorer';
+import ResultsSlide from '../components/presentation/ResultsSlide';
+import CostsSlide, { type CostAsk, type CostItem } from '../components/presentation/CostsSlide';
+import { type PresentationCompetition } from '../components/presentation/CompetitionsExplorer';
 import CompetitionMap from '../components/presentation/CompetitionMap';
 import ReachChart from '../components/presentation/ReachChart';
 import BuildPicker from '../components/presentation/BuildPicker';
@@ -41,6 +41,21 @@ interface StudentStat {
     figure: string;
     label: string;
     text?: string;
+}
+interface SlideResults {
+    title?: string;
+    accent?: string;
+    lead?: string;
+    photo_url?: string;
+}
+interface SlideCosts {
+    title?: string;
+    accent?: string;
+    lead?: string;
+    items?: CostItem[];
+    highlight?: string;
+    ask?: CostAsk | null;
+    photo_url?: string;
 }
 interface RoutineDay {
     day: string;
@@ -106,6 +121,8 @@ interface PresentationProject {
     student_note: string | null;
     student_backdrop_url: string | null;
     student_stats: StudentStat[] | null;
+    slide_results: SlideResults | null;
+    slide_costs: SlideCosts | null;
     closing_question: string | null;
     photos: Photo[] | null;
     contact_whatsapp: string | null;
@@ -274,6 +291,10 @@ export default function PresentationPage() {
     );
 
     const buildItems = useMemo(() => arr<BuildItem>(p?.build_items).filter((b) => b.title || b.text), [p]);
+    const costItems = useMemo(
+        () => arr<CostItem>(p?.slide_costs?.items).filter((i) => i && i.label && i.monthly > 0),
+        [p],
+    );
     const studentStats = useMemo(
         () => arr<StudentStat>(p?.student_stats).filter((st) => st.figure || st.label),
         [p],
@@ -472,29 +493,24 @@ export default function PresentationPage() {
         }
 
         if (competitions.length > 0) {
+            const r = p.slide_results || {};
             list.push({
                 key: 'trajetoria',
                 label: 'A trajetória',
                 node: (
-                    <Slide kicker={n()} title={p.results_title || 'A trajetória esportiva'}>
-                        <div className="mb-6 grid grid-cols-3 gap-3">
-                            <BigStat
-                                value={stats.total}
-                                label={
-                                    stats.firstYear
-                                        ? `resultados desde ${stats.firstYear}`
-                                        : 'resultados'
-                                }
-                            />
-                            <BigStat value={stats.last12.length} label="nos últimos 12 meses" accent />
-                            <BigStat
-                                value={stats.last12Podiums}
-                                label="pódios no período"
-                                sub={`${stats.last12NoPodium} vezes fora do pódio`}
-                            />
-                        </div>
-                        <CompetitionsExplorer competitions={competitions} />
-                    </Slide>
+                    <ResultsSlide
+                        kicker={`${n()} / ${r.title && r.accent ? `${r.title} ${r.accent}` : p.results_title || 'A trajetória esportiva'}`}
+                        title={r.title || p.results_title || 'A trajetória esportiva'}
+                        accent={r.accent}
+                        lead={r.lead || p.results_intro || undefined}
+                        photoUrl={r.photo_url}
+                        competitions={competitions}
+                        total={stats.total}
+                        firstYear={stats.firstYear}
+                        last12={stats.last12.length}
+                        last12Podiums={stats.last12Podiums}
+                        last12NoPodium={stats.last12NoPodium}
+                    />
                 ),
             });
 
@@ -513,6 +529,26 @@ export default function PresentationPage() {
                             }
                         />
                     </Slide>
+                ),
+            });
+        }
+
+        if (costItems.length > 0) {
+            const c = p.slide_costs || {};
+            list.push({
+                key: 'custos',
+                label: 'Os custos do projeto',
+                node: (
+                    <CostsSlide
+                        kicker={`${n()} / Os custos do projeto`}
+                        title={c.title || 'Investimento para'}
+                        accent={c.accent}
+                        lead={c.lead}
+                        items={costItems}
+                        highlight={c.highlight}
+                        ask={c.ask}
+                        photoUrl={c.photo_url}
+                    />
                 ),
             });
         }
@@ -803,6 +839,7 @@ export default function PresentationPage() {
         audienceMetrics,
         buildItems,
         studentStats,
+        costItems,
         pilotSteps,
         picked,
         togglePicked,
